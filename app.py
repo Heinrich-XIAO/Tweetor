@@ -5,10 +5,16 @@ from urllib.parse import quote
 import string
 import filters
 import requests
+import os
+from dotenv import load_dotenv
 from flask import Flask, Response, render_template, request, redirect, url_for, session, g, jsonify
 from flask_cors import CORS, cross_origin
 from flask_session import Session
 from sightengine.client import SightengineClient
+
+
+load_dotenv()
+SIGHT_ENGINE_SECRET = os.getenv('SIGHT_ENGINE_SECRET')
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
@@ -606,7 +612,7 @@ def mod():
 
 def is_profanity(text):
     api_user = '570595698'
-    api_secret = '4xEA9HunfujVzAywfmXN'
+    api_secret = SIGHT_ENGINE_SECRET
     api_url = f'https://api.sightengine.com/1.0/text/check.json?text={quote(text)}&lang=en&mode=standard&categories=drug%2Cmedical%2Cextremism%2Cweapon'
     
     data = {
