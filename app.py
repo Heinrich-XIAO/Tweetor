@@ -406,6 +406,8 @@ def login() -> Response:
         if users[0]["password"] == hashed_password:
             session["handle"] = handle
             session["username"] = users[0]["username"]
+        else:
+            return redirect("/login")
         return redirect("/")
     
     if "username" in session:
