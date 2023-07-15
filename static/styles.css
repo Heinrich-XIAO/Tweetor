@@ -320,6 +320,7 @@ body {
   transform: translateY(-10px);
   border: #000;
   border: 1px;
+}
 
 .search-form button {
   all: unset;

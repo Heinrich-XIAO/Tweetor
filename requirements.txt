@@ -3,5 +3,6 @@ flask_session
 flask_cors
 sightengine
 gevent
+requests
 python-dotenv
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
