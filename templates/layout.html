@@ -22,8 +22,8 @@
     <div class="pages">
       {% if not loggedIn %}
         <div>
-            <a href="{{ url_for('login') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Login</a>
-            <a href="{{ url_for('signup') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Signup</a>
+            <a href="{{ url_for('login') }}" class="w3-bar-item w3-button">Login</a>
+            <a href="{{ url_for('signup') }}" class="w3-bar-item w3-button">Signup</a>
         </div>
       {% else %}
         <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span></a>
