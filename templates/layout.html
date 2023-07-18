@@ -120,12 +120,18 @@
 
     function sendNotification(message) {
       const options = {
-        body: message
-        // You can add more options here, such as icon, sound, etc.
+        body: message,
+        sound: '/static/notification.mp3' // Replace with the path to your sound file
       };
 
       // Create and show the notification
-      new Notification(message, options);
+      const notification = new Notification('Notification', options);
+
+      // Play the sound
+      if (options.sound) {
+        const audio = new Audio(options.sound);
+        audio.play();
+      }
     }
   </script>
 </body>

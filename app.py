@@ -740,24 +740,6 @@ def submit_dm(receiver_handle):
 
     return redirect(url_for("direct_messages", receiver_handle=receiver_handle, loggedIn="username"in session))
 
-@app.route('/notifications')
-def notifications():
-       def generate_notifications():
-           # Logic to generate notifications
-           yield 'data: New direct message received\n\n'  # Example notification message
-
-       return Response(generate_notifications(), mimetype='text/event-stream')
-
-def get_notifications():
-       # Logic to fetch notifications from data source in the desired order
-       notifications = [
-           'New direct message received',
-           'You have a new notification',
-           'Your post has been liked',
-           ...
-       ]
-       return notifications
-
 clients = {}
 
 def event_stream(user):
