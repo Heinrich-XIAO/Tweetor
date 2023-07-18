@@ -95,5 +95,38 @@
       });
     </script>
   {% endif %}
+  <script>
+    const eventSource = new EventSource('/stream');
+
+    eventSource.onmessage = function(event) {
+      const notification = event.data;
+
+      console.log(notification)
+      // Check if the browser supports notifications
+      if ('Notification' in window) {
+        // Check if notification permissions have been granted
+        if (Notification.permission === 'granted') {
+          sendNotification(notification);
+        } else if (Notification.permission !== 'denied') {
+          // Request notification permissions
+          Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+              sendNotification(notification);
+            }
+          });
+        }
+      }
+    };
+
+    function sendNotification(message) {
+      const options = {
+        body: message
+        // You can add more options here, such as icon, sound, etc.
+      };
+
+      // Create and show the notification
+      new Notification(message, options);
+    }
+  </script>
 </body>
 </html>

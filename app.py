@@ -5,6 +5,8 @@ from urllib.parse import quote
 import string
 import filters
 import requests
+import datetime
+import time
 import os
 from dotenv import load_dotenv
 from flask import Flask, Response, render_template, request, redirect, url_for, session, g, jsonify
@@ -734,6 +736,8 @@ def submit_dm(receiver_handle):
 
     db.commit()
 
+    send_notification(receiver_handle)
+
     return redirect(url_for("direct_messages", receiver_handle=receiver_handle, loggedIn="username"in session))
 
 @app.route('/notifications')
@@ -753,6 +757,29 @@ def get_notifications():
            ...
        ]
        return notifications
+
+clients = {}
+
+def event_stream(user):
+    while True:
+        if user in clients and (datetime.datetime.now() - clients[user]).total_seconds()<=1:
+            # Generate the notification message
+            data = 'Someone sent you something'
+
+            # Yield the data as an SSE event
+            yield 'data: {}\n\n'.format(data)
+
+        # Delay before sending the next event
+        time.sleep(1)
+
+@app.route('/stream')
+def stream():
+    user = session.get('handle')
+    return Response(event_stream(user), mimetype='text/event-stream')
+
+def send_notification(user):
+    clients[user] = datetime.datetime.now()
+    return 'Notification sent'
 
 if __name__ == "__main__":
     app.run(debug=False)
