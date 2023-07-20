@@ -14,7 +14,6 @@ from flask_cors import CORS, cross_origin
 from flask_session import Session
 from sightengine.client import SightengineClient
 
-
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv('SIGHT_ENGINE_SECRET')
 
@@ -298,6 +297,8 @@ def submit_tweet() -> Response:
     meme_template_id = request.form["template_id"]
     meme_text0 = request.form["text0"]
     meme_text1 = request.form["text1"]
+    if session.get("username") in muted:
+        return render_template("error.html", error="You were muted.")
     if content.strip() == "":
         return render_template("error.html", error="Message was blank.")
     if len(content) > 10000:
@@ -321,6 +322,7 @@ def submit_tweet() -> Response:
     
     if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
         profane_tweet = "yes"
+        return render_template("error.html", error="Do you really think that's appropriate?")
     
     meme_url = None
     
@@ -516,7 +518,6 @@ def user_profile(username: str) -> Response:
 
     return render_template("user.html", user=user, loggedIn=("username" in session), tweets=tweets, is_following=is_following)
 
-
 @app.route("/like_tweet", methods=["POST"])
 def like_tweet():
     tweet_id = request.form["tweetId"]
@@ -600,19 +601,6 @@ def get_follower_count(user_handle):
     cursor = db.cursor()
     cursor.execute("SELECT COUNT(*) as count FROM follows WHERE followingHandle = ?", (user_handle,))
     return cursor.fetchone()["count"]
-
-@app.route("/mod", methods=["GET", "POST"])
-def mod():
-    if request.method == "GET":
-        return render_template("mod.html")
-    if "id" in request.form:
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("DELETE FROM tweets WHERE id=?", (request.form["id"]))
-        db.commit()
-        return "Success"
-    return "Failed"
-
 
 def is_profanity(text):
     api_user = '570595698'
@@ -739,6 +727,20 @@ def submit_dm(receiver_handle):
     send_notification(receiver_handle)
 
     return redirect(url_for("direct_messages", receiver_handle=receiver_handle, loggedIn="username"in session))
+
+muted = []
+
+@app.route('/mute/<handle>')
+def mute(handle):
+    if session.get('handle') == 'admin':
+        muted.append(handle)
+        return "Completed"
+
+@app.route('/unmute/<handle>')
+def unmute(handle):
+    if session.get('handle') == 'admin':
+        muted.remove(handle)
+        return "Completed"
 
 clients = {}
 
