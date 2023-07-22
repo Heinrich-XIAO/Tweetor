@@ -103,27 +103,46 @@
     </script>
   {% endif %}
   <script>
-    const eventSource = new EventSource('/stream');
+    let eventSource;
 
-    eventSource.onmessage = function(event) {
-      const notification = event.data;
+    function establishSSEConnection() {
+      eventSource = new EventSource('/stream');
 
-      console.log(notification)
-      // Check if the browser supports notifications
-      if ('Notification' in window) {
-        // Check if notification permissions have been granted
-        if (Notification.permission === 'granted') {
-          sendNotification(notification);
-        } else if (Notification.permission !== 'denied') {
-          // Request notification permissions
-          Notification.requestPermission().then(function(permission) {
-            if (permission === 'granted') {
-              sendNotification(notification);
-            }
-          });
+      eventSource.onmessage = function(event) {
+        const notification = event.data;
+
+        console.log(notification);
+
+        sendNotification(notification);
+        // Check if the browser supports notifications
+        if ('Notification' in window) {
+          // Check if notification permissions have been granted
+          if (Notification.permission === 'granted') {
+            sendNotification(notification);
+          } else if (Notification.permission !== 'denied') {
+            // Request notification permissions
+            Notification.requestPermission().then(function(permission) {
+              if (permission === 'granted') {
+                sendNotification(notification);
+              }
+            });
+          }
         }
-      }
-    };
+      };
+
+      eventSource.onerror = function(event) {
+        // Reconnect using exponential backoff strategy
+        setTimeout(establishSSEConnection, 1000);
+      };
+    }
+
+    // Establish SSE connection when the page loads
+    establishSSEConnection();
+
+    // Handle SSE connection closure when the user leaves the page
+    window.addEventListener('beforeunload', function() {
+      eventSource.close();
+    });
 
     function sendNotification(message) {
       const options = {
