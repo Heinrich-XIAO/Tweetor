@@ -1,9 +1,9 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-  <h2>Report Tweet</h2>
-  <form action="{{ url_for('report_tweet') }}" method="post">
-    <input type="hidden" name="tweet_id" value="{{ tweet_id }}" />
+  <h2>Report Flit</h2>
+  <form action="{{ url_for('report_flit') }}" method="post">
+    <input type="hidden" name="flit_id" value="{{ flit_id }}" />
     <label for="reason">Reason for reporting:</label>
     <input type="text" name="reason" id="reason" required />
     <button type="submit">Submit Report</button>

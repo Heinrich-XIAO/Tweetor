@@ -1,8 +1,8 @@
 from datetime import datetime
 from markupsafe import Markup
 
-def format_tweet(tweet_content):
-    formatted_content = tweet_content.replace('***', '<strong><em>', 1).replace('***', '</em></strong>', 1)
+def format_flit(flit_content):
+    formatted_content = flit_content.replace('***', '<strong><em>', 1).replace('***', '</em></strong>', 1)
 
     # Replace double asterisks (**) with HTML tags for bold
     formatted_content = formatted_content.replace('**', '<strong>', 1).replace('**', '</strong>', 1)

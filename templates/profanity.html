@@ -1,21 +1,21 @@
 {% extends "layout.html" %}
 
-{% block title %}Profane Tweets{% endblock %}
+{% block title %}Profane flits{% endblock %}
 
 {% block body %}
 <br>
 <br>
 <br>
-{% for tweet in profane_tweet %}
-  <div class="tweet">
-    <div class="tweet-username tweet-timestamp">
-      <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
-      <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+{% for flit in profane_flit %}
+  <div class="flit">
+    <div class="flit-username flit-timestamp">
+      <a href="/user/{{ flit.userHandle }}">{{ flit.username }}</a>&#160;&#160;
+      <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle }}</a>
       <span>&#160;·&#160;</span>
-      <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
+      <a href="/flits/{{ flit.id }}" class="user-handle">{{ flit.timestamp|format_timestamp }}</a>
     </div>
-    <div class="tweet-content">
-      <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
+    <div class="flit-content">
+      <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
     </div>
   </div>
 {% endfor %}
@@ -30,7 +30,7 @@
 
 {% if turbo %}
 <script>
-  function formatTweet(content, hashtag) {
+  function formatflit(content, hashtag) {
     // Replace double asterisks (**) with HTML tags for bold
     let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>\$1</strong>');
 
@@ -45,11 +45,11 @@
 
     return formattedContent.trimEllip(10000);
   }
-  console.log("You have Tweetor turbo")
+  console.log("You have PerchPerspectives turbo")
 </script>
 {% else %}
 <script>
-  function formatTweet(content) {
+  function formatflit(content) {
     return content.replace('*', '').replace('_', '').trimEllip(280);
   }
 </script>
