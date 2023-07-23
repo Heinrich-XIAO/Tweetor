@@ -9,13 +9,13 @@
 {% if loggedIn %}
   <div class="row">
     <div class="six columns offset-by-three">
-      <form action="/submit_tweet" method="post" id="post_tweet">
+      <form action="/submit_flit" method="post" id="post_flit">
         <input type="hidden" name="text0" id="text0">
         <input type="hidden" name="text1" id="text1">
         <input type="hidden" name="template_id" id="template_id">
         <div class="row">
           <div class="twelve columns">
-            <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="tweet-content-input u-full-width" placeholder="Placehodler Text"></textarea>
+            <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="flit-content-input u-full-width" placeholder="Placehodler Text"></textarea>
             <input type="text" name="hashtag" autocomplete="off" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
         </div>
@@ -27,7 +27,7 @@
         </div>
         <div class="row">
           <div class="twelve columns">
-            <button type="submit" class="button-primary">Tweet</button>
+            <button type="submit" class="button-primary">Flit</button>
           </div>
         </div>
       </form>
@@ -37,25 +37,25 @@
 <br>
 <br>
 <br>
-{% for tweet in tweets %}
-  <div class="tweet">
-    <div class="tweet-username tweet-timestamp">
-      <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
-      <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+{% for flit in flits %}
+  <div class="flit">
+    <div class="flit-username flit-timestamp">
+      <a href="/user/{{ flit.userHandle }}">{{ flit.username }}</a>&#160;&#160;
+      <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle }}</a>
       <span>&#160;·&#160;</span>
-      <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
+      <a href="/flits/{{ flit.id }}" class="user-handle">{{ flit.timestamp|format_timestamp }}</a>
       {% if loggedIn and session.username == "admin" %}
-        <a href="{{ url_for('delete_tweet', tweet_id=tweet.id) }}" style="float: right;"><button style="border: none;"><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a>
+        <a href="{{ url_for('delete_flit', flit_id=flit.id) }}" style="float: right;"><button style="border: none;"><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a>
       {% endif %}
       {% if loggedIn %}
-        <button onclick="openReportModal('{{ tweet.id }}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>
+        <button onclick="openReportModal('{{ flit.id }}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>
       {% endif %}
     </div>
-    <div class="tweet-content">
-      <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
-      {% if tweet.meme_link %}
+    <div class="flit-content">
+      <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
+      {% if flit.meme_link %}
         <br>
-        <a href="/tweets/{{ tweet.id }}"><img src="{{ tweet.meme_link }}" alt="{{ tweet.content }}"></a>
+        <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
       {% endif %}
     </div>
   </div>
@@ -73,7 +73,7 @@
 
 {% if turbo %}
 <script>
-function formatTweet(content, hashtag) {
+function formatflit(content, hashtag) {
   // Replace double asterisks (**) with HTML tags for bold
   let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>\\$1</strong>');
 
@@ -88,11 +88,11 @@ function formatTweet(content, hashtag) {
 
   return formattedContent.trimEllip(10000);
 }
-  console.log("You have Tweetor turbo")
+  console.log("You have PigeonHub turbo")
 </script>
 {% else %}
 <script>
-  function formatTweet(content) {
+  function formatflit(content) {
     return content.replace('*', '').replace('_', '').trimEllip(280);
   }
 </script>
@@ -105,19 +105,19 @@ function formatTweet(content, hashtag) {
 
   // Get the textarea element and the form input element
   const textarea = document.getElementById('field');
-  const tweetInput = document.querySelector('form#post_tweet input[name="content"]');
+  const flitInput = document.querySelector('form#post_flit input[name="content"]');
 
   textarea.addEventListener('input', function() {
     let content = textarea.value;
 
-    const formattedContent = formatTweet(content);
+    const formattedContent = formatflit(content);
 
     // Set the formatted content as the value of the textarea
     textarea.value = formattedContent;
 
     // Update the form input value with the formatted content
-    tweetInput.value = content.trimEllip(280);
-    console.log(tweetInput.value);
+    flitInput.value = content.trimEllip(280);
+    console.log(flitInput.value);
     console.log(textarea.value);
   });
 
@@ -232,8 +232,8 @@ function formatTweet(content, hashtag) {
     console.log(selectedMemeBG)
     const data = {
       template_id: selectedMemeBG,
-      username: "tweetor_official",
-      password: "tweetor_password",
+      username: "PigeonHub_official",
+      password: "PigeonHub_password",
       text0: text1.value,
       text1: text2.value
     };

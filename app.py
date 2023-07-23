@@ -25,18 +25,18 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Register the custom filters
 app.jinja_env.filters['format_timestamp'] = filters.format_timestamp
-app.jinja_env.filters['format_tweet'] = filters.format_tweet
+app.jinja_env.filters['format_flit'] = filters.format_flit
 
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-DATABASE = "tweetor.db"
+DATABASE = "PigeonHub.db"
 
 sqlite3.connect(DATABASE).cursor().execute(
     """
-    CREATE TABLE IF NOT EXISTS tweets  (
+    CREATE TABLE IF NOT EXISTS flits  (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         content TEXT NOT NULL,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -85,7 +85,7 @@ sqlite3.connect(DATABASE).cursor().execute(
     CREATE TABLE IF NOT EXISTS likes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         userHandle TEXT NOT NULL,
-        tweetId INTEGER NOT NULL
+        flitId INTEGER NOT NULL
     )
 """)
 
@@ -100,7 +100,7 @@ sqlite3.connect(DATABASE).cursor().execute(
 
 sqlite3.connect(DATABASE).cursor().execute(
     """
-    CREATE TABLE IF NOT EXISTS profane_tweets  (
+    CREATE TABLE IF NOT EXISTS profane_flits  (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         content TEXT,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -135,23 +135,23 @@ def add_profanity_column_if_not_exists():
     with app.app_context():
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("PRAGMA table_info(tweets)")
+        cursor.execute("PRAGMA table_info(flits)")
         columns = cursor.fetchall()
         column_names = [column[1] for column in columns]
 
-        if 'profane_tweet' not in column_names:
-            cursor.execute("ALTER TABLE tweets ADD COLUMN profane_tweet TEXT")
+        if 'profane_flit' not in column_names:
+            cursor.execute("ALTER TABLE flits ADD COLUMN profane_flit TEXT")
             db.commit()
-            print("profane_tweet column added to the tweets table")
+            print("profane_flit column added to the flits table")
 
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
         """
-        CREATE TABLE IF NOT EXISTS tweets  (
+        CREATE TABLE IF NOT EXISTS flits  (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             content TEXT,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            profane_tweet TEXT,
+            profane_flit TEXT,
             userHandle TEXT NOT NULL,
             username TEXT NOT NULL,
             hashtag TEXT NOT NULL
@@ -188,9 +188,9 @@ add_profanity_dm_column_if_not_exists()
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
         """
-        CREATE TABLE IF NOT EXISTS reported_tweets (
+        CREATE TABLE IF NOT EXISTS reported_flits (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tweet_id INTEGER NOT NULL,
+            flit_id INTEGER NOT NULL,
             reporter_handle TEXT NOT NULL,
             reason TEXT NOT NULL
         )
@@ -214,7 +214,7 @@ with sqlite3.connect(DATABASE) as conn:
         CREATE TABLE IF NOT EXISTS likes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userHandle TEXT NOT NULL,
-            tweetId INTEGER NOT NULL
+            flitd INTEGER NOT NULL
         )
     """)
 
@@ -274,11 +274,11 @@ def home() -> Response:
     db = get_db()
     cursor = db.cursor()    
     if "username" in session and session["handle"] == "admin":
-        cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
+        cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
     else:
-        cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'no' ORDER BY timestamp DESC")
+        cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY timestamp DESC")
           
-    tweets = cursor.fetchall()
+    flits = cursor.fetchall()
 
     if "username" in session:
         user_handle = session["handle"]
@@ -287,12 +287,12 @@ def home() -> Response:
         cursor.execute("SELECT turbo FROM users WHERE handle = ?", (user_handle, ))
         turbo = cursor.fetchone()["turbo"] == 1
 
-        return render_template("home.html", tweets=tweets, loggedIn=True, turbo=turbo, engaged_dms=engaged_dms)
+        return render_template("home.html", flits=flits, loggedIn=True, turbo=turbo, engaged_dms=engaged_dms)
     else:
-        return render_template("home.html", tweets=tweets, loggedIn=False, turbo=False)
+        return render_template("home.html", flits=flits, loggedIn=False, turbo=False)
 
-@app.route("/submit_tweet", methods=["POST"])
-def submit_tweet() -> Response:
+@app.route("/submit_flit", methods=["POST"])
+def submit_flit() -> Response:
     content = str(request.form["content"])
     meme_template_id = request.form["template_id"]
     meme_text0 = request.form["text0"]
@@ -312,16 +312,16 @@ def submit_tweet() -> Response:
     user_turbo = cursor.fetchone()["turbo"]
     
     if user_turbo == 0 and (len(content) > 280 or "*" in content or "_" in content):
-        return render_template("error.html", error="You do not have Tweetor Turbo.")
+        return render_template("error.html", error="You do not have PigeonHub Turbo.")
     
     hashtag = request.form["hashtag"]
     
     # Use the Sightengine result directly to check for profanity
     sightengine_result = is_profanity(content+" "+meme_text0+" "+meme_text1)
-    profane_tweet = "no"
+    profane_flit = "no"
     
     if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
-        profane_tweet = "yes"
+        profane_flit = "yes"
         return render_template("error.html", error="Do you really think that's appropriate?")
     
     meme_url = None
@@ -330,8 +330,8 @@ def submit_tweet() -> Response:
         # IMGFLIP image generating
         r = requests.post("https://api.imgflip.com/caption_image", data={
         'template_id': meme_template_id,
-        'username': "tweetor_official",
-        'password': "tweetor_password",
+        'username': "PigeonHub_official",
+        'password': "PigeonHub_password",
         'text0': meme_text0,
         'text1': meme_text1
         })
@@ -342,8 +342,8 @@ def submit_tweet() -> Response:
         if json["success"]:
             meme_url = json['data']['url']
     
-    # Insert the tweet into the database
-    cursor.execute("INSERT INTO tweets (username, content, userHandle, hashtag, profane_tweet, meme_link) VALUES (?, ?, ?, ?, ?, ?)", (session["username"], content, session["handle"], hashtag, profane_tweet, meme_url, ))
+    # Insert the flit into the database
+    cursor.execute("INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link) VALUES (?, ?, ?, ?, ?, ?)", (session["username"], content, session["handle"], hashtag, profane_flit, meme_url, ))
     
     db.commit()
     return redirect(url_for('home'))
@@ -420,27 +420,27 @@ def login() -> Response:
 
 
 
-@app.route('/tweets/<tweet_id>')
-def singleTweet(tweet_id: str) -> Response:
+@app.route('/flits/<flit_id>')
+def singleflit(flit_id: str) -> Response:
     conn = get_db()
     c = conn.cursor()
 
-    # Get the tweet's information from the database
-    c.execute("SELECT * FROM tweets WHERE id=?", (tweet_id,))
-    tweet = c.fetchone()
+    # Get the flit's information from the database
+    c.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
+    flit = c.fetchone()
 
-    if tweet:
+    if flit:
         if "username" in session:
             conn = get_db()
             c = conn.cursor()
-            c.execute("SELECT * FROM interests WHERE user=? AND hashtag=?", (session["handle"], tweet["hashtag"], ))
+            c.execute("SELECT * FROM interests WHERE user=? AND hashtag=?", (session["handle"], flit["hashtag"], ))
             interests = c.fetchall()
             if len(interests) == 0:
                 conn = get_db()
                 c = conn.cursor()
                 c.execute("INSERT INTO interests (user, hashtag, importance) VALUES (?, ?, ?)", (
                     session["handle"],
-                    tweet["hashtag"],
+                    flit["hashtag"],
                     1,
                 ))
 
@@ -452,13 +452,13 @@ def singleTweet(tweet_id: str) -> Response:
                 c.execute("UPDATE interests SET importance=? WHERE user=? AND hashtag=?", (
                     interests[0]["importance"]+1,
                     session["handle"],
-                    tweet["hashtag"],
+                    flit["hashtag"],
                 ))
                 conn.commit()
                 conn.close()
 
-        # Render the template with the tweet's information
-        return render_template("tweet.html", tweet=tweet, loggedIn=("username" in session))
+        # Render the template with the flit's information
+        return render_template("flit.html", flit=flit, loggedIn=("username" in session))
 
     # If the user doesn't exist, display an error message
     return redirect("/")
@@ -470,13 +470,13 @@ def searchAPI() -> Response:
         c = conn.cursor()
 
         # Find query
-        c.execute("SELECT * FROM tweets WHERE content LIKE ?", (f"%{request.args.get('query')}%", ))
-        tweets = [dict(tweet) for tweet in c.fetchall()]
-        return jsonify(tweets)
+        c.execute("SELECT * FROM flits WHERE content LIKE ?", (f"%{request.args.get('query')}%", ))
+        flits = [dict(flit) for flit in c.fetchall()]
+        return jsonify(flits)
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
-    return jsonify([dict(tweet) for tweet in cursor.fetchall()])
+    cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
+    return jsonify([dict(flit) for flit in cursor.fetchall()])
 
 @app.route('/search', methods=["GET"])
 def search() -> Response:
@@ -485,10 +485,10 @@ def search() -> Response:
         c = conn.cursor()
 
         # Find query
-        c.execute("SELECT * FROM tweets WHERE content LIKE ? OR hashtag LIKE ?", (f"%{request.args.get('query')}%", f"%{request.args.get('query')}%", ))
-        tweets = [dict(tweet) for tweet in c.fetchall()]
-        return render_template("search.html", tweets=tweets, loggedIn=("username" in session))
-    return render_template("search.html", tweets=False, loggedIn=("username" in session))
+        c.execute("SELECT * FROM flits WHERE content LIKE ? OR hashtag LIKE ?", (f"%{request.args.get('query')}%", f"%{request.args.get('query')}%", ))
+        flits = [dict(flit) for flit in c.fetchall()]
+        return render_template("search.html", flits=flits, loggedIn=("username" in session))
+    return render_template("search.html", flits=False, loggedIn=("username" in session))
 
 @app.route('/logout', methods=["GET", "POST"])
 def logout() -> Response:
@@ -507,8 +507,8 @@ def user_profile(username: str) -> Response:
     if not user:
         return redirect("/home")
 
-    cursor.execute("SELECT * FROM tweets WHERE userHandle = ?", (username, ))
-    tweets = cursor.fetchall()
+    cursor.execute("SELECT * FROM flits WHERE userHandle = ?", (username, ))
+    flits = cursor.fetchall()
 
     is_following = False
     if "username" in session:
@@ -516,26 +516,26 @@ def user_profile(username: str) -> Response:
         cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (logged_in_username, user["handle"]))
         is_following = cursor.fetchone() is not None
 
-    return render_template("user.html", user=user, loggedIn=("username" in session), tweets=tweets, is_following=is_following)
+    return render_template("user.html", user=user, loggedIn=("username" in session), flits=flits, is_following=is_following)
 
-@app.route("/like_tweet", methods=["POST"])
-def like_tweet():
-    tweet_id = request.form["tweetId"]
+@app.route("/like_flit", methods=["POST"])
+def like_flit():
+    flit_id = request.form["flitId"]
     user_handle = session["handle"]
 
     db = get_db()
     cursor = db.cursor()
 
     # Check if the like already exists
-    cursor.execute("SELECT * FROM likes WHERE userHandle = ? AND tweetId = ?", (user_handle, tweet_id))
+    cursor.execute("SELECT * FROM likes WHERE userHandle = ? AND flitId = ?", (user_handle, flit_id))
     existing_like = cursor.fetchone()
 
     if existing_like:
-        # Unlike the tweet
+        # Unlike the flit
         cursor.execute("DELETE FROM likes WHERE id = ?", (existing_like["id"],))
     else:
-        # Like the tweet
-        cursor.execute("INSERT INTO likes (userHandle, tweetId) VALUES (?, ?)", (user_handle, tweet_id))
+        # Like the flit
+        cursor.execute("INSERT INTO likes (userHandle, flitId) VALUES (?, ?)", (user_handle, flit_id))
 
     db.commit()
 
@@ -581,19 +581,19 @@ def profanity() -> Response:
 
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'yes' ORDER BY timestamp DESC")
-    profane_tweet = cursor.fetchall()
+    cursor.execute("SELECT * FROM flits WHERE profane_flit = 'yes' ORDER BY timestamp DESC")
+    profane_flit = cursor.fetchall()
     cursor.execute("""
         SELECT * FROM direct_messages WHERE profane_dm = "yes"
     """)
     profane_dm = cursor.fetchall()
 
-    return render_template("profanity.html", profane_tweet=profane_tweet, profane_dm=profane_dm)
+    return render_template("profanity.html", profane_flit=profane_flit, profane_dm=profane_dm)
 
-def get_like_count(tweet_id):
+def get_like_count(flit_id):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) as count FROM likes WHERE tweetId = ?", (tweet_id,))
+    cursor.execute("SELECT COUNT(*) as count FROM likes WHERE flitId = ?", (flit_id,))
     return cursor.fetchone()["count"]
 
 def get_follower_count(user_handle):
@@ -626,19 +626,19 @@ def is_profanity(text):
 
     return result  # Return the result instead of an empty list
 
-@app.route("/delete_tweet", methods=["GET"])
-def delete_tweet() -> Response:
+@app.route("/delete_flit", methods=["GET"])
+def delete_flit() -> Response:
     if "username" in session and session["handle"] != "admin":
         return render_template("error.html", error="You are not authorized to perform this action.")
 
-    tweet_id = request.args.get("tweet_id")
+    flit_id = request.args.get("flit_id")
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("DELETE FROM tweets WHERE id = ?", (tweet_id,))
-    cursor.execute("DELETE FROM reported_tweets WHERE tweet_id=?", (tweet_id,))
+    cursor.execute("DELETE FROM flits WHERE id = ?", (flit_id,))
+    cursor.execute("DELETE FROM reported_flits WHERE flit_id=?", (flit_id,))
     db.commit()
 
-    return redirect(url_for("reported_tweets"))
+    return redirect(url_for("reported_flits"))
 
 
 @app.route("/delete_user", methods=["POST"])
@@ -654,30 +654,30 @@ def delete_user() -> Response:
 
     return redirect(url_for("home"))
 
-@app.route("/report_tweet", methods=["POST"])
-def report_tweet():
-    tweet_id = request.form["tweet_id"]
+@app.route("/report_flit", methods=["POST"])
+def report_flit():
+    flit_id = request.form["flit_id"]
     reporter_handle = session["handle"]
     reason = request.form["reason"]
 
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("INSERT INTO reported_tweets (tweet_id, reporter_handle, reason) VALUES (?, ?, ?)", (tweet_id, reporter_handle, reason))
+    cursor.execute("INSERT INTO reported_flits (flit_id, reporter_handle, reason) VALUES (?, ?, ?)", (flit_id, reporter_handle, reason))
     db.commit()
 
     return redirect(url_for("home"))
 
-@app.route("/reported_tweets")
-def reported_tweets():
+@app.route("/reported_flits")
+def reported_flits():
     if "username" in session and session["handle"] != "admin":
         return render_template("error.html", error="You don't have permission to access this page.")
 
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM reported_tweets")
+    cursor.execute("SELECT * FROM reported_flits")
     reports = cursor.fetchall()
 
-    return render_template("reported_tweets.html", reports=reports)
+    return render_template("reported_flits.html", reports=reports)
 
 @app.route('/dm/<receiver_handle>')
 def direct_messages(receiver_handle):
