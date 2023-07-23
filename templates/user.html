@@ -6,49 +6,46 @@
 <br>
 <br>
 <br>
-<div class="container">
-  <div class="row">
-    <div class="twelve columns">
-      <h1>{{ user.username }}'s Profile</h1>
-      {% if loggedIn and session.username == "admin" %}
-        <form action="{{ url_for('delete_user') }}" method="post">
-          <input type="hidden" name="user_handle" value="{{ user.handle }}" />
-          <button type="submit">Delete User</button>
-        </form>
-      {% endif %}
+<div class="row">
+  <div class="twelve columns">
+    <h1>{{ user.username }}'s Profile</h1>
+    <h5>This user was the #{{ user.id-1 }} user created.</h5><!-- -1 because the admin account is an account-->
+    {% if loggedIn and session.username == "admin" %}
+      <form action="{{ url_for('delete_user') }}" method="post">
+        <input type="hidden" name="user_handle" value="{{ user.handle }}" />
+        <button type="submit">Delete User</button>
+      </form>
+    {% endif %}
 
-      {% if session['username'] != user.username %}
-        <!-- Follow button -->
-        <form action="{{ url_for('follow_user') }}" method="post">
-          <input type="hidden" name="followingUsername" value="{{ user.username }}">
-          <button type="submit">
-            {% if is_following %}
-              Unfollow
-            {% else %}
-              Follow
-            {% endif %}
-          </button>
-        </form>
-        
-        <!-- Start DM button -->
-        <a href="{{ url_for('direct_messages', receiver_handle=user.handle) }}" class="dm-button">Start DM</a>
-      {% endif %}
-    </div>
+    {% if session['username'] != user.username %}
+      <!-- Follow button -->
+      <form action="{{ url_for('follow_user') }}" method="post">
+        <input type="hidden" name="followingUsername" value="{{ user.username }}">
+        <button type="submit">
+          {% if is_following %}
+            Unfollow
+          {% else %}
+            Follow
+          {% endif %}
+        </button>
+      </form>
+      
+      <!-- Start DM button -->
+      <a href="{{ url_for('direct_messages', receiver_handle=user.handle) }}" class="dm-button">Start DM</a>
+    {% endif %}
   </div>
-  
-  <h2>Flits</h2>
-  <ul>
-    {% for flit in flits %}
-      <div class="flit">
-        <div class="flit-username">
-          <a href="/user/{{ flit.userHandle }}">{{ flit.username }}</a>&#160;&#160;
-          <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle }}</a>
-        </div>
-        <div class="flit-content">
-          <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
-        </div>
-      </div>
-    {% endfor %}
-  </ul>
 </div>
+<ul>
+  {% for flit in flits %}
+    <div class="flit">
+      <div class="flit-username">
+        <a href="/user/{{ flit.userHandle }}">{{ flit.username }}</a>&#160;&#160;
+        <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle }}</a>
+      </div>
+      <div class="flit-content">
+        <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
+      </div>
+    </div>
+  {% endfor %}
+</ul>
 {% endblock %}
