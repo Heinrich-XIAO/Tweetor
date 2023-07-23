@@ -89,7 +89,7 @@
     text-align: center;
 }
 
-.tweet-content-input.tweet-content-input, .tweet-content-input.tweet-content-input:focus {
+.flit-content-input.flit-content-input, .flit-content-input.flit-content-input:focus {
   border-radius: 0%;
   border-width: 0px;
   border: none;
@@ -177,7 +177,7 @@ body {
   color: white;
 }
 
-.tweet {
+.flit {
   padding: 20px;
   margin-bottom: -1px;
   background-color: #000;
@@ -187,15 +187,15 @@ body {
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
 }
 
-.tweet-username a, .tweet-content a {
+.flit-username a, .flit-content a {
   text-decoration: none;
 }
 
-.tweet-username a:hover, .tweet-content a:hover {
+.flit-username a:hover, .flit-content a:hover {
   text-decoration: underline;
 }
 
-.tweet-username a:not(.user-handle), .tweet-content a, .tweet-content a:hover {
+.flit-username a:not(.user-handle), .flit-content a, .flit-content a:hover {
   color: #fff;
 }
 
@@ -204,7 +204,7 @@ body {
   font-weight: normal;
 }
 
-.tweet-username {
+.flit-username {
   font-size: 18px;
   font-weight: bold;
   color: #333;
@@ -212,13 +212,13 @@ body {
   text-decoration: none;
 }
 
-.tweet-content {
+.flit-content {
   font-size: 16px;
   color: #555;
   text-decoration: none;
 }
 
-.tweet-timestamp {
+.flit-timestamp {
   font-size: 14px;
   color: #888;
 }

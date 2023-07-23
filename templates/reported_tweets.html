@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reported Tweets</title>
+  <title>Reported Flits</title>
   <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
   <!-- Add your CSS styles here -->
   <style>
@@ -23,19 +23,19 @@
   </style>
 </head>
 <body>
-  <h1>Reported Tweets</h1>
+  <h1>Reported Flits</h1>
   <table>
     <tr>
-      <th>Tweet ID</th>
+      <th>Flit ID</th>
       <th>Reporter Handle</th>
       <th>Reason</th>
     </tr>
     {% for report in reports %}
       <tr>
-        <td><a href="{{ url_for('singleTweet', tweet_id=report.tweet_id) }}">{{ report.tweet_id }}</a></td>
+        <td><a href="{{ url_for('singleflit', flit_id=report.flit_id) }}">{{ report.flit_id }}</a></td>
         <td>{{ report.reporter_handle }}</td>
         <td>{{ report.reason }}</td>
-        <td><a href="{{ url_for('delete_tweet', tweet_id=report.tweet_id) }}"><button><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a></td>
+        <td><a href="{{ url_for('delete_flit', flit_id=report.flit_id) }}"><button><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a></td>
       </tr>
     {% endfor %}
   </table>
