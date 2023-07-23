@@ -507,7 +507,7 @@ def user_profile(username: str) -> Response:
     if not user:
         return redirect("/home")
 
-    cursor.execute("SELECT * FROM flits WHERE userHandle = ?", (username, ))
+    cursor.execute("SELECT * FROM flits WHERE userHandle = ? ORDER BY timestamp DESC", (username, ))
     flits = cursor.fetchall()
 
     is_following = False
