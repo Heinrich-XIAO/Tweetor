@@ -516,7 +516,19 @@ def user_profile(username: str) -> Response:
         cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (logged_in_username, user["handle"]))
         is_following = cursor.fetchone() is not None
 
-    return render_template("user.html", user=user, loggedIn=("username" in session), flits=flits, is_following=is_following)
+    latest_tweet_time = flits[0]['timestamp']
+    latest_tweet_time = datetime.datetime.strptime(latest_tweet_time, "%Y-%m-%d %H:%M:%S")
+    first_tweet_time = flits[-1]['timestamp']
+    first_tweet_time = datetime.datetime.strptime(first_tweet_time, "%Y-%m-%d %H:%M:%S")
+    print(first_tweet_time, type(first_tweet_time))
+    print(latest_tweet_time, type(latest_tweet_time))
+
+    diff = latest_tweet_time - first_tweet_time
+    weeks = diff.total_seconds()/3600/24/7
+    activeness = len(flits)/weeks*1000
+    print(weeks, activeness)
+
+    return render_template("user.html", user=user, loggedIn=("username" in session), flits=flits, is_following=is_following, activeness=round(len(flits)/weeks*1000))
 
 @app.route("/like_flit", methods=["POST"])
 def like_flit():
