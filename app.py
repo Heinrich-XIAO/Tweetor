@@ -458,7 +458,7 @@ def singleflit(flit_id: str) -> Response:
                 conn.close()
 
         # Render the template with the flit's information
-        return render_template("flit.html", flit=flit, loggedIn=("username" in session))
+        return render_template("flit.html", flit=flit, loggedIn=("username" in session), engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
 
     # If the user doesn't exist, display an error message
     return redirect("/")
@@ -487,8 +487,8 @@ def search() -> Response:
         # Find query
         c.execute("SELECT * FROM flits WHERE content LIKE ? OR hashtag LIKE ?", (f"%{request.args.get('query')}%", f"%{request.args.get('query')}%", ))
         flits = [dict(flit) for flit in c.fetchall()]
-        return render_template("search.html", flits=flits, loggedIn=("username" in session))
-    return render_template("search.html", flits=False, loggedIn=("username" in session))
+        return render_template("search.html", flits=flits, loggedIn=("username" in session), engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
+    return render_template("search.html", flits=False, loggedIn=("username" in session), engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
 
 @app.route('/logout', methods=["GET", "POST"])
 def logout() -> Response:
@@ -525,10 +525,10 @@ def user_profile(username: str) -> Response:
 
     diff = latest_tweet_time - first_tweet_time
     weeks = diff.total_seconds()/3600/24/7
-    activeness = len(flits)/weeks*1000
+    activeness = round(0 if weeks == 0 else len(flits)/weeks*1000,2)
     print(weeks, activeness)
 
-    return render_template("user.html", user=user, loggedIn=("username" in session), flits=flits, is_following=is_following, activeness=round(len(flits)/weeks*1000))
+    return render_template("user.html", user=user, loggedIn=("username" in session), flits=flits, is_following=is_following, activeness=activeness, engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
 
 @app.route("/like_flit", methods=["POST"])
 def like_flit():
@@ -710,7 +710,7 @@ def direct_messages(receiver_handle):
 
     messages = cursor.fetchall()
 
-    return render_template("direct_messages.html", messages=messages, receiver_handle=receiver_handle, loggedIn="username"in session)
+    return render_template("direct_messages.html", messages=messages, receiver_handle=receiver_handle, loggedIn="username"in session, engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
 
 @app.route("/submit_dm/<receiver_handle>", methods=["POST"])
 def submit_dm(receiver_handle):
