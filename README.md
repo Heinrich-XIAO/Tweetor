@@ -1,6 +1,6 @@
-# PigeonHub
+# Tweetor
 
-PigeonHub is a social media website built using Flask, SQLite, and Jinja templates. It allows users to sign up, log in, post Flits, view user profiles, and interact with Flits.
+Tweetor is a social media website built using Flask, SQLite, and Jinja templates. It allows users to sign up, log in, post Flits, view user profiles, and interact with Flits.
 
 ## Features
 

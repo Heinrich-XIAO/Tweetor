@@ -32,7 +32,7 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-DATABASE = "PigeonHub.db"
+DATABASE = "tweetor.db"
 
 sqlite3.connect(DATABASE).cursor().execute(
     """
@@ -312,7 +312,7 @@ def submit_flit() -> Response:
     user_turbo = cursor.fetchone()["turbo"]
     
     if user_turbo == 0 and (len(content) > 280 or "*" in content or "_" in content):
-        return render_template("error.html", error="You do not have PigeonHub Turbo.")
+        return render_template("error.html", error="You do not have Tweetor Turbo.")
     
     hashtag = request.form["hashtag"]
     
@@ -330,8 +330,8 @@ def submit_flit() -> Response:
         # IMGFLIP image generating
         r = requests.post("https://api.imgflip.com/caption_image", data={
         'template_id': meme_template_id,
-        'username': "PigeonHub_official",
-        'password': "PigeonHub_password",
+        'username': "tweetor_official",
+        'password': "tweetor_password",
         'text0': meme_text0,
         'text1': meme_text1
         })
