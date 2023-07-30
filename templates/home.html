@@ -97,6 +97,7 @@ function formatflit(content, hashtag) {
 </script>
 {% endif %}
 
+{% if loggedIn %}
 <script>
   String.prototype.trimEllip = function (length) {
     return this.length > length ? this.substring(0, length) : this;
@@ -115,9 +116,7 @@ function formatflit(content, hashtag) {
     textarea.value = formattedContent;
 
     // Update the form input value with the formatted content
-    flitInput.value = content.trimEllip(280);
-    console.log(flitInput.value);
-    console.log(textarea.value);
+    // textarea.value = content.trimEllip(280);
   });
 
   // Function to move the cursor to the end of the textarea
@@ -132,6 +131,7 @@ function formatflit(content, hashtag) {
   }
 
 </script>
+{% endif %}
 <script defer>
   let meme = document.querySelector('#memePopup');
   let memeImages = document.querySelector('#memeBackgrounds');

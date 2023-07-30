@@ -341,3 +341,7 @@ hr {
   margin-top: 0rem;
   margin-bottom: 0rem;
 }
+
+a {
+  display: inline-block; max-width: 100px; vertical-align: middle;
+}
