@@ -297,9 +297,10 @@ def submit_flit() -> Response:
     meme_template_id = request.form["template_id"]
     meme_text0 = request.form["text0"]
     meme_text1 = request.form["text1"]
+    print(meme_template_id)
     if session.get("username") in muted:
         return render_template("error.html", error="You were muted.")
-    if content.strip() == "":
+    if content.strip() == "" and not meme_template_id:
         return render_template("error.html", error="Message was blank.")
     if len(content) > 10000:
         return render_template("error.html", error="Message was too long.")
