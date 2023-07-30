@@ -348,11 +348,12 @@ def submit_flit() -> Response:
     db.commit()
     return redirect(url_for('home'))
 
+used_captchas = []
+
 # Signup route
 @app.route("/signup", methods=["GET", "POST"])
 def signup() -> Response:
     error = None
-    correct_captcha = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5))
     if request.method == "POST":
         username = request.form["username"]
         handle = username
@@ -360,6 +361,9 @@ def signup() -> Response:
         passwordConformation = request.form["passwordConformation"]
         user_captcha_input = request.form["input"]
         correct_captcha = request.form["correct_captcha"]
+        if correct_captcha in used_captchas:
+            return "Why did you try to spam accounts bruh?"
+        used_captchas.append(correct_captcha)
 
         if user_captcha_input != correct_captcha:
             return redirect("/signup")
@@ -389,7 +393,7 @@ def signup() -> Response:
 
     if "username" in session:
         return redirect("/")
-    return render_template("signup.html", error=error, correct_captcha=correct_captcha)
+    return render_template("signup.html", error=error)
 
 
 # Login route
@@ -776,6 +780,14 @@ def stream():
 def send_notification(user):
     clients[user] = datetime.datetime.now()
     return 'Notification sent'
+
+@app.route('/get_captcha')
+def get_captcha():
+    while True:
+        correct_captcha = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5))
+        if correct_captcha not in used_captchas:
+            break
+    return correct_captcha
 
 if __name__ == "__main__":
     app.run(debug=False)

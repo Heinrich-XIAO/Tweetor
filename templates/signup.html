@@ -20,7 +20,7 @@
           <input type="text" id="image" readonly value="{{ correct_captcha }}" class="captcha-image">
           <input type="text" id="user_input" name="input" placeholder="Enter CAPTCHA" required>
           <button type="button" onclick="generate()" class="captcha-refresh">Refresh</button>
-          <input type="hidden" name="correct_captcha" value="{{ correct_captcha }}">
+          <input type="hidden" name="correct_captcha" value="...">
           
           <input type="submit" value="Signup">
         </form>
@@ -45,16 +45,19 @@
   </style>
 
   <script>
-    function generate() {
+    async function generate() {
       // Clear old input
-      document.getElementById("submit").value = "";
+      document.getElementById("user_input").value = "";
 
       // Access the element to store
       // the generated captcha
       captcha = document.getElementById("image");
+      
+      const res = await fetch("/get_captcha");
+      const correct_captcha = await res.text();
 
       // Store generated input
-      captcha.value = "{{ correct_captcha }}";
+      captcha.value = correct_captcha;
     }
 
     // Call generate function on page load
