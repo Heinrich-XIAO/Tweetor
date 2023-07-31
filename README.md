@@ -27,7 +27,7 @@ git clone <repository_url>
 2. Navigate to the project directory:
 
 ``
-cd Fliter
+cd Tweetor
 ``
 
 3. Create a virtual environment:
@@ -54,28 +54,28 @@ pip install -r requirements.txt
 python main.py
 ``
 
-7. Open your web browser and visit `http://localhost:5000` to access Fliter.
+7. Open your web browser and visit `http://localhost:5000` to access Tweetor.
 
 ## To-Do List
 
-[x] Search functionality to find users and Flits
-[x] Direct Messages (DMs) functionality
-[ ] Following functionality
-[ ] Implement an algorithm for personalized Flit recommendations (similar to Twitter's algorithm)
-[ ] Add user profile picture upload functionality
-[ ] Enhance the design and styling of the application
-[ ] Implement reFlits and likes functionality
-[ ] Integrate real-time updates using WebSocket (e.g., new Flits, notifications)
-[ ] Implement pagination for Flits on the home page and user profiles
-[ ] Implement trending topics and hashtags
-[ ] Add user settings and account management features
-[ ] Implement user authentication using OAuth (e.g., Google, Facebook, Twitter)
-[ ] Add support for multimedia content (images, videos) in Flits
-[ ] Implement user mentions and notifications
-[ ] Implement hashtag autocompletion and suggestions
-[ ] Improve security (e.g., password hashing, CSRF protection)
-[ ] Implement email notifications for important events (e.g., new followers, mentions)
-[ ] Perform code optimization and refactoring for better performance and maintainability
+- [x] Search functionality to find users and Flits
+- [x] Direct Messages (DMs) functionality
+- [ ] Following functionality
+- [ ] Implement an algorithm for personalized Flit recommendations (similar to Twitter's algorithm)
+- [ ] Add user profile picture upload functionality
+- [ ] Enhance the design and styling of the application
+- [ ] Implement reFlits and likes functionality
+- [ ] Integrate real-time updates using WebSocket (e.g., new Flits, notifications)
+- [ ] Implement pagination for Flits on the home page and user profiles
+- [ ] Implement trending topics and hashtags
+- [ ] Add user settings and account management features
+- [ ] Implement user authentication using OAuth (e.g., Google, Facebook, Twitter)
+- [ ] Add support for multimedia content (images, videos) in Flits
+- [ ] Implement user mentions and notifications
+- [ ] Implement hashtag autocompletion and suggestions
+- [ ] Improve security (e.g., password hashing, CSRF protection)
+- [ ] Implement email notifications for important events (e.g., new followers, mentions)
+- [ ] Perform code optimization and refactoring for better performance and maintainability
 
 ## Contributing
 
