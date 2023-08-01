@@ -294,13 +294,10 @@ def home() -> Response:
 @app.route("/submit_flit", methods=["POST"])
 def submit_flit() -> Response:
     content = str(request.form["content"])
-    meme_template_id = request.form["template_id"]
-    meme_text0 = request.form["text0"]
-    meme_text1 = request.form["text1"]
-    print(meme_template_id)
+    meme_url = request.form["meme_link"]
     if session.get("username") in muted:
         return render_template("error.html", error="You were muted.")
-    if content.strip() == "" and not meme_template_id:
+    if content.strip() == "" and not meme_url:
         return render_template("error.html", error="Message was blank.")
     if len(content) > 10000:
         return render_template("error.html", error="Message was too long.")
@@ -318,30 +315,12 @@ def submit_flit() -> Response:
     hashtag = request.form["hashtag"]
     
     # Use the Sightengine result directly to check for profanity
-    sightengine_result = is_profanity(content+" "+meme_text0+" "+meme_text1)
+    sightengine_result = is_profanity(content)
     profane_flit = "no"
     
     if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
         profane_flit = "yes"
         return render_template("error.html", error="Do you really think that's appropriate?")
-    
-    meme_url = None
-    
-    if meme_template_id and meme_text0 and meme_text1:
-        # IMGFLIP image generating
-        r = requests.post("https://api.imgflip.com/caption_image", data={
-        'template_id': meme_template_id,
-        'username': "tweetor_official",
-        'password': "tweetor_password",
-        'text0': meme_text0,
-        'text1': meme_text1
-        })
-
-        json = r.json()
-
-        print(json)
-        if json["success"]:
-            meme_url = json['data']['url']
     
     # Insert the flit into the database
     cursor.execute("INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link) VALUES (?, ?, ?, ?, ?, ?)", (session["username"], content, session["handle"], hashtag, profane_flit, meme_url, ))

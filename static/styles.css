@@ -345,3 +345,22 @@ hr {
 a {
   display: inline-block; max-width: 100px; vertical-align: middle;
 }
+
+#memeImages {
+  width: 400px;
+  height: 400px;
+  position: relative;
+  background: yellow;
+}
+
+#memeImages > img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#memeImages img {
+  max-width: 100px;
+  width: 9%;
+}
