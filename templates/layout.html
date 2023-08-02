@@ -20,7 +20,7 @@
   </script>
 </head>
 <body>
-  <div class="w3-sidebar w3-black w3-bar-block" style="width:10%;border-right: 1px solid #555;">
+  <div class="w3-sidebar w3-black w3-bar-block" style="width:10%;border-right: 1px solid #555;min-width: 60px;">
     <div class="logo">
       <a href="/">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="fliter Logo">
@@ -46,7 +46,7 @@
       {% endif %}
     </div>
   </div>
-  <main style="margin-left:10%;">
+  <main style="margin-left:10%;position:fixed;">
     {% block body %}
 
     {% endblock %}
