@@ -39,12 +39,24 @@
 <ul>
   {% for flit in flits %}
     <div class="flit">
-      <div class="flit-username">
+      <div class="flit-username flit-timestamp">
         <a href="/user/{{ flit.userHandle }}">{{ flit.username }}</a>&#160;&#160;
         <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle }}</a>
+        <span>&#160;·&#160;</span>
+        <a href="/flits/{{ flit.id }}" class="user-handle">{{ flit.timestamp|format_timestamp }}</a>
+        {% if loggedIn and session.username == "admin" %}
+          <a href="{{ url_for('delete_flit', flit_id=flit.id) }}" style="float: right;"><button style="border: none;"><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a>
+        {% endif %}
+        {% if loggedIn %}
+          <button onclick="openReportModal('{{ flit.id }}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>
+        {% endif %}
       </div>
       <div class="flit-content">
         <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
+        {% if flit.meme_link %}
+          <br>
+          <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
+        {% endif %}
       </div>
     </div>
   {% endfor %}
