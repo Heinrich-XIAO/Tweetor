@@ -342,10 +342,6 @@ hr {
   margin-bottom: 0rem;
 }
 
-a {
-  display: inline-block; max-width: 100px; vertical-align: middle;
-}
-
 #memeImages {
   width: 400px;
   height: 400px;
