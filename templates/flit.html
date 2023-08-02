@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ Flit.content }} {% endblock %}
+{% block title %}{{ flit.content }} {% endblock %}
 
 {% block body %}
 <br>
@@ -26,6 +26,5 @@
       <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
     {% endif %}
   </div>
-  <button class="like-btn" data-flit-id="{{ flit.id }}" style="border: none; margin: 0px;"><span class="iconify" data-icon="bx:like" data-width="27"></span></button>
 </div>
 {% endblock %}

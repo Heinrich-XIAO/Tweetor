@@ -111,10 +111,8 @@ sqlite3.connect(DATABASE).cursor().execute(
 """)
 
 def get_db():
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-        db.row_factory = sqlite3.Row
+    db = g._database = sqlite3.connect(DATABASE)
+    db.row_factory = sqlite3.Row
     return db
 
 def add_profanity_dm_column_if_not_exists():
@@ -266,6 +264,9 @@ def get_engaged_direct_messages(user_handle):
     """, (user_handle, user_handle))
 
     engaged_dms = cursor.fetchall()
+
+    db.commit()
+
     return engaged_dms
 
 
