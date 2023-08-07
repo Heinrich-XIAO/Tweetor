@@ -13,6 +13,8 @@ from flask import Flask, Response, render_template, request, redirect, url_for, 
 from flask_cors import CORS, cross_origin
 from flask_session import Session
 from sightengine.client import SightengineClient
+from flask_socketio import SocketIO, emit
+
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv('SIGHT_ENGINE_SECRET')
@@ -769,6 +771,22 @@ def get_captcha():
         if correct_captcha not in used_captchas:
             break
     return correct_captcha
+
+socketio = SocketIO()
+
+@socketio.on("connect")
+def handle_connect():
+    print("Client connected")
+
+@socketio.on("message")
+def message(data):
+    print("New Message")
+    print(data)
+    emit('chat', data, broadcast=True)
+
+socketio.init_app(app)
+
+socketio.run(app)
 
 if __name__ == "__main__":
     app.run(debug=False)

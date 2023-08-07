@@ -1,6 +1,8 @@
 flask
 flask_session
 flask_cors
+Flask_SocketIO
+gevent-websocket
 sightengine
 gevent
 requests

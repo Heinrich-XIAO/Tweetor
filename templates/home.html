@@ -9,7 +9,7 @@
 {% if loggedIn %}
   <div class="row">
     <div class="six columns offset-by-three">
-      <form action="/submit_flit" method="post" id="post_flit">
+      <form action="/submit_flit" method="post" id="post_flit" onsubmit="sendMessage(JSON.stringify(Object.fromEntries(new FormData(this))))">
         <input type="hidden" name="text0" id="text0">
         <input type="hidden" name="text1" id="text1">
         <input type="hidden" name="meme_link" id="meme_link">
@@ -37,6 +37,7 @@
 <br>
 <br>
 <br>
+<div id="flits">
 {% for flit in flits %}
   <div class="flit">
     <div class="flit-username flit-timestamp">
@@ -60,6 +61,7 @@
     </div>
   </div>
 {% endfor %}
+</div>
 
 <div class="form-popup" id="memePopup">
   <h1>Make-A-Meme</h1>
@@ -128,6 +130,18 @@ function formatflit(content, hashtag) {
     element.focus();
   }
 
+  socket.on("chat", (data) => {
+    setTimeout(async (data) => {
+      const res = await fetch('/');
+      const text = await res.text();
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(text, 'text/html');
+      console.log(doc)
+      document.getElementById("flits").innerHTML = doc.getElementById("flits").innerHTML;
+      const audio = new Audio('/static/notification.mp3');
+        audio.play();
+    }, 50 )
+  })
 </script>
 {% endif %}
 <script defer>
