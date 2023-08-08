@@ -772,7 +772,7 @@ def get_captcha():
             break
     return correct_captcha
 
-socketio = SocketIO()
+socketio = SocketIO(ping_timeout=3, ping_interval=1)
 
 @socketio.on("connect")
 def handle_connect():
