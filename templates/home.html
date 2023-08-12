@@ -130,18 +130,18 @@ function formatflit(content, hashtag) {
     element.focus();
   }
 
-  socket.on("chat", (data) => {
-    setTimeout(async (data) => {
-      const res = await fetch('/');
-      const text = await res.text();
-      let parser = new DOMParser();
-      let doc = parser.parseFromString(text, 'text/html');
-      console.log(doc)
-      document.getElementById("flits").innerHTML = doc.getElementById("flits").innerHTML;
-      const audio = new Audio('/static/notification.mp3');
-        audio.play();
-    }, 50 )
-  })
+  // socket.on("chat", (data) => {
+  //   setTimeout(async (data) => {
+  //     const res = await fetch('/');
+  //     const text = await res.text();
+  //     let parser = new DOMParser();
+  //     let doc = parser.parseFromString(text, 'text/html');
+  //     console.log(doc)
+  //     document.getElementById("flits").innerHTML = doc.getElementById("flits").innerHTML;
+  //     const audio = new Audio('/static/notification.mp3');
+  //       audio.play();
+  //   }, 50 )
+  // })
 </script>
 {% endif %}
 <script defer>

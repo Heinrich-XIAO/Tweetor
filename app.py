@@ -786,7 +786,7 @@ def message(data):
 
 socketio.init_app(app)
 
-socketio.run(app)
+# socketio.run(app)
 
 if __name__ == "__main__":
     app.run(debug=False)
