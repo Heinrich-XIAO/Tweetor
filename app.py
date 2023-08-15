@@ -520,8 +520,7 @@ def user_profile(username: str) -> Response:
         cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (logged_in_username, user["handle"]))
         is_following = cursor.fetchone() is not None
 
-    latest_tweet_time = flits[0]['timestamp']
-    latest_tweet_time = datetime.datetime.strptime(latest_tweet_time, "%Y-%m-%d %H:%M:%S")
+    latest_tweet_time = datetime.datetime.now()
     first_tweet_time = flits[-1]['timestamp']
     first_tweet_time = datetime.datetime.strptime(first_tweet_time, "%Y-%m-%d %H:%M:%S")
     print(first_tweet_time, type(first_tweet_time))
