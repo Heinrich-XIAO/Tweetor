@@ -296,7 +296,6 @@ def home() -> Response:
     else:
         return render_template("home.html", flits=flits, loggedIn=False, turbo=False)
 
-@sitemapper.include()
 @app.route("/submit_flit", methods=["POST"])
 def submit_flit() -> Response:
     content = str(request.form["content"])
