@@ -15,7 +15,6 @@ from flask_session import Session
 from sightengine.client import SightengineClient
 from flask_sitemapper import Sitemapper
 from flask_socketio import SocketIO, emit
-from flask_sitemap import Sitemap
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv('SIGHT_ENGINE_SECRET')
