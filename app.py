@@ -252,6 +252,26 @@ def create_admin_if_not_exists():
 
 create_admin_if_not_exists()
 
+def add_reflits_columns_if_not_exists():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("PRAGMA table_info(flits)")
+        columns = cursor.fetchall()
+        column_names = [column[1] for column in columns]
+
+        if 'is_reflit' not in column_names:
+            cursor.execute("ALTER TABLE flits ADD COLUMN is_reflit DEFAULT 0")
+            print("is_reflit column added to the flits table")
+            
+        if 'original_flit_id' not in column_names:
+            cursor.execute("ALTER TABLE flits ADD COLUMN original_flit_id INT DEFAULT -1")
+            print("original_flit_id column added to the flits table")
+        
+        db.commit()
+
+add_reflits_columns_if_not_exists()
+
 def row_to_dict(row):
     return {col[0]: row[idx] for idx, col in enumerate(row.description)}
 
@@ -285,6 +305,7 @@ def home() -> Response:
           
     flits = cursor.fetchall()
 
+    print(flits)
     if "username" in session:
         user_handle = session["handle"]
         engaged_dms = get_engaged_direct_messages(user_handle)
@@ -298,41 +319,63 @@ def home() -> Response:
 
 @app.route("/submit_flit", methods=["POST"])
 def submit_flit() -> Response:
-    content = str(request.form["content"])
-    meme_url = request.form["meme_link"]
-    if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
-        return render_template("error.html", error="Why is this meme not from tenor?")
-    if session.get("username") in muted:
-        return render_template("error.html", error="You were muted.")
-    if content.strip() == "" and not meme_url:
-        return render_template("error.html", error="Message was blank.")
-    if len(content) > 10000:
-        return render_template("error.html", error="Message was too long.")
-    if "username" not in session:
-        return render_template("error.html", error="You are not logged in.")
-    
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
-    user_turbo = cursor.fetchone()["turbo"]
+    if request.form.get('original_flit_id') is None:
+        content = str(request.form["content"])
+        meme_url = request.form["meme_link"]
+        if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
+            return render_template("error.html", error="Why is this meme not from tenor?")
+        if session.get("username") in muted:
+            return render_template("error.html", error="You were muted.")
+        if content.strip() == "" and not meme_url:
+            return render_template("error.html", error="Message was blank.")
+        if len(content) > 10000:
+            return render_template("error.html", error="Message was too long.")
+        if "username" not in session:
+            return render_template("error.html", error="You are not logged in.")
+        
+        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
+        user_turbo = cursor.fetchone()["turbo"]
+        
+        if user_turbo == 0 and (len(content) > 280 or "*" in content or "_" in content):
+            return render_template("error.html", error="You do not have Tweetor Turbo.")
+        
+        hashtag = request.form["hashtag"]
+        
+        # Use the Sightengine result directly to check for profanity
+        sightengine_result = is_profanity(content)
+        profane_flit = "no"
+        
+        if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
+            profane_flit = "yes"
+            return render_template("error.html", error="Do you really think that's appropriate?")
+        # Insert the flit into the database
+        cursor.execute("INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (session["username"], content, session["handle"], hashtag, profane_flit, meme_url, 0, -1))
+        db.commit()
+        db.close()
+        return redirect(url_for('home'))
     
-    if user_turbo == 0 and (len(content) > 280 or "*" in content or "_" in content):
-        return render_template("error.html", error="You do not have Tweetor Turbo.")
+    # Check for reflit
+    is_reflit = False
+    original_flit_id = request.form.get('original_flit_id') # get original_flit_id from the form data
+    if original_flit_id is not None:
+        # Look for the original flit in the database
+        cursor.execute("SELECT id FROM flits WHERE id = ?", (original_flit_id,))
+        original_flit = cursor.fetchone()
+
+        if original_flit:  # If the original flit exists
+            is_reflit = True
+            # Instead of using form content as new flit content, we simply state it's a reflit of another flit
+            content = "Reflit: " + str(original_flit_id)
     
-    hashtag = request.form["hashtag"]
-    
-    # Use the Sightengine result directly to check for profanity
-    sightengine_result = is_profanity(content)
-    profane_flit = "no"
-    
-    if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
-        profane_flit = "yes"
-        return render_template("error.html", error="Do you really think that's appropriate?")
-    
-    # Insert the flit into the database
-    cursor.execute("INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link) VALUES (?, ?, ?, ?, ?, ?)", (session["username"], content, session["handle"], hashtag, profane_flit, meme_url, ))
+    cursor.execute("INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (session["username"], "", session["handle"], "", "no", "", int(is_reflit), original_flit_id))
+       
     
     db.commit()
+    db.close()
     return redirect(url_for('home'))
 
 used_captchas = []
@@ -429,6 +472,11 @@ def singleflit(flit_id: str) -> Response:
     flit = c.fetchone()
 
     if flit:
+        original_flit = None
+        if flit["is_reflit"]==1:
+            c.execute("SELECT * FROM flits WHERE id = ?", (flit["original_flit_id"],))
+            original_flit = c.fetchone()
+            
         if "username" in session:
             conn = get_db()
             c = conn.cursor()
@@ -457,7 +505,7 @@ def singleflit(flit_id: str) -> Response:
                 conn.close()
 
         # Render the template with the flit's information
-        return render_template("flit.html", flit=flit, loggedIn=("username" in session), engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
+        return render_template("flit.html", flit=flit, loggedIn=("username" in session), original_flit=original_flit, engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
 
     # If the user doesn't exist, display an error message
     return redirect("/")
@@ -511,7 +559,7 @@ def user_profile(username: str) -> Response:
     if not user:
         return redirect("/home")
 
-    cursor.execute("SELECT * FROM flits WHERE userHandle = ? ORDER BY timestamp DESC", (username, ))
+    cursor.execute("SELECT * FROM flits WHERE userHandle = ? AND is_reflit=0 ORDER BY timestamp DESC", (username, ))
     flits = cursor.fetchall()
 
     is_following = False

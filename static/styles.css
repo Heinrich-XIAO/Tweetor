@@ -360,3 +360,28 @@ hr {
   max-width: 100px;
   width: 9%;
 }
+
+.retweet-button {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: #657786;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.retweet-button:hover {
+  color: #1DA1F2;
+}
+
+.retweet-button span {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+}
+
+.retweet-form {
+  margin-bottom: 0;
+}

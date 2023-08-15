@@ -52,7 +52,28 @@
       {% endif %}
     </div>
     <div class="flit-content">
-      <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
+      <a href="/flits/{{ flit.id }}">    
+        {% if flit.is_reflit %}
+          <!-- if the flit is a reflit, include the original flit's content -->
+          {% set original_flit = flit.original_flit_id %}
+          {% for item in flits %}
+              {% if item.id == flit.original_flit_id %}
+                  {% set original_flit = item.content %}
+                  <a href="{{url_for('singleflit', flit_id=flit.original_flit_id)}}">ReFlit: {{ original_flit }} {{item.hashtag}}</a>
+                  {% if item.meme_link %}
+                    <br>
+                    <a href="/flits/{{ item.id }}"><img src="{{ item.meme_link }}" alt="{{ item.content }}"></a>
+                  {% endif %}
+              {% endif %}
+          {% endfor %}
+        {% else %}
+          {{ flit.content|format_flit }} {{ flit.hashtag }}
+          <form action="{{ url_for('submit_flit') }}" method="POST" class="retweet-form">
+            <input type="hidden" name="original_flit_id" value="{{ flit.id }}">
+            <button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>
+          </form>
+        {% endif %}  
+      </a>
       {% if flit.meme_link %}
         <br>
         <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
