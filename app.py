@@ -298,7 +298,7 @@ def home() -> Response:
 def submit_flit() -> Response:
     content = str(request.form["content"])
     meme_url = request.form["meme_link"]
-    if not meme_url.startswith("https://media.tenor.com/"):
+    if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
         return render_template("error.html", error="Why is this meme not from tenor?")
     if session.get("username") in muted:
         return render_template("error.html", error="You were muted.")
