@@ -13,8 +13,9 @@ from flask import Flask, Response, render_template, request, redirect, url_for, 
 from flask_cors import CORS, cross_origin
 from flask_session import Session
 from sightengine.client import SightengineClient
+from flask_sitemapper import Sitemapper
 from flask_socketio import SocketIO, emit
-
+from flask_sitemap import Sitemap
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv('SIGHT_ENGINE_SECRET')
@@ -24,6 +25,8 @@ app.secret_key = "super secret key"
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+sitemapper = Sitemapper()
+sitemapper.init_app(app)
 
 # Register the custom filters
 app.jinja_env.filters['format_timestamp'] = filters.format_timestamp
@@ -271,7 +274,7 @@ def get_engaged_direct_messages(user_handle):
 
     return engaged_dms
 
-
+@sitemapper.include()
 @app.route("/")
 def home() -> Response:
     db = get_db()
@@ -294,6 +297,7 @@ def home() -> Response:
     else:
         return render_template("home.html", flits=flits, loggedIn=False, turbo=False)
 
+@sitemapper.include()
 @app.route("/submit_flit", methods=["POST"])
 def submit_flit() -> Response:
     content = str(request.form["content"])
@@ -336,6 +340,7 @@ def submit_flit() -> Response:
 used_captchas = []
 
 # Signup route
+@sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
 def signup() -> Response:
     error = None
@@ -382,6 +387,7 @@ def signup() -> Response:
 
 
 # Login route
+@sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
 def login() -> Response:
     if request.method == "POST":
@@ -407,8 +413,14 @@ def login() -> Response:
         return redirect("/")
     return render_template("login.html")
 
+c = sqlite3.connect(DATABASE).cursor()
 
+def get_all_flit_ids():
+    c.execute("SELECT id FROM flits")
+    flit_ids = [i[0] for i in c.fetchall()]
+    return flit_ids
 
+@sitemapper.include(url_variables={'flit_id': get_all_flit_ids()})
 @app.route('/flits/<flit_id>')
 def singleflit(flit_id: str) -> Response:
     conn = get_db()
@@ -486,12 +498,17 @@ def logout() -> Response:
         session.pop('username', None)
     return redirect("/")
 
+def get_all_user_handles():
+    c.execute("SELECT handle FROM users")
+    user_handles = [i[0] for i in c.fetchall()]
+    return user_handles
 
+@sitemapper.include(url_variables={'username': get_all_user_handles()})
 @app.route("/user/<username>")
 def user_profile(username: str) -> Response:
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    cursor.execute("SELECT * FROM users WHERE handle = ?", (username,))
     user = cursor.fetchone()
     if not user:
         return redirect("/home")
@@ -775,6 +792,10 @@ def get_captcha():
     return correct_captcha
 
 socketio = SocketIO(ping_timeout=2, ping_interval=1)
+
+@app.route("/sitemap.xml")
+def sitemap():
+  return sitemapper.generate()
 
 @socketio.on("connect")
 def handle_connect():
