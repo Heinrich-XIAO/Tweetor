@@ -385,3 +385,23 @@ hr {
 .retweet-form {
   margin-bottom: 0;
 }
+
+main {
+  width: 90%;
+  float: left; /* This will make the main element fill the remaining space */
+}
+
+/* This is the media query for smaller screens */
+@media screen and (max-width: 600px) {
+  /* This will override the default style when the screen width is less than or equal to 600px */
+  menu {
+    width: 100%; /* This will make the div element take up the full width of the screen */
+    min-width: auto; /* This will remove the minimum width constraint */
+    float: none; /* This will make the div element stop floating */
+  }
+
+  main {
+    width: 100%; /* This will make the main element take up the full width of the screen */
+    float: none; /* This will make the main element stop floating */
+  }
+}
