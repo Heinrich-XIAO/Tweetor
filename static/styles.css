@@ -386,11 +386,6 @@ hr {
   margin-bottom: 0;
 }
 
-main {
-  width: 90%;
-  float: left; /* This will make the main element fill the remaining space */
-}
-
 /* This is the media query for smaller screens */
 @media screen and (max-width: 600px) {
   /* This will override the default style when the screen width is less than or equal to 600px */
