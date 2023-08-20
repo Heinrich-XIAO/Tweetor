@@ -10,16 +10,13 @@
   <div class="twelve columns">
     <div>
       <h1>{{ user.username }}'s Profile</h1>
-      <h5>Activeness: {{ activeness }}</h5>
-      <div style="background-color: #333; width: max-content; border-radius: 10%;float: right;">
+      <div style="background-color: #333; width: max-content; border-radius: 10%;">
         {% for badge in badges %}
           <img src="{{ url_for('static', filename=badge[0]) }}" alt="{{ badge[1] }}" width="40px" style="padding: 5px;top: 50%;bottom: 50%;">
         {% endfor %}
         #{{ user.id-1 }}
       </div>
     </div>
-    <h5>This user was the #{{ user.id-1 }} user created.</h5><!-- -1 because the admin account is an account-->
-
     {% if loggedIn and session.username == "admin" %}
       <form action="{{ url_for('delete_user') }}" method="post">
         <input type="hidden" name="user_handle" value="{{ user.handle }}" />
