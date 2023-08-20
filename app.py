@@ -38,6 +38,8 @@ Session(app)
 
 DATABASE = "tweetor.db"
 
+staff_accounts = ["ItsMe", "Dude_Pog"]
+
 sqlite3.connect(DATABASE).cursor().execute(
     """
     CREATE TABLE IF NOT EXISTS flits  (
@@ -576,10 +578,17 @@ def user_profile(username: str) -> Response:
 
     diff = latest_tweet_time - first_tweet_time
     weeks = diff.total_seconds()/3600/24/7
-    activeness = round(0 if weeks == 0 else len(flits)/weeks*1000,2)
-    print(weeks, activeness)
+    activeness = round(0 if weeks == 0 else len(flits)/weeks*1000)
 
-    return render_template("user.html", user=user, loggedIn=("username" in session), flits=flits, is_following=is_following, activeness=activeness, engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
+    badges = []
+
+    if activeness > 5000:
+        badges.append(("badges/creator.png", "Activeness of over 5000"))
+    
+    if user['handle'] in staff_accounts:
+        badges.append(("badges/staff.png", "Staff at Tweetor!"))
+
+    return render_template("user.html", badges=badges, user=user, loggedIn=("username" in session), flits=flits, is_following=is_following, activeness=activeness, engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
 
 @app.route("/like_flit", methods=["POST"])
 def like_flit():
