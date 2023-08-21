@@ -644,7 +644,8 @@ def follow_user():
 
         return redirect(url_for("user_profile", username=following_username))
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(jsonify({"error": str(e)}), 500)
+        return "Internal Server Error 500"
     
 @app.route("/profanity")
 def profanity() -> Response:
