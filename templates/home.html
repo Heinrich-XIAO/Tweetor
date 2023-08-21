@@ -3,9 +3,9 @@
 {% block title %}Home{% endblock %}
 
 {% block body %}
-<br>
-<br>
 {% if loggedIn %}
+  <br>
+  <br>
   <div class="row">
     <div class="six columns offset-by-three">
       <form action="/submit_flit" method="post" id="post_flit" onsubmit="sendMessage(JSON.stringify(Object.fromEntries(new FormData(this))))">
@@ -32,10 +32,10 @@
       </form>
     </div>
   </div>
+  <br>
+  <br>
+  <br>
 {% endif %}
-<br>
-<br>
-<br>
 <div id="flits">
 {% for flit in flits %}
   <div class="flit">
