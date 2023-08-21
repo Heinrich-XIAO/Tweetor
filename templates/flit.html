@@ -40,7 +40,7 @@
   {% if not flit.is_reflit %}
   <form action="{{ url_for('submit_flit') }}" method="POST">
     <input type="hidden" name="original_flit_id" value="{{ flit.id }}">
-    <button type="submit">Reflit</button>
+    <button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>
   </form>
   {% endif %}
 </div>
