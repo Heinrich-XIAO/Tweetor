@@ -37,7 +37,7 @@
       <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
     {% endif %}
   </div>
-  {% if not flit.is_reflit %}
+  {% if not flit.is_reflit and loggedIn %}
   <form action="{{ url_for('submit_flit') }}" method="POST">
     <input type="hidden" name="original_flit_id" value="{{ flit.id }}">
     <button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>
