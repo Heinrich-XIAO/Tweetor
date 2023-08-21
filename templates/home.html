@@ -205,6 +205,7 @@ function formatflit(content, hashtag) {
         img.width = e.srcElement.width*3;
         img.dataset = e.srcElement.dataset;
         memeImages.innerHTML = '';
+        document.getElementById("addedElements").innerHTML = "";
         document.getElementById("addedElements").appendChild(img);
         document.getElementById("meme_link").value = img.src;
         closeMeme();
