@@ -1,4 +1,38 @@
 * {box-sizing: border-box;}
+body {
+  display: grid;
+  grid-template-columns: auto 0px; 
+}
+
+.top {
+  --offset: 50px; 
+  
+  position: sticky;
+  bottom: 20px;      
+  margin-right:10px; 
+  place-self: end;
+  margin-top: calc(100vh + var(--offset));
+  
+  /* visual styling */
+  text-decoration: none;
+  padding: 10px;
+  font-family: sans-serif;
+  color: #000;
+  background: #fff;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+p {
+  font-size: 25px;
+}
+
+/* remove the below if you don't want smooth scrolling */
+html,
+body {
+	scroll-behavior: smooth;
+}
+
 
 #memePopup {
   display: flex;
