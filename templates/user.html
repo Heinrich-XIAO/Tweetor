@@ -3,6 +3,10 @@
 {% block title %}{{ user.username }}'s profile {% endblock %}
 
 {% block body %}
+<div id="error">
+  <h1>Not Found</h1>
+  <p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>  
+</div>
 <br>
 <br>
 <br>
@@ -67,4 +71,25 @@
     </div>
   {% endfor %}
 </ul>
+<script>
+  // Get the current URL path
+  let path = window.location.pathname;
+  // Split the path by / and get the last part as the username
+  let username = "{{ user.username }}";
+  // Get the error element
+  let error = document.getElementById("error");
+  // Check if the username contains a forward slash
+  if (username.includes("/")) {
+    // Show the error element
+    error.style.display = "block";
+    // Set a timeout of 2 seconds to start fading out the error element
+    setTimeout(function() {
+      // Add a CSS class of fade-out to the error element
+      error.style.display = "none";
+    }, 2000);
+  } else {
+    error.style.display = "none";
+  }
+</script>
+
 {% endblock %}

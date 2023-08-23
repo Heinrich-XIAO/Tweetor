@@ -754,7 +754,7 @@ def get_all_user_handles():
 
 
 @sitemapper.include(url_variables={"username": get_all_user_handles()})
-@app.route("/user/<username>")
+@app.route("/user/<path:username>")
 def user_profile(username: str) -> Response:
     # Get a connection to the database
     conn = get_db()
@@ -1020,7 +1020,7 @@ def reported_flits():
     return render_template("reported_flits.html", reports=reports)
 
 
-@app.route("/dm/<receiver_handle>")
+@app.route("/dm/<path:receiver_handle>")
 def direct_messages(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
