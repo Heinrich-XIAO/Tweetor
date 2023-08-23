@@ -400,3 +400,57 @@ hr {
     float: none; /* This will make the main element stop floating */
   }
 }
+
+/* Define a keyframes animation named fade-out */
+@keyframes fade-out {
+  /* Set the opacity of the element to 1 at the start */
+  from {
+    opacity: 1;
+  }
+  /* Set the opacity of the element to 0 at the end */
+  to {
+    opacity: 0;
+  }
+}
+
+#error {
+  /* Add your other styles here */
+  position: fixed; /* Make the element fixed */
+  top: 0; /* Position it at the top of the viewport */
+  left: 0; /* Position it at the left of the viewport */
+  width: 100%; /* Make it span the entire width */
+  height: 100%; /* Make it span the entire height */
+  z-index: 9999; /* Make it on top of everything else */
+  background-color: #fff;
+  color: #000;
+}
+
+#error p, #error h1 {
+  all:initial;
+}
+
+#error h1 {
+  display: block;
+  font-size: 2em;
+  margin-block-start: 0.67em;
+  margin-block-end: 0.67em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  font-weight: bold;
+}
+
+#error p {
+  display: block;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+}
+
+/* Apply the fade-out animation to the error element when it has the class of fade-out */
+#error.fade-out {
+  /* Set the animation name, duration, and timing function */
+  animation: fade-out 2s ease-in-out;
+  /* Set the animation fill mode to forwards to keep the final state */
+  animation-fill-mode: forwards;
+}
