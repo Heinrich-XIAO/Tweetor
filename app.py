@@ -754,7 +754,7 @@ def get_all_user_handles():
 
 
 @sitemapper.include(url_variables={"username": get_all_user_handles()})
-@app.route("/user/<username>")
+@app.route("/user/<path:username>")
 def user_profile(username: str) -> Response:
     # Get a connection to the database
     conn = get_db()
