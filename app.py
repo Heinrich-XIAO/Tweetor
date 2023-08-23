@@ -1053,7 +1053,7 @@ def direct_messages(receiver_handle):
     )
 
 
-@app.route("/submit_dm/<receiver_handle>", methods=["POST"])
+@app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
 def submit_dm(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
