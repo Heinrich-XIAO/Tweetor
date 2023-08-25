@@ -21,10 +21,11 @@ body {
   background: #fff;
   border-radius: 100px;
   white-space: nowrap;
+  float: right;
 }
 
-p {
-  font-size: 25px;
+.top:hover, .top a:hover {
+  color: #444;
 }
 
 /* remove the below if you don't want smooth scrolling */
