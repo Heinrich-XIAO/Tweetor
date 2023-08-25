@@ -1,15 +1,19 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ user.username }}'s profile {% endblock %}
+{% block title %}{{ user.username|striptags }}'s profile {% endblock %}
 
 {% block body %}
+<div id="error">
+  <h1>Not Found</h1>
+  <p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>  
+</div>
 <br>
 <br>
 <br>
 <div class="row">
   <div class="twelve columns">
     <div>
-      <h1>{{ user.username }}'s Profile</h1>
+      <h1>{{ user.username|striptags }}'s Profile</h1>
       <div style="background-color: #333; width: max-content; border-radius: 10%;">
         {% for badge in badges %}
           <img src="{{ url_for('static', filename=badge[0]) }}" alt="{{ badge[1] }}" width="40px" style="padding: 5px;top: 50%;bottom: 50%;">
@@ -46,8 +50,8 @@
   {% for flit in flits %}
     <div class="flit">
       <div class="flit-username flit-timestamp">
-        <a href="/user/{{ flit.userHandle }}">{{ flit.username }}</a>&#160;&#160;
-        <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle }}</a>
+        <a href="/user/{{ flit.userHandle }}">{{ flit.username|striptags }}</a>&#160;&#160;
+        <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle|striptags }}</a>
         <span>&#160;·&#160;</span>
         <a href="/flits/{{ flit.id }}" class="user-handle">{{ flit.timestamp|format_timestamp }}</a>
         {% if loggedIn and session.username == "admin" %}
@@ -58,7 +62,7 @@
         {% endif %}
       </div>
       <div class="flit-content">
-        <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
+        <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit|striptags }} {{ flit.hashtag|striptags }}</a>
         {% if flit.meme_link %}
           <br>
           <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
@@ -67,4 +71,25 @@
     </div>
   {% endfor %}
 </ul>
+<script>
+  // Get the current URL path
+  let path = window.location.pathname;
+  // Split the path by / and get the last part as the username
+  let username = "{{ user.username }}";
+  // Get the error element
+  let error = document.getElementById("error");
+  // Check if the username contains a forward slash
+  if (username.includes("/")) {
+    // Show the error element
+    error.style.display = "block";
+    // Set a timeout of 2 seconds to start fading out the error element
+    setTimeout(function() {
+      // Add a CSS class of fade-out to the error element
+      error.style.display = "none";
+    }, 2000);
+  } else {
+    error.style.display = "none";
+  }
+</script>
+
 {% endblock %}

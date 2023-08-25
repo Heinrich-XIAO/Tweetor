@@ -9,13 +9,13 @@
 {% for flit in profane_flit %}
   <div class="flit">
     <div class="flit-username flit-timestamp">
-      <a href="/user/{{ flit.userHandle }}">{{ flit.username }}</a>&#160;&#160;
-      <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle }}</a>
+      <a href="/user/{{ flit.userHandle }}">{{ flit.username|striptags }}</a>&#160;&#160;
+      <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle|striptags }}</a>
       <span>&#160;·&#160;</span>
       <a href="/flits/{{ flit.id }}" class="user-handle">{{ flit.timestamp|format_timestamp }}</a>
     </div>
     <div class="flit-content">
-      <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit }} {{ flit.hashtag }}</a>
+      <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit|striptags }} {{ flit.hashtag|striptags }}</a>
     </div>
   </div>
 {% endfor %}
