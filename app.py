@@ -340,25 +340,41 @@ def get_engaged_direct_messages(user_handle):
 @sitemapper.include()
 @app.route("/")
 def home() -> Response:
+    # Get a connection to the database
     db = get_db()
+
+    # Create a cursor to interact with the database
     cursor = db.cursor()
+
+    # Check if the user is logged in and is an admin
     if "username" in session and session["handle"] == "admin":
+        # If admin, retrieve all flits regardless of content
         cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
     else:
+        # If not admin, retrieve only non-profane flits
         cursor.execute(
             "SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY timestamp DESC"
         )
 
+    # Fetch the results of the SQL query
     flits = cursor.fetchall()
 
+    # Print the fetched flits (for debugging purposes)
     print(flits)
+
+    # Check if the user is logged in
     if "username" in session:
+        # Get the user's handle from the session
         user_handle = session["handle"]
+
+        # Get the list of engaged direct messages for the user
         engaged_dms = get_engaged_direct_messages(user_handle)
 
+        # Query the database to check if the user has turbo status
         cursor.execute("SELECT turbo FROM users WHERE handle = ?", (user_handle,))
         turbo = cursor.fetchone()["turbo"] == 1
 
+        # Render the home template with user-specific data
         return render_template(
             "home.html",
             flits=flits,
@@ -367,22 +383,35 @@ def home() -> Response:
             engaged_dms=engaged_dms,
         )
     else:
+        # Render the home template without user-specific data since not logged in
         return render_template("home.html", flits=flits, loggedIn=False, turbo=False)
 
 
 @app.route("/submit_flit", methods=["POST"])
 def submit_flit() -> Response:
+    # Get a connection to the database
     db = get_db()
+
+    # Create a cursor to interact with the database
     cursor = db.cursor()
+
+    # Check if the original_flit_id field is present in the form data
     if request.form.get("original_flit_id") is None:
+        # Extract form data for the new flit
         content = str(request.form["content"])
         meme_url = request.form["meme_link"]
+
+        # Validate meme URL format
         if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
             return render_template(
                 "error.html", error="Why is this meme not from tenor?"
             )
+
+        # Check if the user is muted
         if session.get("username") in muted:
             return render_template("error.html", error="You were muted.")
+
+        # Check for various content validation conditions
         if content.strip() == "" and not meme_url:
             return render_template("error.html", error="Message was blank.")
         if len(content) > 10000:
@@ -390,18 +419,18 @@ def submit_flit() -> Response:
         if "username" not in session:
             return render_template("error.html", error="You are not logged in.")
 
+        # Check user's turbo status and content length/type
         cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"],))
         user_turbo = cursor.fetchone()["turbo"]
-
         if user_turbo == 0 and (len(content) > 280 or "*" in content or "_" in content):
             return render_template("error.html", error="You do not have Tweetor Turbo.")
 
+        # Extract and validate hashtag from form data
         hashtag = request.form["hashtag"]
 
-        # Use the Sightengine result directly to check for profanity
+        # Use the Sightengine result to check for profanity
         sightengine_result = is_profanity(content)
         profane_flit = "no"
-
         if (
             sightengine_result["status"] == "success"
             and len(sightengine_result["profanity"]["matches"]) > 0
@@ -410,7 +439,8 @@ def submit_flit() -> Response:
             return render_template(
                 "error.html", error="Do you really think that's appropriate?"
             )
-        # Insert the flit into the database
+
+        # Insert the new flit into the database
         cursor.execute(
             "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -430,9 +460,7 @@ def submit_flit() -> Response:
 
     # Check for reflit
     is_reflit = False
-    original_flit_id = request.form.get(
-        "original_flit_id"
-    )  # get original_flit_id from the form data
+    original_flit_id = request.form.get("original_flit_id")  # Get original_flit_id from form data
     if original_flit_id is not None:
         # Look for the original flit in the database
         cursor.execute("SELECT id FROM flits WHERE id = ?", (original_flit_id,))
@@ -440,9 +468,10 @@ def submit_flit() -> Response:
 
         if original_flit:  # If the original flit exists
             is_reflit = True
-            # Instead of using form content as new flit content, we simply state it's a reflit of another flit
+            # Instead of using form content as new flit content, indicate it's a reflit
             content = "Reflit: " + str(original_flit_id)
 
+    # Insert the reflit or empty flit into the database
     cursor.execute(
         "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (
@@ -470,6 +499,8 @@ used_captchas = []
 @app.route("/signup", methods=["GET", "POST"])
 def signup() -> Response:
     error = None
+
+    # If the HTTP request method is POST, handle form submission
     if request.method == "POST":
         username = request.form["username"]
         handle = username
@@ -477,25 +508,37 @@ def signup() -> Response:
         passwordConformation = request.form["passwordConformation"]
         user_captcha_input = request.form["input"]
         correct_captcha = request.form["correct_captcha"]
+
+        # Prevent spam by checking if the captcha was already used
         if correct_captcha in used_captchas:
             return "Why did you try to spam accounts bruh?"
         used_captchas.append(correct_captcha)
 
+        # Check if the user-provided captcha input matches the correct captcha
         if user_captcha_input != correct_captcha:
             return redirect("/signup")
 
+        # Check if the provided passwords match
         if password != passwordConformation:
             return redirect("/signup")
 
+        # Get a connection to the database
         db = get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
 
+        # Create a cursor to interact with the database
+        cursor = db.cursor()
+
+        # Check if the username already exists in the database
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        
+        # If the username is taken, modify the handle to make it unique
         if len(cursor.fetchall()) != 0:
             handle = f"{username}{len(cursor.fetchall())}"
 
+        # Hash the password before storing it in the database
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
+        # Insert the new user data into the database
         cursor.execute(
             "INSERT INTO users (username, password, handle, turbo) VALUES (?, ?, ?, ?)",
             (username, hashed_password, handle, 0),
@@ -503,12 +546,18 @@ def signup() -> Response:
         db.commit()
         db.close()
 
+        # Set session data for the newly registered user
         session["handle"] = handle
         session["username"] = username
+
+        # Redirect to the home page
         return redirect("/")
 
+    # If the user is already logged in, redirect to the home page
     if "username" in session:
         return redirect("/")
+
+    # Render the signup template with potential error messages
     return render_template("signup.html", error=error)
 
 
@@ -516,27 +565,44 @@ def signup() -> Response:
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
 def login() -> Response:
+    # Handle form submission if the request method is POST
     if request.method == "POST":
         handle = request.form["handle"]
         password = request.form["password"]
 
+        # Get a connection to the database
         db = get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM users WHERE handle = ?", (handle,))
 
+        # Create a cursor to interact with the database
+        cursor = db.cursor()
+
+        # Query the database for the user with the provided handle
+        cursor.execute("SELECT * FROM users WHERE handle = ?", (handle,))
         users = cursor.fetchall()
+
+        # If there is no or more than one matching user, redirect to the login page
         if len(users) != 1:
             return redirect("/login")
+
+        # Hash the provided password to check against the stored hashed password
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
+
+        # If the password matches the stored hashed password, set session data for the user
         if users[0]["password"] == hashed_password:
             session["handle"] = handle
             session["username"] = users[0]["username"]
         else:
+            # If the password doesn't match, redirect to the login page
             return redirect("/login")
+
+        # Redirect the user to the home page after successful login
         return redirect("/")
 
+    # If the user is already logged in, redirect to the home page
     if "username" in session:
         return redirect("/")
+
+    # Render the login template for users who are not logged in
     return render_template("login.html")
 
 
@@ -552,22 +618,25 @@ def get_all_flit_ids():
 @sitemapper.include(url_variables={"flit_id": get_all_flit_ids()})
 @app.route("/flits/<flit_id>")
 def singleflit(flit_id: str) -> Response:
+    # Get a connection to the database
     conn = get_db()
+
+    # Create a cursor to interact with the database
     c = conn.cursor()
 
-    # Get the flit's information from the database
+    # Retrieve the specified flit's information from the database
     c.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
     flit = c.fetchone()
 
     if flit:
         original_flit = None
         if flit["is_reflit"] == 1:
+            # Retrieve the original flit's information if this flit is a reflit
             c.execute("SELECT * FROM flits WHERE id = ?", (flit["original_flit_id"],))
             original_flit = c.fetchone()
 
         if "username" in session:
-            conn = get_db()
-            c = conn.cursor()
+            # If the user is logged in, check and update their interests in hashtags
             c.execute(
                 "SELECT * FROM interests WHERE user=? AND hashtag=?",
                 (
@@ -576,9 +645,9 @@ def singleflit(flit_id: str) -> Response:
                 ),
             )
             interests = c.fetchall()
+
+            # Update user's interest in the hashtag if it exists, otherwise add a new interest
             if len(interests) == 0:
-                conn = get_db()
-                c = conn.cursor()
                 c.execute(
                     "INSERT INTO interests (user, hashtag, importance) VALUES (?, ?, ?)",
                     (
@@ -587,12 +656,8 @@ def singleflit(flit_id: str) -> Response:
                         1,
                     ),
                 )
-
                 conn.commit()
-                conn.close()
             else:
-                conn = get_db()
-                c = conn.cursor()
                 c.execute(
                     "UPDATE interests SET importance=? WHERE user=? AND hashtag=?",
                     (
@@ -602,7 +667,6 @@ def singleflit(flit_id: str) -> Response:
                     ),
                 )
                 conn.commit()
-                conn.close()
 
         # Render the template with the flit's information
         return render_template(
@@ -615,7 +679,7 @@ def singleflit(flit_id: str) -> Response:
             else get_engaged_direct_messages(session["username"]),
         )
 
-    # If the user doesn't exist, display an error message
+    # If the flit doesn't exist, redirect to the home page
     return redirect("/")
 
 
@@ -673,9 +737,13 @@ def search() -> Response:
 
 @app.route("/logout", methods=["GET", "POST"])
 def logout() -> Response:
+    # Check if the user is logged in
     if "username" in session:
+        # Remove session data for the user
         session.pop("handle", None)
         session.pop("username", None)
+    
+    # Redirect the user to the home page, whether they were logged in or not
     return redirect("/")
 
 
@@ -686,21 +754,30 @@ def get_all_user_handles():
 
 
 @sitemapper.include(url_variables={"username": get_all_user_handles()})
-@app.route("/user/<username>")
+@app.route("/user/<path:username>")
 def user_profile(username: str) -> Response:
+    # Get a connection to the database
     conn = get_db()
+
+    # Create a cursor to interact with the database
     cursor = conn.cursor()
+
+    # Query the database for the user profile with the specified username
     cursor.execute("SELECT * FROM users WHERE handle = ?", (username,))
     user = cursor.fetchone()
+
+    # If the user doesn't exist, redirect to the home page
     if not user:
         return redirect("/home")
 
+    # Query the database for the user's non-reflit flits, ordered by timestamp
     cursor.execute(
         "SELECT * FROM flits WHERE userHandle = ? AND is_reflit=0 ORDER BY timestamp DESC",
         (username,),
     )
     flits = cursor.fetchall()
 
+    # Check if the logged-in user is following this user's profile
     is_following = False
     if "username" in session:
         logged_in_username = session["username"]
@@ -710,24 +787,25 @@ def user_profile(username: str) -> Response:
         )
         is_following = cursor.fetchone() is not None
 
+    # Calculate the user's activeness based on their tweet frequency
     latest_tweet_time = datetime.datetime.now()
     first_tweet_time = flits[-1]["timestamp"]
     first_tweet_time = datetime.datetime.strptime(first_tweet_time, "%Y-%m-%d %H:%M:%S")
-    print(first_tweet_time, type(first_tweet_time))
-    print(latest_tweet_time, type(latest_tweet_time))
-
     diff = latest_tweet_time - first_tweet_time
     weeks = diff.total_seconds() / 3600 / 24 / 7
     activeness = round(0 if weeks == 0 else len(flits) / weeks * 1000)
 
+    # Initialize a list for user badges
     badges = []
 
+    # Add badges based on activeness and staff status
     if activeness > 5000:
         badges.append(("badges/creator.png", "Activeness of over 5000"))
 
     if user["handle"] in staff_accounts:
         badges.append(("badges/staff.png", "Staff at Tweetor!"))
 
+    # Render the user profile template with relevant data
     return render_template(
         "user.html",
         badges=badges,
@@ -942,7 +1020,7 @@ def reported_flits():
     return render_template("reported_flits.html", reports=reports)
 
 
-@app.route("/dm/<receiver_handle>")
+@app.route("/dm/<path:receiver_handle>")
 def direct_messages(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
@@ -975,7 +1053,7 @@ def direct_messages(receiver_handle):
     )
 
 
-@app.route("/submit_dm/<receiver_handle>", methods=["POST"])
+@app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
 def submit_dm(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
