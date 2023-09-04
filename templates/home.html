@@ -195,7 +195,7 @@ function formatflit(content, hashtag) {
       const img = document.createElement("img");
 
       // Set the src attribute to the gif url
-      img.src = result.media_formats.gif.url;
+      img.src = result.media_formats.webm.url;
       img.height = 100;
       img.dataset['id'] = result.id;
       img.onclick = (e) => {
