@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="utf-8">
   <title>{% block title %}{% endblock %} | Tweetor</title>
   <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
@@ -31,7 +32,7 @@
   </script>
 </head>
 <body>
-  <div class="w3-sidebar w3-black w3-bar-block menu" style="width:10%;border-right: 1px solid #555;min-width: 60px;">
+  <div class="w3-sidebar w3-black w3-bar-block menu">
     <div class="logo">
       <a href="/">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="fliter Logo">
@@ -57,7 +58,7 @@
       {% endif %}
     </div>
   </div>
-  <main style="margin-left:10%;">
+  <main>
     {% block body %}
 
     {% endblock %}
@@ -65,11 +66,11 @@
       <form action="{{ url_for('report_flit') }}" class="form-container" method="post">
         <h1>Report flit</h1>
       
-        <label for="flit_id">flit ID (Do not change if filled out automatically): </label>
-        <input type="number" name="flit_id" id="modalflitId"/>
+        <label for="modalflitId">flit ID (Do not change if filled out automatically): </label>
+        <input type="number" name="flit_id" id="modalflitId" placeholder="Flit ID: "/>
       
-        <label for="reason"><b>Reason: </b></label>
-        <input type="text" placeholder="Enter Reason" name="reason" required>
+        <label for="reportReason"><b>Reason: </b></label>
+        <input type="text" placeholder="Enter Reason" name="reason" id="reportReason" required>
       
         <button type="submit" class="btn">Submit Report</button>
         <button type="button" class="btn cancel" onclick="closeForm()">Cancel</button>

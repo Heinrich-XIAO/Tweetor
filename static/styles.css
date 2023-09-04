@@ -512,18 +512,28 @@ hr {
   margin-bottom: 0;
 }
 
+main {
+  margin-left: 10%;
+}
+
+.menu {
+  width:10%;
+  border-right: 1px solid #555;
+  min-width: 60px;
+}
+
 /* This is the media query for smaller screens */
 @media screen and (max-width: 600px) {
   /* This will override the default style when the screen width is less than or equal to 600px */
   menu {
-    width: 100%; /* This will make the div element take up the full width of the screen */
-    min-width: auto; /* This will remove the minimum width constraint */
-    float: none; /* This will make the div element stop floating */
+    width: 100% !important; /* This will make the div element take up the full width of the screen */
+    min-width: auto !important; /* This will remove the minimum width constraint */
+    float: none !important; /* This will make the div element stop floating */
   }
 
   main {
-    width: 100%; /* This will make the main element take up the full width of the screen */
-    float: none; /* This will make the main element stop floating */
+    width: 100% !important; /* This will make the main element take up the full width of the screen */
+    float: none !important; /* This will make the main element stop floating */
   }
 }
 
