@@ -51,7 +51,7 @@ pip install -r requirements.txt
 6. Run the application:
 
 ``
-python main.py
+python app.py
 ``
 
 7. Open your web browser and visit `http://localhost:5000` to access Tweetor.
