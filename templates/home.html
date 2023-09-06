@@ -62,7 +62,7 @@
                   <a href="{{url_for('singleflit', flit_id=flit.original_flit_id)}}">ReFlit: {{ original_flit }} {{item.hashtag}}</a>
                   {% if item.meme_link %}
                     <br>
-                    <a href="/flits/{{ item.id }}"><img src="{{ item.meme_link }}" alt="{{ item.content }}"></a>
+                    <a href="/flits/{{ item.id }}"><img src="{{ item.meme_link }}" alt="{{ item.content }}" loading="lazy"></a>
                   {% endif %}
               {% endif %}
           {% endfor %}
@@ -72,7 +72,7 @@
       </a>
       {% if flit.meme_link %}
         <br>
-        <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
+        <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}" loading="lazy"></a>
       {% endif %}
       {% if loggedIn and not flit.is_reflit %}
         <form action="{{ url_for('submit_flit') }}" method="POST" class="retweet-form">

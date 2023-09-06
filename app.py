@@ -359,9 +359,6 @@ def home() -> Response:
     # Fetch the results of the SQL query
     flits = cursor.fetchall()
 
-    # Print the fetched flits (for debugging purposes)
-    print(flits)
-
     # Check if the user is logged in
     if "username" in session:
         # Get the user's handle from the session
@@ -949,8 +946,6 @@ def is_profanity(text):
 
     response = requests.post(api_url, data=data)
     result = response.json()
-
-    print(f"Sightengine result: {result}")  # Debugging: Print the result
 
     return result  # Return the result instead of an empty list
 
