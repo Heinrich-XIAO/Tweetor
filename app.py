@@ -499,7 +499,7 @@ def signup() -> Response:
 
     # If the HTTP request method is POST, handle form submission
     if request.method == "POST":
-        username = request.form["username"]
+        username = request.form["username"].strip()
         handle = username
         password = request.form["password"]
         passwordConformation = request.form["passwordConformation"]
