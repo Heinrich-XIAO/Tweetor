@@ -1,5 +1,22 @@
 console.log("Leaderboard.js loaded");
 
+function isWithinLastDays(dateString, days) {
+  // Parse the input date string into a Date object
+  const inputDate = new Date(dateString);
+
+  // Get the current date
+  const currentDate = new Date();
+
+  // Calculate the time difference in milliseconds
+  const timeDifference = currentDate - inputDate;
+
+  // Calculate the number of milliseconds in 7 days
+  const sevenDaysInMilliseconds = days * 24 * 60 * 60 * 1000;
+
+  // Check if the time difference is less than 7 days
+  return timeDifference <= sevenDaysInMilliseconds;
+}
+
 async function loadLeaderboard() {
   // Get leaderboard div
   const leaderboardElement = document.getElementById("leaderboard");
@@ -14,6 +31,9 @@ async function loadLeaderboard() {
       userData[handle]++;
     } else {
       userData[handle] = 1;
+    }
+    if (!isWithinLastDays(flit["timestamp"], 30)) {
+      break;
     }
   }
   const sortedUserData = Object.entries(userData).sort((a, b) => b[1] - a[1]);
