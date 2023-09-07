@@ -590,3 +590,22 @@ main {
   /* Set the animation fill mode to forwards to keep the final state */
   animation-fill-mode: forwards;
 }
+
+
+/* Leaderboard styles */
+.rankNumber {
+  margin-left: 20px;
+}
+
+.leaderboardHandle {
+  text-align: center;
+}
+
+.leaderboardScore {
+  float: right;
+  margin-right: 20px;
+}
+
+.leaderboard {
+  width: 100%;
+}
