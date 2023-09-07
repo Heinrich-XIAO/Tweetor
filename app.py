@@ -602,6 +602,14 @@ def login() -> Response:
     # Render the login template for users who are not logged in
     return render_template("login.html")
 
+@app.route('/leaderboard')
+def leaderboard():
+    return render_template('leaderboard.html',
+        loggedIn=("username" in session),
+        engaged_dms=[]
+        if "username" not in session
+        else get_engaged_direct_messages(session["username"])
+    )
 
 c = sqlite3.connect(DATABASE).cursor()
 
