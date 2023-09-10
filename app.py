@@ -1064,6 +1064,9 @@ def submit_dm(receiver_handle):
     sender_handle = session["handle"]
     content = request.form["content"]
 
+    if len(content) > 1000:
+        return render_template("error.html", error="Too many characters in DM")
+
     sightengine_result = is_profanity(content)
     profane_dm = "no"
 
