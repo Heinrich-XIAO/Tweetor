@@ -26,7 +26,11 @@ async function loadLeaderboard() {
   let userData = {};
   for (let i = 0; i < json.length; i++) {
     const flit = json[i];
-    const handle = flit["userHandle"]
+    const handle = flit["userHandle"];
+    console.log(flit);
+    if (flit['is_reflit'] == 1) {
+      continue;
+    }
     if (userData[handle] != undefined) {
       userData[handle]++;
     } else {
