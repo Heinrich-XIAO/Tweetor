@@ -21,14 +21,6 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "h9gh740rsd");
   </script>
-  <script>
-    // const socket = io();
-
-
-    function sendMessage(data) {
-      // socket.emit("message", data)
-    }
-  </script>
 </head>
 <body>
   <div class="w3-sidebar w3-black w3-bar-block menu">
@@ -77,6 +69,8 @@
     </div>
 
   </div>
+
+  <script src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
   <script>
     const reportModal = document.getElementById('reportModal');
     const modalflitId = document.getElementById('modalflitId');
