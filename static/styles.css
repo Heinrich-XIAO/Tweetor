@@ -321,7 +321,7 @@ body {
   text-decoration: underline;
 }
 
-.flit-username a:not(.user-handle), .flit-content a, .flit-content a:hover {
+.flit-username a:not(.user-handle), .flit-content > a, .flit-content > a:hover {
   color: #fff;
 }
 

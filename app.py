@@ -1158,5 +1158,24 @@ def get_captcha():
         if correct_captcha not in used_captchas:
             break
     return correct_captcha
+
+@app.route("/api/flit")
+def flitAPI():
+    try:
+        flit_id = int(request.args.get("flit_id"))
+    except ValueError:
+        return jsonify("Flit ID is invalid")
+    db = get_db()
+    c = db.cursor()
+    c.execute('SELECT * FROM flits WHERE id=?', (flit_id,))
+    flit = c.fetchone()
+    
+    if flit['profane_flit'] == 'yes':
+        return "Flit is profane"
+    
+    return jsonify({
+        "flit": dict(flit)
+    })
+
 if __name__ == "__main__":
     app.run(debug=False)
