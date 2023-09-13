@@ -70,7 +70,6 @@
 
   </div>
 
-  <script src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
   <script>
     const reportModal = document.getElementById('reportModal');
     const modalflitId = document.getElementById('modalflitId');
@@ -90,6 +89,7 @@
       reportModal.style.display = 'none';
     }
   </script>
+  <script src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
   {% if loggedIn %}
     <script>
       document.querySelectorAll(".like-btn").forEach((btn) => {
