@@ -51,15 +51,7 @@ async function renderSingleFlit(flit) {
     flit_data_div.appendChild(handle);
     flit_data_div.innerHTML += '&#160;·&#160;';
     flit_data_div.appendChild(timestampElement);
-    flit_data_div.innerHTML += `<button style="float: right; border: none;" class='reportButton'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
-    flit_data_div.getElementsByClassName('reportButton')[0].dataset.flitId = flitId;
-    flit_data_div.getElementsByClassName('reportButton')[0].addEventListener('onclick', (e) => {
-      const reportModal = document.getElementById('reportModal');
-      const modalflitId = document.getElementById('modalflitId');
-      modalflitId.value = e.src.dataset.flitId;
-      reportModal.style.display = 'block';
-      console.log(e.src.dataset.flitId);
-    });
+    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openReportModal(${flitId})'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
 
     flit.appendChild(flit_data_div);
 
