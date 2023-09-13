@@ -609,3 +609,8 @@ main {
 .leaderboard {
   width: 100%;
 }
+
+/* ReFlit Styles */
+.originalFlit {
+  border-radius: 10px;
+}
