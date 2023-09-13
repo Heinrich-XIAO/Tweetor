@@ -51,6 +51,8 @@ async function renderSingleFlit(flit) {
     flit_data_div.appendChild(handle);
     flit_data_div.innerHTML += '&#160;·&#160;';
     flit_data_div.appendChild(timestampElement);
+    flit_data_div.innerHTML += `<button onclick="openReportModal('${flitId}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
+
 
     flit.appendChild(flit_data_div);
 
@@ -60,8 +62,10 @@ async function renderSingleFlit(flit) {
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
       originalFlit.classList.add('flit');
+      originalFlit.classList.add('originalFlit');
       originalFlit.dataset.flitId = json.flit.original_flit_id;
       renderSingleFlit(originalFlit);
+      flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
       flit.appendChild(flitContentDiv);
     } else {
