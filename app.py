@@ -777,7 +777,7 @@ def user_profile(username: str) -> Response:
 
     # Query the database for the user's non-reflit flits, ordered by timestamp
     cursor.execute(
-        "SELECT * FROM flits WHERE userHandle = ? AND is_reflit=0 ORDER BY timestamp DESC",
+        "SELECT * FROM flits WHERE userHandle = ? ORDER BY timestamp DESC",
         (username,),
     )
     flits = cursor.fetchall()

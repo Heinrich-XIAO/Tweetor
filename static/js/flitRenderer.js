@@ -12,9 +12,11 @@ async function renderSingleFlit(flit) {
 
     const username = document.createElement('a');
     username.innerText = json.flit.username;
+    username.href = `user/${json.flit.userHandle}`;
 
     const handle = document.createElement('a');
     handle.innerText = '@' + json.flit.userHandle;
+    username.href = `user/${json.flit.userHandle}`;
     handle.classList.add("user-handle");
 
     let timestamp = new Date(json.flit.timestamp.replace(/-/g, "/").replace(/T/, " "));
