@@ -97,7 +97,7 @@ async function renderSingleFlit(flit) {
 
     flit.appendChild(reflitForm);
 
-    flit.innerHTML += ''
+    flit.innerHTML += '';
   }
   flit.href = `/flits/${flitId}`;
 }
