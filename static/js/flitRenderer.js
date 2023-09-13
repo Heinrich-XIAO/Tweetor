@@ -1,5 +1,14 @@
 console.log("Flit renderer loaded");
 
+// Function to get the abbreviated month name
+function getMonthAbbreviation(date) {
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+  return months[date.getMonth()];
+}
+
 async function renderSingleFlit(flit) {
   const flitId = flit.dataset.flitId;
   const res = await fetch(`/api/flit?flit_id=${flitId}`);
@@ -20,15 +29,6 @@ async function renderSingleFlit(flit) {
     handle.classList.add("user-handle");
 
     let timestamp = new Date(json.flit.timestamp.replace(/-/g, "/").replace(/T/, " "));
-
-    // Function to get the abbreviated month name
-    function getMonthAbbreviation(date) {
-      const months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-      ];
-      return months[date.getMonth()];
-    }
 
     // Format the Date object
     let now = new Date();
@@ -83,10 +83,21 @@ async function renderSingleFlit(flit) {
 
       flit.appendChild(flitContentDiv);
     }
-    flit.innerHTML += `<form action="/submit_flit" method="POST">
-      <input type="hidden" name="original_flit_id" value="${flitId}">
-      <button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>
-    </form>`;
+
+    const reflitForm = document.createElement('form');
+    reflitForm.action = '/submit_flit';
+    reflitForm.method = 'POST';
+
+    const reflitInput = document.createElement('input');
+    reflitInput.type = 'hidden';
+    reflitInput.name = 'original_flit_id';
+    reflitInput.value = flitId;
+    reflitForm.appendChild(reflitInput);
+    reflitForm.innerHTML += '<button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>';
+
+    flit.appendChild(reflitForm);
+
+    flit.innerHTML += ''
   }
   flit.href = `/flits/${flitId}`;
 }
