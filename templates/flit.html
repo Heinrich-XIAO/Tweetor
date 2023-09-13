@@ -6,42 +6,6 @@
 <br>
 <br>
 <br>
-<div class="flit">
-  <div class="flit-username flit-timestamp">
-    <a href="/user/{{ flit.userHandle }}">{{ flit.username|striptags }}</a>&#160;&#160;
-    <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle|striptags }}</a>
-    <span>&#160;·&#160;</span>
-    <a href="/flits/{{ flit.id }}" class="user-handle">{{ flit.timestamp|format_timestamp }}</a>
-    {% if loggedIn and session.username == "admin" %}
-      <a href="{{ url_for('delete_flit', flit_id=flit.id) }}" style="float: right;"><button style="border: none;"><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a>
-    {% endif %}
-    {% if loggedIn %}
-      <button onclick="openReportModal('{{ flit.id }}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>
-    {% endif %}
-  </div>
-  <div class="flit-content">
-    <a href="/flits/{{ flit.id }}">    
-      {% if flit.is_reflit %}
-        <!-- if the flit is a reflit, include the original flit's content -->
-        <a href="{{url_for('singleflit', flit_id=flit.original_flit_id)}}">ReFlit: {{ original_flit.content|striptags }} {{original_flit.hashtag|striptags}}</a>
-        {% if original_flit.meme_link %}
-          <br>
-          <a href="/flits/{{ original_flit.id }}"><img src="{{ original_flit.meme_link }}" alt="{{ original_flit.content }}"></a>
-        {% endif %}
-      {% else %}
-        {{ flit.content|format_flit|striptags }} {{ flit.hashtag|striptags }}
-      {% endif %}  
-    </a>
-    {% if flit.meme_link %}
-      <br>
-      <a href="/flits/{{ flit.id }}"><img src="{{ flit.meme_link }}" alt="{{ flit.content }}"></a>
-    {% endif %}
-  </div>
-  {% if not flit.is_reflit and loggedIn %}
-  <form action="{{ url_for('submit_flit') }}" method="POST">
-    <input type="hidden" name="original_flit_id" value="{{ flit.id }}">
-    <button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>
-  </form>
-  {% endif %}
+<div class="flit" data-flit-id="{{ flit.id }}">
 </div>
 {% endblock %}
