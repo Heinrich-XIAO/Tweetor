@@ -409,7 +409,7 @@ def submit_flit() -> Response:
             return render_template("error.html", error="You were muted.")
 
         # Check for various content validation conditions
-        if content.strip() == "" and not meme_url:
+        if content.strip() == "":
             return render_template("error.html", error="Message was blank.")
         if len(content) > 10000:
             return render_template("error.html", error="Message was too long.")
