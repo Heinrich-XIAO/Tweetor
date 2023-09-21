@@ -85,6 +85,81 @@
 {% endfor %}
 </div>
 
+<div id="loading" style="display: none;">Loading...</div>
+
+<script>
+let isLoading = false;
+let noMoreFlits = false;
+let page = 1;
+
+function fetchFlits() {
+    if (isLoading || noMoreFlits) {
+        return;
+    }
+    isLoading = true;
+    document.getElementById('loading').style.display = 'block';
+    fetch('/?page=' + page)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(flits) {
+            if (flits.length === 0) {
+                // No more flits to fetch
+                noMoreFlits = true;
+                return;
+            }
+            
+            var flitsContainer = document.getElementById('flits');
+            flitsContainer.innerHTML = ''; // Clear the previous flits
+
+            flits.forEach(function(flit) {
+                // Create the main flit div
+                var flitDiv = document.createElement('div');
+                flitDiv.className = 'flit';
+
+                // Create the username and timestamp div
+                var flitUsernameTimestampDiv = document.createElement('div');
+                flitUsernameTimestampDiv.className = 'flit-username flit-timestamp';
+
+                var usernameLink = document.createElement('a');
+                usernameLink.href = '/user/' + flit.userHandle;
+                usernameLink.textContent = flit.username;
+                flitUsernameTimestampDiv.appendChild(usernameLink);
+
+                // Add more elements as needed...
+
+                flitDiv.appendChild(flitUsernameTimestampDiv);
+
+                // Create the flit content div
+                var flitContentDiv = document.createElement('div');
+                flitContentDiv.className = 'flit-content';
+
+                var contentLink = document.createElement('a');
+                contentLink.href = '/flits/' + flit.id;
+                contentLink.textContent = flit.content;
+                flitContentDiv.appendChild(contentLink);
+
+                flitDiv.appendChild(flitContentDiv);
+                flitsContainer.appendChild(flitDiv);
+            });
+
+            isLoading = false;
+            page += 1;
+        });
+}
+
+fetchFlits();
+
+window.addEventListener('scroll', function(event) {
+    event.preventDefault(); // Prevent the default scroll behavior
+    console.log('Scroll event fired');
+    if (!noMoreFlits && Math.abs(window.scrollY - (document.body.scrollHeight - window.innerHeight)) < 1) {
+        console.log('Fetching flits');
+        fetchFlits();
+    }
+});
+</script>
+
 <div class="form-popup" id="memePopup">
   <h1>Make-A-Meme</h1>
 

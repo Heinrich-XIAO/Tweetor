@@ -43,5 +43,18 @@
     <button type="submit">Reflit</button>
   </form>
   {% endif %}
+  <form action="/submit_comment" method="post">
+    <label for="content">Comment:</label><br>
+    <textarea id="content" name="content" required></textarea><br>
+    <input type="hidden" name="flit_id" value="{{ flit.id }}">
+    <input type="submit" value="Submit">
+  </form>
+
+  <!-- Loop over the comments and display them -->
+  {% for comment in comments %}
+  <div class="comment">
+    <p><strong>{{ comment.username }}</strong>: {{ comment.content }}</p>
+  </div>
+  {% endfor %}
 </div>
 {% endblock %}

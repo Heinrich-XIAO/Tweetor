@@ -179,6 +179,19 @@ with sqlite3.connect(DATABASE) as conn:
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            profane_comment,
+            content TEXT,
+            flit_id INTEGER,
+            FOREIGN KEY(flit_id) REFERENCES flits(id)
+        )
+""")    
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS direct_messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_handle TEXT NOT NULL,
@@ -295,19 +308,31 @@ def get_engaged_direct_messages(user_handle):
 
     return engaged_dms
 
-@sitemapper.include()
-@app.route("/")
-def home() -> Response:
+
+@app.route("/", methods=["GET", "POST"])
+def home():
+    app.logger.info('Processing default request')
     db = get_db()
-    cursor = db.cursor()    
+    cursor = db.cursor()
+
+    # Pagination
+    page = int(request.args.get('page', 1))
+    per_page = 10  # Number of flits per page
+    offset = (page - 1) * per_page
+
     if "username" in session and session["handle"] == "admin":
-        cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
+        cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC LIMIT ? OFFSET ?", (per_page, offset))
     else:
-        cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY timestamp DESC")
-          
+        cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY timestamp DESC LIMIT ? OFFSET ?", (per_page, offset))
+
     flits = cursor.fetchall()
 
-    print(flits)
+    if request.args.get('page'):
+        # Convert each Row object in flits into a dictionary
+        flits = [dict(zip([column[0] for column in cursor.description], row)) for row in flits]
+        app.logger.info('Flits: %s', flits)
+        return jsonify(flits)
+
     if "username" in session:
         user_handle = session["handle"]
         engaged_dms = get_engaged_direct_messages(user_handle)
@@ -318,6 +343,8 @@ def home() -> Response:
         return render_template("home.html", flits=flits, loggedIn=True, turbo=turbo, engaged_dms=engaged_dms)
     else:
         return render_template("home.html", flits=flits, loggedIn=False, turbo=False)
+
+
 
 @app.route("/submit_flit", methods=["POST"])
 def submit_flit() -> Response:
@@ -463,6 +490,8 @@ def get_all_flit_ids():
     flit_ids = [i[0] for i in c.fetchall()]
     return flit_ids
 
+
+
 @sitemapper.include(url_variables={'flit_id': get_all_flit_ids()})
 @app.route('/flits/<flit_id>')
 def singleflit(flit_id: str) -> Response:
@@ -492,9 +521,7 @@ def singleflit(flit_id: str) -> Response:
                     flit["hashtag"],
                     1,
                 ))
-
                 conn.commit()
-                conn.close()
             else:
                 conn = get_db()
                 c = conn.cursor()
@@ -504,13 +531,50 @@ def singleflit(flit_id: str) -> Response:
                     flit["hashtag"],
                 ))
                 conn.commit()
-                conn.close()
 
-        # Render the template with the flit's information
-        return render_template("flit.html", flit=flit, loggedIn=("username" in session), original_flit=original_flit, engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']))
+        # Get the comments for the flit
+        c.execute("SELECT * FROM comments WHERE flit_id=?", (flit_id,))
+        comments = c.fetchall()
+
+        # Render the template with the flit's information and the comments
+        response = render_template("flit.html", flit=flit, loggedIn=("username" in session), original_flit=original_flit, engaged_dms=[] if "username" not in session else get_engaged_direct_messages(session['username']), comments=comments)
+
+        conn.close()
+        return response
 
     # If the user doesn't exist, display an error message
+    conn.close()
     return redirect("/")
+
+@app.route("/submit_comment", methods=["POST"])
+def submit_comment() -> Response:
+    db = get_db()
+    cursor = db.cursor()
+    if "username" not in session:
+        return render_template("error.html", error="You are not logged in.")
+    content = str(request.form["content"])
+    flit_id = request.form["flit_id"]
+    if content.strip() == "":
+        return render_template("error.html", error="Comment was blank.")
+    
+    # Use the Sightengine client to check for profanity
+    sightengine_result = is_profanity(content)
+    
+    # If the comment contains profanity, set profane_flit to "yes", else "no"
+    profane_flit = "yes" if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0 else "no"
+
+    # If the comment contains profanity, return an error message
+    if profane_flit == "yes":
+        return render_template("error.html", error="Do you really think that's appropriate?")
+    
+    # Insert the comment into the comments table
+    cursor.execute("INSERT INTO comments (username, content, flit_id, profane_comment) VALUES (?, ?, ?, ?)",
+            (session["username"], content, flit_id, profane_flit))
+    
+    db.commit()
+    db.close()
+    return redirect(url_for('home'))
+    
 
 @app.route('/api/search', methods=["GET"])
 def searchAPI() -> Response:
