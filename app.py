@@ -24,6 +24,8 @@ from flask_cors import CORS, cross_origin
 from flask_session import Session
 from sightengine.client import SightengineClient
 from flask_sitemapper import Sitemapper
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
@@ -35,6 +37,9 @@ app.config["CORS_HEADERS"] = "Content-Type"
 
 sitemapper = Sitemapper()
 sitemapper.init_app(app)
+
+# Rate limiting
+limiter = Limiter(get_remote_address, app=app)
 
 # Register the custom filters
 app.jinja_env.filters["format_timestamp"] = filters.format_timestamp
@@ -385,6 +390,7 @@ def home() -> Response:
 
 
 @app.route("/submit_flit", methods=["POST"])
+@limiter.limit("3/minute")
 def submit_flit() -> Response:
     # Get a connection to the database
     db = get_db()
