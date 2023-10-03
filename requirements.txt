@@ -2,6 +2,7 @@ flask
 flask_session
 flask_cors
 flask_sitemapper
+Flask-Limiter
 gevent-websocket
 sightengine
 gevent
