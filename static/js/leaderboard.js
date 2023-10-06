@@ -1,14 +1,19 @@
 console.log("Leaderboard.js loaded");
 
-function isWithinLastDays(dateString, days) {
+function timeDifferenceStr(a) {
   // Parse the input date string into a Date object
-  const inputDate = new Date(dateString);
+  const inputDate = new Date(a);
 
   // Get the current date
   const currentDate = new Date();
 
   // Calculate the time difference in milliseconds
   const timeDifference = currentDate - inputDate;
+  return timeDifference/24/60/60/1000;
+}
+
+function isWithinLastDays(dateString, days) {
+  const timeDifference = timeDifferenceStr(dateString);
 
   // Calculate the number of milliseconds in 7 days
   const sevenDaysInMilliseconds = days * 24 * 60 * 60 * 1000;
@@ -20,6 +25,9 @@ function isWithinLastDays(dateString, days) {
 async function loadLeaderboard() {
   // Get leaderboard div
   const leaderboardElement = document.getElementById("leaderboard");
+  
+  // Constants
+  const days = 30;
 
   const res = await fetch("/api/search");
   const json = await res.json();
@@ -27,27 +35,24 @@ async function loadLeaderboard() {
   for (let i = 0; i < json.length; i++) {
     const flit = json[i];
     const handle = flit["userHandle"];
-    console.log(flit);
+    if (timeDifferenceStr(flit["timestamp"])>days) {
+      break;
+    }
     if (flit['is_reflit'] == 1) {
       continue;
     }
     if (userData[handle] != undefined) {
-      userData[handle]++;
+      userData[handle] += (days - timeDifferenceStr(flit["timestamp"]))/days*2;
     } else {
-      userData[handle] = 1;
-    }
-    if (!isWithinLastDays(flit["timestamp"], 30)) {
-      break;
+      userData[handle] = (days - timeDifferenceStr(flit["timestamp"]))/days*2;
     }
   }
   const sortedUserData = Object.entries(userData).sort((a, b) => b[1] - a[1]);
-  console.log(sortedUserData);
   for (let i = 0; i < sortedUserData.length; i++) {
     const singleUserData = {
       "handle": sortedUserData[i][0],
       "flits": sortedUserData[i][1],
     };
-    console.log(singleUserData);
 
     // Rank number span declaration
     const rankNumber = document.createElement('td');
@@ -62,7 +67,7 @@ async function loadLeaderboard() {
     // Score span declaration
     const score = document.createElement('td');
     score.classList.add("leaderboardScore");
-    score.innerText = singleUserData["flits"];
+    score.innerText = Math.round(singleUserData["flits"]*100)/100;
 
     // Main rank div declaration
     const rank = document.createElement('tr');
