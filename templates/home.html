@@ -51,32 +51,6 @@
   <button type="button" class="btn cancel" onclick="closeMeme()">Cancel</button>
 </div>
 
-{% if turbo %}
-<script>
-function formatflit(content, hashtag) {
-  // Replace double asterisks (**) with HTML tags for bold
-  let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>\\$1</strong>');
-
-  // Replace single asterisks (*) with HTML tags for italic
-  formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '\\$1<em>\\$2</em>\\$3');
-
-  // Replace double underscores (__) with HTML tags for underlines
-  formattedContent = formattedContent.replace(/__(.*?)__/g, '<u>\\$1</u>');
-
-  // Append the hashtag to the formatted content
-  formattedContent += ' ' + hashtag;
-
-  return formattedContent.trimEllip(10000);
-}
-</script>
-{% else %}
-<script>
-  function formatflit(content) {
-    return content.replace('*', '').replace('_', '').trimEllip(280);
-  }
-</script>
-{% endif %}
-
 {% if loggedIn %}
 <script>
   String.prototype.trimEllip = function (length) {
@@ -89,39 +63,9 @@ function formatflit(content, hashtag) {
 
   textarea.addEventListener('input', function() {
     let content = textarea.value;
-
-    const formattedContent = formatflit(content);
-
-    // Set the formatted content as the value of the textarea
-    textarea.value = formattedContent;
-
     // Update the form input value with the formatted content
-    // textarea.value = content.trimEllip(280);
+    textarea.value = content.trimEllip(280);
   });
-
-  // Function to move the cursor to the end of the textarea
-  function moveCursorToEnd(element) {
-    const range = document.createRange();
-    const selection = window.getSelection();
-    range.selectNodeContents(element);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    element.focus();
-  }
-
-  // socket.on("chat", (data) => {
-  //   setTimeout(async (data) => {
-  //     const res = await fetch('/');
-  //     const text = await res.text();
-  //     let parser = new DOMParser();
-  //     let doc = parser.parseFromString(text, 'text/html');
-  //     console.log(doc)
-  //     document.getElementById("flits").innerHTML = doc.getElementById("flits").innerHTML;
-  //     const audio = new Audio('/static/notification.mp3');
-  //       audio.play();
-  //   }, 50 )
-  // })
 </script>
 {% endif %}
 <script defer>
