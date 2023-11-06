@@ -388,6 +388,28 @@ def home() -> Response:
         # Render the home template without user-specific data since not logged in
         return render_template("home.html", flits=flits, loggedIn=False, turbo=False)
 
+@app.route("/api/get_flits")
+def get_flits():
+    skip = request.args.get("skip")
+    limit = request.args.get("limit")
+
+    # Get a connection to the database
+    db = get_db()
+
+    # Create a cursor to interact with the database
+    cursor = db.cursor()
+    try:
+        limit = int(request.args.get("limit"))
+        skip = int(request.args.get("skip"))
+    except ValueError:
+        # Handle the error, e.g., return an error response or set default values
+        limit = 10
+        skip = 0
+
+    cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY id DESC LIMIT ? OFFSET ?", (limit, skip))
+    
+    return jsonify([dict(flit) for flit in cursor.fetchall()])
+
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("3/minute")
