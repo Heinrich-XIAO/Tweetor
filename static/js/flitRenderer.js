@@ -16,6 +16,7 @@ function getMonthAbbreviation(date) {
 async function renderFlits() {
   const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
   const json = await res.json();
+  console.log(json)
   for (let flitJSON of json) {
     const flit = document.createElement('div');
     flit.classList.add('flit');
@@ -213,7 +214,11 @@ async function renderAll() {
 renderAll();
 
 window.onscroll = function (ev) {
-  if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight) {
-      renderFlits();
+  console.log(window.innerHeight);
+  console.log(window.innerHeight + window.scrollY);
+  console.log(document.body.offsetHeight);
+  if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+    console.log("You reached the end for now")
+    renderFlits();
   }
 };
