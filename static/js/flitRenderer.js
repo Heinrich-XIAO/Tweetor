@@ -1,5 +1,9 @@
 console.log("Flit renderer loaded");
 
+const flits = document.getElementById('flits');
+let skip = 0;
+let limit = 10;
+
 // Function to get the abbreviated month name
 function getMonthAbbreviation(date) {
   const months = [
@@ -9,27 +13,27 @@ function getMonthAbbreviation(date) {
   return months[date.getMonth()];
 }
 
-async function renderSingleFlit(flit) {
-  const flitId = flit.dataset.flitId;
-  const res = await fetch(`/api/flit?flit_id=${flitId}`);
+async function renderFlits() {
+  const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
   const json = await res.json();
-  console.log(json)
-  if (json['flit']) {
+  for (let flitJSON of json) {
+    const flit = document.createElement('div');
+    flit.classList.add('flit');
     const flit_data_div = document.createElement('div');
     flit_data_div.classList.add("flit-username");
     flit_data_div.classList.add("flit-timestamp");
 
     const username = document.createElement('a');
-    username.innerText = json.flit.username;
-    username.href = `user/${json.flit.userHandle}`;
+    username.innerText = flitJSON.username;
+    username.href = `user/${flitJSON.userHandle}`;
 
     const handle = document.createElement('a');
-    handle.innerText = '@' + json.flit.userHandle;
-    username.href = `user/${json.flit.userHandle}`;
+    handle.innerText = '@' + flitJSON.userHandle;
+    username.href = `user/${flitJSON.userHandle}`;
     handle.classList.add("user-handle");
 
-    let timestamp = new Date(json.flit.timestamp.replace(/-/g, "/").replace(/T/, " "));
-
+    let timestamp = new Date(flitJSON.timestamp.replace(/-/g, "/").replace(/T/, " "));
+    
     // Format the Date object
     let now = new Date();
     let formatted_timestamp;
@@ -51,31 +55,31 @@ async function renderSingleFlit(flit) {
     flit_data_div.appendChild(handle);
     flit_data_div.innerHTML += '&#160;·&#160;';
     flit_data_div.appendChild(timestampElement);
-    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openReportModal(${flitId})'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
+    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openReportModal(${flitJSON.id})'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
 
     flit.appendChild(flit_data_div);
 
     const flitContentDiv = document.createElement('div');
     flitContentDiv.classList.add('flit-content');
 
-    if (json.flit.is_reflit) {
+    if (flitJSON.is_reflit) {
       const originalFlit = document.createElement('div');
       originalFlit.classList.add('flit');
       originalFlit.classList.add('originalFlit');
-      originalFlit.dataset.flitId = json.flit.original_flit_id;
+      originalFlit.dataset.flitId = flitJSON.original_flit_id;
       renderSingleFlit(originalFlit);
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
       flit.appendChild(flitContentDiv);
     } else {
       const content = document.createElement('a');
-      content.innerText = json.flit.content + ' ' + json.flit.hashtag;
-      content.href = `/flits/${flitId}`;
+      content.innerText = flitJSON.content + ' ' + flitJSON.hashtag;
+      content.href = `/flits/${flitJSON.id}`;
 
       flitContentDiv.appendChild(content);
-      if (json.flit.meme_link) {
+      if (flitJSON.meme_link) {
         const image = document.createElement('img');
-        image.src = json.flit.meme_link;
+        image.src = flitJSON.meme_link;
         flitContentDiv.appendChild(document.createElement('br'));
         flitContentDiv.appendChild(image);
       }
@@ -90,23 +94,24 @@ async function renderSingleFlit(flit) {
     const reflitInput = document.createElement('input');
     reflitInput.type = 'hidden';
     reflitInput.name = 'original_flit_id';
-    reflitInput.value = flitId;
+    reflitInput.value = flitJSON.id;
     reflitForm.appendChild(reflitInput);
     reflitForm.innerHTML += '<button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>';
 
     flit.appendChild(reflitForm);
 
     flit.innerHTML += '';
+    flit.href = `/flits/${flitJSON.id}`;
+
+    // Add flit in flits div
+    flits.appendChild(flit);
   }
-  flit.href = `/flits/${flitId}`;
+  skip += limit;
 }
+renderFlits();
 
-const flits = document.getElementsByClassName('flit');
-
-async function renderAll() {
-  for (let i = 0; i < flits.length; i++) {
-    await renderSingleFlit(flits[i]);
+window.onscroll = function (ev) {
+  if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight) {
+      renderFlits();
   }
-}
-
-renderAll();
+};
