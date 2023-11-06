@@ -37,11 +37,9 @@
   <br>
 {% endif %}
 <div id="flits">
-{% for flit in flits %}
-  <div class="flit" data-flit-id="{{ flit.id }}">
-  </div>
-{% endfor %}
 </div>
+
+<a href="#" class="top">Back to Top ↑</a>
 
 <div class="form-popup" id="memePopup">
   <h1>Make-A-Meme</h1>
@@ -109,19 +107,6 @@ function formatflit(content, hashtag) {
     selection.addRange(range);
     element.focus();
   }
-
-  // socket.on("chat", (data) => {
-  //   setTimeout(async (data) => {
-  //     const res = await fetch('/');
-  //     const text = await res.text();
-  //     let parser = new DOMParser();
-  //     let doc = parser.parseFromString(text, 'text/html');
-  //     console.log(doc)
-  //     document.getElementById("flits").innerHTML = doc.getElementById("flits").innerHTML;
-  //     const audio = new Audio('/static/notification.mp3');
-  //       audio.play();
-  //   }, 50 )
-  // })
 </script>
 {% endif %}
 <script defer>
@@ -148,7 +133,6 @@ function formatflit(content, hashtag) {
     }
 
     for (const result of data['results']) {
-      console.log(result);
       // Create an img element
       const img = document.createElement("img");
 
@@ -157,7 +141,6 @@ function formatflit(content, hashtag) {
       img.height = 100;
       img.dataset['id'] = result.id;
       img.onclick = (e) => {
-        console.log(e);
         const img = document.createElement("img");
         img.src = e.srcElement.src;
         img.width = e.srcElement.width*3;
@@ -168,7 +151,6 @@ function formatflit(content, hashtag) {
         document.getElementById("meme_link").value = img.src;
         closeMeme();
       }
-      console.log(img.dataset);
 
       // Append the img element to the div
       memeImages.appendChild(img);
@@ -180,6 +162,4 @@ function formatflit(content, hashtag) {
     searchTenor(this.value);
   });
 </script>
-
-<a href="#" class="top">Back to Top ↑</a>
 {% endblock %}
