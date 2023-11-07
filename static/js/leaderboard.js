@@ -29,7 +29,7 @@ async function loadLeaderboard() {
   // Constants
   const days = 30;
 
-  const res = await fetch("/api/search");
+  const res = await fetch("/api/get_flits?skip=0&limit=100");
   const json = await res.json();
   let userData = {};
   for (let i = 0; i < json.length; i++) {

@@ -444,59 +444,6 @@ def singleflit(flit_id: str) -> Response:
     # If the flit doesn't exist, redirect to the home page
     return redirect("/")
 
-
-@app.route("/api/search", methods=["GET"])
-def searchAPI() -> Response:
-    if request.args.get("query"):
-        conn = helpers.get_db()
-        c = conn.cursor()
-
-        # Find query
-        c.execute(
-            "SELECT * FROM flits WHERE content LIKE ?",
-            (f"%{request.args.get('query')}%",),
-        )
-        flits = [dict(flit) for flit in c.fetchall()]
-        return jsonify(flits)
-    db = helpers.get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
-    return jsonify([dict(flit) for flit in cursor.fetchall()])
-
-
-@app.route("/search", methods=["GET"])
-def search() -> Response:
-    if request.args.get("query"):
-        conn = helpers.get_db()
-        c = conn.cursor()
-
-        # Find query
-        c.execute(
-            "SELECT * FROM flits WHERE content LIKE ? OR hashtag LIKE ?",
-            (
-                f"%{request.args.get('query')}%",
-                f"%{request.args.get('query')}%",
-            ),
-        )
-        flits = [dict(flit) for flit in c.fetchall()]
-        return render_template(
-            "search.html",
-            flits=flits,
-            loggedIn=("username" in session),
-            engaged_dms=[]
-            if "username" not in session
-            else get_engaged_direct_messages(session["username"]),
-        )
-    return render_template(
-        "search.html",
-        flits=False,
-        loggedIn=("username" in session),
-        engaged_dms=[]
-        if "username" not in session
-        else get_engaged_direct_messages(session["username"]),
-    )
-
-
 @app.route("/logout", methods=["GET", "POST"])
 def logout() -> Response:
     # Check if the user is logged in
@@ -581,78 +528,6 @@ def user_profile(username: str) -> Response:
         else get_engaged_direct_messages(session["username"]),
     )
 
-
-@app.route("/like_flit", methods=["POST"])
-def like_flit():
-    flit_id = request.form["flitId"]
-    user_handle = session["handle"]
-
-    db = helpers.get_db()
-    cursor = db.cursor()
-
-    # Check if the like already exists
-    cursor.execute(
-        "SELECT * FROM likes WHERE userHandle = ? AND flitId = ?",
-        (user_handle, flit_id),
-    )
-    existing_like = cursor.fetchone()
-
-    if existing_like:
-        # Unlike the flit
-        cursor.execute("DELETE FROM likes WHERE id = ?", (existing_like["id"],))
-    else:
-        # Like the flit
-        cursor.execute(
-            "INSERT INTO likes (userHandle, flitId) VALUES (?, ?)",
-            (user_handle, flit_id),
-        )
-
-    db.commit()
-
-    return jsonify({"status": "success"})
-
-
-@app.route("/follow_user", methods=["POST"])
-def follow_user():
-    try:
-        if "followingUsername" not in request.form or "username" not in session:
-            return render_template("error.html", error="You are not logged in.")
-        following_username = request.form["followingUsername"]
-        follower_username = session["username"]
-
-        db = helpers.get_db()
-        cursor = db.cursor()
-
-        cursor.execute("SELECT * FROM users WHERE handle=?", (following_username,))
-
-        if cursor.fetchone() is None:
-            return render_template("error.html", error="That user doesn't exist.")
-
-        # Check if the user is already following
-        cursor.execute(
-            "SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?",
-            (follower_username, following_username),
-        )
-        existing_follow = cursor.fetchone()
-
-        if existing_follow:
-            # Unfollow the user
-            cursor.execute("DELETE FROM follows WHERE id = ?", (existing_follow["id"],))
-        else:
-            # Follow the user
-            cursor.execute(
-                "INSERT INTO follows (followerHandle, followingHandle) VALUES (?, ?)",
-                (follower_username, following_username),
-            )
-
-        db.commit()
-
-        return redirect(url_for("user_profile", username=following_username))
-    except Exception as e:
-        print(jsonify({"error": str(e)}), 500)
-        return "Internal Server Error 500"
-
-
 @app.route("/profanity")
 def profanity() -> Response:
     if "username" in session and session["handle"] != "admin":
@@ -676,24 +551,6 @@ def profanity() -> Response:
     return render_template(
         "profanity.html", profane_flit=profane_flit, profane_dm=profane_dm
     )
-
-
-def get_like_count(flit_id):
-    db = helpers.get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) as count FROM likes WHERE flitId = ?", (flit_id,))
-    return cursor.fetchone()["count"]
-
-
-def get_follower_count(user_handle):
-    db = helpers.get_db()
-    cursor = db.cursor()
-    cursor.execute(
-        "SELECT COUNT(*) as count FROM follows WHERE followingHandle = ?",
-        (user_handle,),
-    )
-    return cursor.fetchone()["count"]
-
 
 def is_profanity(text):
     api_user = "570595698"
@@ -846,8 +703,6 @@ def submit_dm(receiver_handle):
 
     db.commit()
 
-    send_notification(receiver_handle)
-
     return redirect(
         url_for(
             "direct_messages",
@@ -856,9 +711,9 @@ def submit_dm(receiver_handle):
         )
     )
 
+# Muting and unmuting
 
 muted = []
-
 
 @app.route("/mute/<handle>")
 def mute(handle):
@@ -866,43 +721,11 @@ def mute(handle):
         muted.append(handle)
         return "Completed"
 
-
 @app.route("/unmute/<handle>")
 def unmute(handle):
     if session.get("handle") == "admin":
         muted.remove(handle)
         return "Completed"
-
-
-clients = {}
-
-
-def event_stream(user):
-    while True:
-        if (
-            user in clients
-            and (datetime.datetime.now() - clients[user]).total_seconds() <= 1
-        ):
-            # Generate the notification message
-            data = "Someone sent you something"
-
-            # Yield the data as an SSE event
-            yield "data: {}\n\n".format(data)
-
-        # Delay before sending the next event
-        time.sleep(1)
-
-
-@app.route("/stream")
-def stream():
-    user = session.get("handle")
-    return Response(event_stream(user), mimetype="text/event-stream")
-
-
-def send_notification(user):
-    clients[user] = datetime.datetime.now()
-    return "Notification sent"
-
 
 @app.route("/get_captcha")
 def get_captcha():
