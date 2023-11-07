@@ -26,6 +26,8 @@ from sightengine.client import SightengineClient
 from flask_sitemapper import Sitemapper
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import helpers
+import database_setup
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
@@ -54,274 +56,12 @@ DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
 
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS flits  (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT NOT NULL,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        userHandle TEXT NOT NULL,
-        username TEXT NOT NULL,
-        hashtag TEXT NOT NULL,
-        meme_link TEXT
-    )
-"""
-)
-
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        turbo INTEGER DEFAULT 0,
-        handle TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS interests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL,
-        hashtag TEXT NOT NULL,
-        importance INT NOT NULL
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS notifications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL,
-        origin TEXT NOT NULL,
-        content TEXT NOT NULL,
-        viewed INTEGER DEFAULT 0
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS likes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userHandle TEXT NOT NULL,
-        flitId INTEGER NOT NULL
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS follows (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        followerHandle TEXT NOT NULL,
-        followingHandle TEXT NOT NULL
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS profane_flits  (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        userHandle TEXT NOT NULL,
-        username TEXT NOT NULL,
-        hashtag TEXT NOT NULL
-    )
-"""
-)
-
-
-def get_db():
-    db = g._database = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
-
-
-def add_profanity_dm_column_if_not_exists():
-    with app.app_context():
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("PRAGMA table_info(direct_messages)")
-        columns = cursor.fetchall()
-        column_names = [column[1] for column in columns]
-
-        if "profane_dm" not in column_names:
-            cursor.execute("ALTER TABLE direct_messages ADD COLUMN profane_dm TEXT")
-            db.commit()
-            print("profane_dm column added to the direct_messages table")
-
-
-def add_profanity_column_if_not_exists():
-    with app.app_context():
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("PRAGMA table_info(flits)")
-        columns = cursor.fetchall()
-        column_names = [column[1] for column in columns]
-
-        if "profane_flit" not in column_names:
-            cursor.execute("ALTER TABLE flits ADD COLUMN profane_flit TEXT")
-            db.commit()
-            print("profane_flit column added to the flits table")
-
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS flits  (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            profane_flit TEXT,
-            userHandle TEXT NOT NULL,
-            username TEXT NOT NULL,
-            hashtag TEXT NOT NULL
-        )
-    """
-    )
-
-add_profanity_column_if_not_exists()
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            turbo INTEGER DEFAULT 0,
-            handle TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL
-        )
-    """
-    )
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS direct_messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sender_handle TEXT NOT NULL,
-            receiver_handle TEXT NOT NULL,
-            content TEXT,
-            profane_dm TEXT NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """
-    )
-add_profanity_dm_column_if_not_exists()
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS reported_flits (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            flit_id INTEGER NOT NULL,
-            reporter_handle TEXT NOT NULL,
-            reason TEXT NOT NULL
-        )
-    """
-    )
-
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS interests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            hashtag TEXT NOT NULL,
-            importance INT NOT NULL
-        )
-    """
-    )
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS likes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userHandle TEXT NOT NULL,
-            flitd INTEGER NOT NULL
-        )
-    """
-    )
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS follows (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            followerHandle TEXT NOT NULL,
-            followingHandle TEXT NOT NULL
-        )
-    """
-    )
-
-
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, "_database", None)
-    if db is not None:
-        db.close()
-
-
-def create_admin_if_not_exists():
-    with app.app_context():
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = 'admin'")
-        admin_account = cursor.fetchone()
-        print("Admin account found:", admin_account)
-
-        if not admin_account:
-            hashed_password = hashlib.sha256("admin_password".encode()).hexdigest()
-            cursor.execute(
-                "INSERT INTO users (username, handle, password) VALUES (?, ?, ?)",
-                ("admin", "admin", hashed_password),
-            )
-            db.commit()
-            print("Admin account created")
-
-
-create_admin_if_not_exists()
-
-
-def add_reflits_columns_if_not_exists():
-    with app.app_context():
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("PRAGMA table_info(flits)")
-        columns = cursor.fetchall()
-        column_names = [column[1] for column in columns]
-
-        if "is_reflit" not in column_names:
-            cursor.execute("ALTER TABLE flits ADD COLUMN is_reflit DEFAULT 0")
-            print("is_reflit column added to the flits table")
-
-        if "original_flit_id" not in column_names:
-            cursor.execute(
-                "ALTER TABLE flits ADD COLUMN original_flit_id INT DEFAULT -1"
-            )
-            print("original_flit_id column added to the flits table")
-
-        db.commit()
-
-
-add_reflits_columns_if_not_exists()
-
-
 def row_to_dict(row):
     return {col[0]: row[idx] for idx, col in enumerate(row.description)}
 
 
 def get_engaged_direct_messages(user_handle):
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
 
     cursor.execute(
@@ -346,7 +86,7 @@ def get_engaged_direct_messages(user_handle):
 @app.route("/")
 def home() -> Response:
     # Get a connection to the database
-    db = get_db()
+    db = helpers.get_db()
 
     # Create a cursor to interact with the database
     cursor = db.cursor()
@@ -394,7 +134,7 @@ def get_flits():
     limit = request.args.get("limit")
 
     # Get a connection to the database
-    db = get_db()
+    db = helpers.get_db()
 
     # Create a cursor to interact with the database
     cursor = db.cursor()
@@ -415,7 +155,7 @@ def get_flits():
 @limiter.limit("3/minute")
 def submit_flit() -> Response:
     # Get a connection to the database
-    db = get_db()
+    db = helpers.get_db()
 
     # Create a cursor to interact with the database
     cursor = db.cursor()
@@ -548,7 +288,7 @@ def signup() -> Response:
             return redirect("/signup")
 
         # Get a connection to the database
-        db = get_db()
+        db = helpers.get_db()
 
         # Create a cursor to interact with the database
         cursor = db.cursor()
@@ -596,7 +336,7 @@ def login() -> Response:
         password = request.form["password"]
 
         # Get a connection to the database
-        db = get_db()
+        db = helpers.get_db()
 
         # Create a cursor to interact with the database
         cursor = db.cursor()
@@ -652,7 +392,7 @@ def get_all_flit_ids():
 @app.route("/flits/<flit_id>")
 def singleflit(flit_id: str) -> Response:
     # Get a connection to the database
-    conn = get_db()
+    conn = helpers.get_db()
 
     # Create a cursor to interact with the database
     c = conn.cursor()
@@ -719,7 +459,7 @@ def singleflit(flit_id: str) -> Response:
 @app.route("/api/search", methods=["GET"])
 def searchAPI() -> Response:
     if request.args.get("query"):
-        conn = get_db()
+        conn = helpers.get_db()
         c = conn.cursor()
 
         # Find query
@@ -729,7 +469,7 @@ def searchAPI() -> Response:
         )
         flits = [dict(flit) for flit in c.fetchall()]
         return jsonify(flits)
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
     return jsonify([dict(flit) for flit in cursor.fetchall()])
@@ -738,7 +478,7 @@ def searchAPI() -> Response:
 @app.route("/search", methods=["GET"])
 def search() -> Response:
     if request.args.get("query"):
-        conn = get_db()
+        conn = helpers.get_db()
         c = conn.cursor()
 
         # Find query
@@ -790,7 +530,7 @@ def get_all_user_handles():
 @app.route("/user/<path:username>")
 def user_profile(username: str) -> Response:
     # Get a connection to the database
-    conn = get_db()
+    conn = helpers.get_db()
 
     # Create a cursor to interact with the database
     cursor = conn.cursor()
@@ -858,7 +598,7 @@ def like_flit():
     flit_id = request.form["flitId"]
     user_handle = session["handle"]
 
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
 
     # Check if the like already exists
@@ -891,7 +631,7 @@ def follow_user():
         following_username = request.form["followingUsername"]
         follower_username = session["username"]
 
-        db = get_db()
+        db = helpers.get_db()
         cursor = db.cursor()
 
         cursor.execute("SELECT * FROM users WHERE handle=?", (following_username,))
@@ -931,7 +671,7 @@ def profanity() -> Response:
             "error.html", error="You are not authorized to view this page."
         )
 
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute(
         "SELECT * FROM flits WHERE profane_flit = 'yes' ORDER BY timestamp DESC"
@@ -950,14 +690,14 @@ def profanity() -> Response:
 
 
 def get_like_count(flit_id):
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute("SELECT COUNT(*) as count FROM likes WHERE flitId = ?", (flit_id,))
     return cursor.fetchone()["count"]
 
 
 def get_follower_count(user_handle):
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute(
         "SELECT COUNT(*) as count FROM follows WHERE followingHandle = ?",
@@ -994,7 +734,7 @@ def delete_flit() -> Response:
         )
 
     flit_id = request.args.get("flit_id")
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute("DELETE FROM flits WHERE id = ?", (flit_id,))
     cursor.execute("DELETE FROM reported_flits WHERE flit_id=?", (flit_id,))
@@ -1011,7 +751,7 @@ def delete_user() -> Response:
         )
 
     user_handle = request.form["user_handle"]
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute("DELETE FROM users WHERE handle = ?", (user_handle,))
     db.commit()
@@ -1025,7 +765,7 @@ def report_flit():
     reporter_handle = session["handle"]
     reason = request.form["reason"]
 
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute(
         "INSERT INTO reported_flits (flit_id, reporter_handle, reason) VALUES (?, ?, ?)",
@@ -1043,7 +783,7 @@ def reported_flits():
             "error.html", error="You don't have permission to access this page."
         )
 
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM reported_flits")
     reports = cursor.fetchall()
@@ -1058,7 +798,7 @@ def direct_messages(receiver_handle):
 
     sender_handle = session["handle"]
 
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
 
     cursor.execute(
@@ -1104,7 +844,7 @@ def submit_dm(receiver_handle):
     ):
         profane_dm = "yes"
 
-    db = get_db()
+    db = helpers.get_db()
     cursor = db.cursor()
 
     cursor.execute(
@@ -1193,7 +933,7 @@ def flitAPI():
         flit_id = int(request.args.get("flit_id"))
     except ValueError:
         return jsonify("Flit ID is invalid")
-    db = get_db()
+    db = helpers.get_db()
     c = db.cursor()
     c.execute('SELECT * FROM flits WHERE id=?', (flit_id,))
     flit = c.fetchone()
