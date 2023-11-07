@@ -112,21 +112,16 @@ def home() -> Response:
         # Get the list of engaged direct messages for the user
         engaged_dms = get_engaged_direct_messages(user_handle)
 
-        # Query the database to check if the user has turbo status
-        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (user_handle,))
-        turbo = cursor.fetchone()["turbo"] == 1
-
         # Render the home template with user-specific data
         return render_template(
             "home.html",
             flits=flits,
             loggedIn=True,
-            turbo=turbo,
             engaged_dms=engaged_dms,
         )
     else:
         # Render the home template without user-specific data since not logged in
-        return render_template("home.html", flits=flits, loggedIn=False, turbo=False)
+        return render_template("home.html", flits=flits, loggedIn=False)
 
 @app.route("/api/get_flits")
 def get_flits():
@@ -183,12 +178,6 @@ def submit_flit() -> Response:
             return render_template("error.html", error="Message was too long.")
         if "username" not in session:
             return render_template("error.html", error="You are not logged in.")
-
-        # Check user's turbo status and content length/type
-        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"],))
-        user_turbo = cursor.fetchone()["turbo"]
-        if user_turbo == 0 and (len(content) > 280 or "*" in content or "_" in content):
-            return render_template("error.html", error="You do not have Tweetor Turbo.")
 
         # Extract and validate hashtag from form data
         hashtag = request.form["hashtag"]
@@ -305,7 +294,7 @@ def signup() -> Response:
 
         # Insert the new user data into the database
         cursor.execute(
-            "INSERT INTO users (username, password, handle, turbo) VALUES (?, ?, ?, ?)",
+            "INSERT INTO users (username, password, handle) VALUES (?, ?, ?)",
             (username, hashed_password, handle, 0),
         )
         db.commit()

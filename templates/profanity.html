@@ -27,36 +27,4 @@
     </li>
   {% endfor %}
 </ul>
-
-{% if turbo %}
-<script>
-  function formatflit(content, hashtag) {
-    // Replace double asterisks (**) with HTML tags for bold
-    let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>\$1</strong>');
-
-    // Replace single asterisks (*) with HTML tags for italic
-    formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '\$1<em>\$2</em>\$3');
-
-    // Replace double underscores (__) with HTML tags for underlines
-    formattedContent = formattedContent.replace(/__(.*?)__/g, '<u>\$1</u>');
-
-    // Append the hashtag to the formatted content
-    formattedContent += ' ' + hashtag;
-
-    return formattedContent.trimEllip(10000);
-  }
-</script>
-{% else %}
-<script>
-  function formatflit(content) {
-    return content.replace('*', '').replace('_', '').trimEllip(280);
-  }
-</script>
-{% endif %}
-
-<script>
-  String.prototype.trimEllip = function (length) {
-    return this.length > length ? this.substring(0, length) : this;
-  }
-</script>
 {% endblock %}
