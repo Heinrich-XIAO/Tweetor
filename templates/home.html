@@ -37,11 +37,9 @@
   <br>
 {% endif %}
 <div id="flits">
-{% for flit in flits %}
-  <div class="flit" data-flit-id="{{ flit.id }}">
-  </div>
-{% endfor %}
 </div>
+
+<a href="#" class="top">Back to Top ↑</a>
 
 <div class="form-popup" id="memePopup">
   <h1>Make-A-Meme</h1>
@@ -92,7 +90,6 @@
     }
 
     for (const result of data['results']) {
-      console.log(result);
       // Create an img element
       const img = document.createElement("img");
 
@@ -101,7 +98,6 @@
       img.height = 100;
       img.dataset['id'] = result.id;
       img.onclick = (e) => {
-        console.log(e);
         const img = document.createElement("img");
         img.src = e.srcElement.src;
         img.width = e.srcElement.width*3;
@@ -112,7 +108,6 @@
         document.getElementById("meme_link").value = img.src;
         closeMeme();
       }
-      console.log(img.dataset);
 
       // Append the img element to the div
       memeImages.appendChild(img);
@@ -124,6 +119,4 @@
     searchTenor(this.value);
   });
 </script>
-
-<a href="#" class="top">Back to Top ↑</a>
 {% endblock %}
