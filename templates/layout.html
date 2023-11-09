@@ -35,10 +35,12 @@
             <a href="{{ url_for('login') }}" class="w3-bar-item w3-button">Login</a>
             <a href="{{ url_for('signup') }}" class="w3-bar-item w3-button">Signup</a>
         </div>
+        
       {% else %}
         <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span></a>
         <a href="{{ url_for('leaderboard') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="material-symbols:trophy"></span></a>
         <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span></a>
+        <a href="{{ url_for('settings') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-settings"></span></a>
         {% block admin_buttons %}{% endblock %}
         <hr>
         <div>
