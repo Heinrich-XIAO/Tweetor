@@ -257,7 +257,14 @@ used_captchas = []
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    return render_template('settings.html')
+    if "username" not in session:
+        return render_template('error.html', error="Are you signed in?")
+    return render_template('settings.html',
+        loggedIn=("username" in session),
+        engaged_dms=[]
+        if "username" not in session
+        else get_engaged_direct_messages(session["username"])
+    )
 
 # Signup route
 @sitemapper.include()
@@ -370,7 +377,7 @@ def login() -> Response:
     # Render the login template for users who are not logged in
     return render_template("login.html")
 
-@app.route('/change-password', methods=['GET', 'POST'])
+@app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
     if request.method == 'POST':
