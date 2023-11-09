@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+{% block body %}
+<h1>Settings</h1>
+<h2>Change Password</h2>
+<form action="{{ url_for('change_password') }}" method="post">
+    <label for="current_password">Current Password</label>
+    <input type="password" id="current_password" name="current_password" required>
+    <label for="new_password">New Password</label>
+    <input type="password" id="new_password" name="new_password" required>
+    <button type="submit">Change Password</button>
+</form>
+{% endblock %}
