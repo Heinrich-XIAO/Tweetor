@@ -8,6 +8,7 @@ import requests
 import datetime
 import time
 import os
+from functools import wraps
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -81,6 +82,13 @@ def get_engaged_direct_messages(user_handle):
 
     return engaged_dms
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url_for('login'), 302)
+        return f(*args, **kwargs)
+    return decorated_function
 
 @sitemapper.include()
 @app.route("/")
@@ -247,6 +255,16 @@ def submit_flit() -> Response:
 
 used_captchas = []
 
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    if "username" not in session:
+        return render_template('error.html', error="Are you signed in?")
+    return render_template('settings.html',
+        loggedIn=("username" in session),
+        engaged_dms=[]
+        if "username" not in session
+        else get_engaged_direct_messages(session["username"])
+    )
 
 # Signup route
 @sitemapper.include()
@@ -294,7 +312,7 @@ def signup() -> Response:
 
         # Insert the new user data into the database
         cursor.execute(
-            "INSERT INTO users (username, password, handle) VALUES (?, ?, ?)",
+            "INSERT INTO users (username, password, handle, turbo) VALUES (?, ?, ?, ?)",
             (username, hashed_password, handle, 0),
         )
         db.commit()
@@ -358,6 +376,34 @@ def login() -> Response:
 
     # Render the login template for users who are not logged in
     return render_template("login.html")
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+
+        db = helpers.get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT password FROM users WHERE username = ?", (session["username"],))
+        user = cursor.fetchone()
+
+        hashed_password = hashlib.sha256(current_password.encode()).hexdigest()
+
+        if user['password'] == hashed_password:
+            new_hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
+            cursor.execute(
+                "UPDATE users SET password = ? WHERE username = ?",
+                (new_hashed_password, session["username"]),
+            )
+            db.commit()
+            return redirect('/')
+        else:
+            return 'Current password is incorrect'
+
+    return render_template('change_password.html')
+
 
 @app.route('/leaderboard')
 def leaderboard():
