@@ -143,6 +143,7 @@ button:hover, button:focus {
   display: none;
   min-width: 100%;
   width: 100%;
+  background-color: var(--background);
 }
 
 #memeBackgrounds * {
