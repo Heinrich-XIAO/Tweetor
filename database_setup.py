@@ -64,15 +64,7 @@ sqlite3.connect(DATABASE).cursor().execute(
 """
 )
 
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS follows (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        followerHandle TEXT NOT NULL,
-        followingHandle TEXT NOT NULL
-    )
-"""
-)
+
 
 sqlite3.connect(DATABASE).cursor().execute(
     """

@@ -532,16 +532,6 @@ def user_profile(username: str) -> Response:
     )
     flits = cursor.fetchall()
 
-    # Check if the logged-in user is following this user's profile
-    is_following = False
-    if "username" in session:
-        logged_in_username = session["username"]
-        cursor.execute(
-            "SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?",
-            (logged_in_username, user["handle"]),
-        )
-        is_following = cursor.fetchone() is not None
-
     # Calculate the user's activeness based on their tweet frequency
     latest_tweet_time = datetime.datetime.now()
     first_tweet_time = flits[-1]["timestamp"]
@@ -567,7 +557,6 @@ def user_profile(username: str) -> Response:
         user=user,
         loggedIn=("username" in session),
         flits=flits,
-        is_following=is_following,
         activeness=activeness,
         engaged_dms=[]
         if "username" not in session

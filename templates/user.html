@@ -28,22 +28,8 @@
       </form>
     {% endif %}
 
-    {% if session['username'] != user.username %}
-      <!-- Follow button -->
-      <form action="{{ url_for('follow_user') }}" method="post">
-        <input type="hidden" name="followingUsername" value="{{ user.username }}">
-        <button type="submit">
-          {% if is_following %}
-            Unfollow
-          {% else %}
-            Follow
-          {% endif %}
-        </button>
-      </form>
-      
       <!-- Start DM button -->
       <a href="{{ url_for('direct_messages', receiver_handle=user.handle) }}" class="dm-button">Start DM</a>
-    {% endif %}
   </div>
 </div>
 <div>

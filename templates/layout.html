@@ -73,23 +73,69 @@
   </div>
 
   <script>
-    const reportModal = document.getElementById('reportModal');
-    const modalflitId = document.getElementById('modalflitId');
+window.onload = function() {
+  let fontSize = localStorage.getItem('fontSize');
+  let colorScheme = localStorage.getItem('colorScheme');
+  let autoplayGifs = localStorage.getItem('autoplayGifs') === 'true';
 
-    function openReportModal(flitId) {
-      modalflitId.value = flitId;
-      reportModal.style.display = 'block';
+  if (fontSize) {
+    document.body.style.fontSize = fontSize + 'px';
+  }
+
+  if (colorScheme) {
+    if (colorScheme === 'light') {
+      document.body.style.backgroundColor = 'fff';
+      document.body.style.color = '#333';
+    } else if (colorScheme === 'navy') {
+      document.body.style.backgroundColor = '#05182B';
+      document.body.style.color = '#225485';
+    } else if (colorScheme == 'dark') {
+      document.body.style.backgroundColor = '#333';
+      document.body.style.color = '#fff';
+
+    } else {
+      document.body.style.backgroundColor = '#0F0C0C';
+      document.body.style.color = '#fff';
     }
+  }
 
-    window.onclick = function (event) {
-      if (event.target == reportModal) {
-        reportModal.style.display = 'none';
+  if (autoplayGifs) {
+    let gifs = document.getElementsByTagName('img');
+    for (let i = 0; i < gifs.length; i++) {
+      if (gifs[i].src.endsWith('.gif')) {
+        gifs[i].style.display = 'block';
       }
     }
+  } else {
+    let gifs = document.getElementsByTagName('img');
+    for (let i = 0; i < gifs.length; i++) {
+      if (gifs[i].src.endsWith('.gif')) {
+        gifs[i].style.display = 'none';
+        gifs[i].onclick = function() {
+          this.style.display = 'block';
+        }
+      }
+    }
+  }
 
-    function closeForm() {
+  const reportModal = document.getElementById('reportModal');
+  const modalflitId = document.getElementById('modalflitId');
+
+  function openReportModal(flitId) {
+    modalflitId.value = flitId;
+    reportModal.style.display = 'block';
+  }
+
+  window.onclick = function (event) {
+    if (event.target == reportModal) {
       reportModal.style.display = 'none';
     }
+  }
+
+  function closeForm() {
+    reportModal.style.display = 'none';
+  }
+}
   </script>
   <script src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
   {% if loggedIn %}

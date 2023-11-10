@@ -16,4 +16,32 @@
     <br/>
     <button type="submit">Change Password</button>
 </form>
+<h2>Appearance Settings</h2>
+<form id="appearanceSettings">
+    <label for="fontSize">Font Size:</label>
+    <input type="number" id="fontSize" name="fontSize" min="10" max="24">
+    <label for="colorScheme">Color Scheme:</label>
+    <select id="colorScheme" name="colorScheme">
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+    <option value="navy">Navy Blue</option>
+    <label for="autoplayGifs">Autoplay GIFs:</label>
+    <input type="checkbox" id="autoplayGifs" name="autoplayGifs">
+    </select>
+    <button type="submit">Save Settings</button>
+   </form>
+
+<script>
+document.getElementById('appearanceSettings').addEventListener('submit', function(event) {
+  event.preventDefault();
+
+  let fontSize = document.getElementById('fontSize').value;
+  let colorScheme = document.getElementById('colorScheme').value;
+  let autoplayGifs = document.getElementById('autoplayGifs').checked;
+
+  localStorage.setItem('fontSize', fontSize);
+  localStorage.setItem('colorScheme', colorScheme);
+  localStorage.setItem('autoplayGifs', autoplayGifs);
+});
+</script>
 {% endblock %}
