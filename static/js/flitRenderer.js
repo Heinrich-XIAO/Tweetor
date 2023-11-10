@@ -78,7 +78,7 @@ async function renderFlits() {
       content.href = `/flits/${flitJSON.id}`;
 
       flitContentDiv.appendChild(content);
-      if (flitJSON.meme_link) {
+      if (flitJSON.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
         const image = document.createElement('img');
         image.src = flitJSON.meme_link;
         flitContentDiv.appendChild(document.createElement('br'));
