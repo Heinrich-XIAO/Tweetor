@@ -4,6 +4,23 @@ body {
   grid-template-columns: auto 0px; 
 }
 
+:root[data-applied-mode="light"] {
+  color-scheme: light;
+  --text: black;
+  --color: black;
+  --background: white;
+}
+:root[data-applied-mode="dark"] {
+  color-scheme: dark;
+  --text: white;
+  --color: white;
+  --background: black;
+}
+
+.iconify {
+  color: var(--color, white)
+}
+
 .top {
   --offset: 50px; 
   
@@ -16,8 +33,6 @@ body {
   text-decoration: none;
   padding: 10px;
   font-family: sans-serif;
-  color: #000;
-  background: #fff;
   border-radius: 100px;
   white-space: nowrap;
   float: right;
@@ -43,7 +58,6 @@ body {
   line-height: 1.6;
   font-weight: 400;
   font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: #222; 
 }
 
 textarea, 
@@ -51,7 +65,6 @@ input[type="text"],
 input[type="password"] {
   height: 38px;
   padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
-  background-color: #fff;
   border: 1px solid #D1D1D1;
   border-radius: 4px;
   box-shadow: none;
@@ -76,7 +89,6 @@ button, input[type="submit"] {
   display: inline-block;
   height: 38px;
   padding: 0 30px;
-  color: #555;
   text-align: center;
   font-size: 11px;
   font-weight: 600;
@@ -95,19 +107,16 @@ button, input[type="submit"] {
 }
 
 button:hover, button:focus {
-  color: #333;
   border-color: #888;
   outline: 0; 
 }
 
 .button-primary {
-  color: #FFF;
   background-color: #33C3F0;
   border-color: #33C3F0; 
 }
 
 .button-primary:focus {
-  color: #FFF;
   background-color: #1EAEDB;
   border-color: #1EAEDB; 
 }
@@ -134,7 +143,6 @@ button:hover, button:focus {
   display: none;
   min-width: 100%;
   width: 100%;
-  background-color: #000;
 }
 
 #memeBackgrounds * {
@@ -180,7 +188,6 @@ button:hover, button:focus {
 }
 
 .search-form button svg {
-  color: #fff;
   fill: currentColor;
   width: 24px;
   height: 24px;
@@ -220,8 +227,6 @@ button:hover, button:focus {
   border: none;
   border-style: none; 
   outline:none;
-  background-color: black;
-  color: #fff;
   font-size: x-large;
   height: 10em;
   width: 100%;
@@ -243,7 +248,6 @@ button:hover, button:focus {
 .logout button,  .login button, .signup button {
 	background-color: transparent;
 	border: none;
-	color: white;
 	font-size: 16px;
 }
 
@@ -254,7 +258,6 @@ button:hover, button:focus {
   text-align: center;
   border: 1px solid #ccc;
   border-radius: 4px;
-  background-color: #fff;
 }
 
 .centered-form h2 {
@@ -285,7 +288,6 @@ button:hover, button:focus {
 
 .centered-form input[type="submit"] {
   background-color: #1da1f2;
-  color: #fff;
   border: none;
   border-radius: 4px;
   /* padding: 10px 20px 10px 20px; */
@@ -297,15 +299,9 @@ button:hover, button:focus {
   background-color: #0c8bd6;
 }
 
-body {
-  background-color: black;
-  color: white;
-}
-
 .flit {
   padding: 20px;
   margin-bottom: -1px;
-  background-color: #000;
   border-style: solid;
   border-color: #555;
   border-width: 1px;
@@ -321,7 +317,6 @@ body {
 }
 
 .flit-username a:not(.user-handle), .flit-content > a, .flit-content > a:hover {
-  color: #fff;
 }
 
 .user-handle, .user-handle:hover {
@@ -369,7 +364,6 @@ body {
 /* Button used to open the contact form - fixed at the bottom of the page */
 .open-button {
   background-color: #555;
-  color: white;
   padding: 16px 20px;
   border: none;
   cursor: pointer;
@@ -394,7 +388,6 @@ body {
 .form-container {
   max-width: 300px;
   padding: 10px;
-  background-color: black;
 }
 
 /* Full-width input fields */
@@ -408,14 +401,12 @@ body {
 
 /* When the inputs get focus, do something */
 .form-container input[type=text]:focus, .form-container input[type=password]:focus {
-  background-color: #ddd;
   outline: none;
 }
 
 /* Set a style for the submit/login button */
 .form-container .btn {
   background-color: #04AA6D;
-  color: white;
   /* padding: 16px 20px; */
   border: none;
   cursor: pointer;
@@ -455,7 +446,6 @@ body {
 }
 
 .search-form button svg {
-  color: #fff;
   fill: currentColor;
   width: 24px;
   height: 24px;
@@ -515,10 +505,11 @@ main {
   margin-left: 10%;
 }
 
-.menu {
+.menu{
   width:10%;
   border-right: 1px solid #555;
   min-width: 60px;
+  background-color: var(--background, black);
 }
 
 /* This is the media query for smaller screens */
@@ -556,8 +547,6 @@ main {
   width: 100%; /* Make it span the entire width */
   height: 100%; /* Make it span the entire height */
   z-index: 9999; /* Make it on top of everything else */
-  background-color: #fff;
-  color: #000;
 }
 
 #error p, #error h1 {
