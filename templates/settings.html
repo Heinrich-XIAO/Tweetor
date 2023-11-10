@@ -16,4 +16,14 @@
     <br/>
     <button type="submit">Change Password</button>
 </form>
+
+<h2>Appearance</h2>
+<label for="theme_input">Theme</label>
+<select name="theme_input" id="theme_input">
+    <option value="dark">Dark Mode</option>
+    <option value="light">Light Mode</option>
+</select>
+<input type="button" value="Select Theme" id="theme_submit">
+
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 {% endblock %}
