@@ -27,9 +27,9 @@ async function loadLeaderboard() {
   const leaderboardElement = document.getElementById("leaderboard");
   
   // Constants
-  const days = 30;
+  const days = 10;
 
-  const res = await fetch("/api/get_flits?skip=0&limit=100");
+  const res = await fetch("/api/get_flits?skip=0&limit=1000");
   const json = await res.json();
   let userData = {};
   for (let i = 0; i < json.length; i++) {
