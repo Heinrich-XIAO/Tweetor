@@ -33,49 +33,6 @@ sqlite3.connect(DATABASE).cursor().execute(
 
 sqlite3.connect(DATABASE).cursor().execute(
     """
-    CREATE TABLE IF NOT EXISTS interests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL,
-        hashtag TEXT NOT NULL,
-        importance INT NOT NULL
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS notifications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL,
-        origin TEXT NOT NULL,
-        content TEXT NOT NULL,
-        viewed INTEGER DEFAULT 0
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS likes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userHandle TEXT NOT NULL,
-        flitId INTEGER NOT NULL
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS follows (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        followerHandle TEXT NOT NULL,
-        followingHandle TEXT NOT NULL
-    )
-"""
-)
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
     CREATE TABLE IF NOT EXISTS profane_flits  (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         content TEXT,
@@ -86,33 +43,6 @@ sqlite3.connect(DATABASE).cursor().execute(
     )
 """
 )
-
-
-def add_profanity_dm_column_if_not_exists():
-  db = helpers.get_db()
-  cursor = db.cursor()
-  cursor.execute("PRAGMA table_info(direct_messages)")
-  columns = cursor.fetchall()
-  column_names = [column[1] for column in columns]
-
-  if "profane_dm" not in column_names:
-    cursor.execute("ALTER TABLE direct_messages ADD COLUMN profane_dm TEXT")
-    db.commit()
-    print("profane_dm column added to the direct_messages table")
-
-
-def add_profanity_column_if_not_exists():
-  db = helpers.get_db()
-  cursor = db.cursor()
-  cursor.execute("PRAGMA table_info(flits)")
-  columns = cursor.fetchall()
-  column_names = [column[1] for column in columns]
-
-  if "profane_flit" not in column_names:
-      cursor.execute("ALTER TABLE flits ADD COLUMN profane_flit TEXT")
-      db.commit()
-      print("profane_flit column added to the flits table")
-
 
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
@@ -128,8 +58,6 @@ with sqlite3.connect(DATABASE) as conn:
         )
     """
     )
-
-add_profanity_column_if_not_exists()
 
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
@@ -157,7 +85,7 @@ with sqlite3.connect(DATABASE) as conn:
         )
     """
     )
-add_profanity_dm_column_if_not_exists()
+
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
         """
@@ -169,42 +97,6 @@ with sqlite3.connect(DATABASE) as conn:
         )
     """
     )
-
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS interests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            hashtag TEXT NOT NULL,
-            importance INT NOT NULL
-        )
-    """
-    )
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS likes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userHandle TEXT NOT NULL,
-            flitd INTEGER NOT NULL
-        )
-    """
-    )
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS follows (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            followerHandle TEXT NOT NULL,
-            followingHandle TEXT NOT NULL
-        )
-    """
-    )
-
 
 def create_admin_if_not_exists():
   db = helpers.get_db()
@@ -222,28 +114,4 @@ def create_admin_if_not_exists():
     db.commit()
     print("Admin account created")
 
-
 create_admin_if_not_exists()
-
-
-def add_reflits_columns_if_not_exists():
-  db = helpers.get_db()
-  cursor = db.cursor()
-  cursor.execute("PRAGMA table_info(flits)")
-  columns = cursor.fetchall()
-  column_names = [column[1] for column in columns]
-
-  if "is_reflit" not in column_names:
-    cursor.execute("ALTER TABLE flits ADD COLUMN is_reflit DEFAULT 0")
-    print("is_reflit column added to the flits table")
-
-  if "original_flit_id" not in column_names:
-    cursor.execute(
-      "ALTER TABLE flits ADD COLUMN original_flit_id INT DEFAULT -1"
-    )
-    print("original_flit_id column added to the flits table")
-
-  db.commit()
-
-
-add_reflits_columns_if_not_exists()
