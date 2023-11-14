@@ -3,7 +3,6 @@ import hashlib
 import random
 from urllib.parse import quote
 import string
-import filters
 import requests
 import datetime
 import time
@@ -23,7 +22,6 @@ from flask import (
 )
 from flask_cors import CORS, cross_origin
 from flask_session import Session
-from sightengine.client import SightengineClient
 from flask_sitemapper import Sitemapper
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -44,10 +42,6 @@ sitemapper.init_app(app)
 # Rate limiting
 limiter = Limiter(get_remote_address, app=app)
 
-# Register the custom filters
-app.jinja_env.filters["format_timestamp"] = filters.format_timestamp
-app.jinja_env.filters["format_flit"] = filters.format_flit
-
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -56,10 +50,6 @@ Session(app)
 DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
-
-def row_to_dict(row):
-    return {col[0]: row[idx] for idx, col in enumerate(row.description)}
-
 
 def get_engaged_direct_messages(user_handle):
     db = helpers.get_db()
@@ -155,7 +145,7 @@ def get_flits():
 
 
 @app.route("/submit_flit", methods=["POST"])
-@limiter.limit("3/minute")
+@limiter.limit("2/minute")
 def submit_flit() -> Response:
     # Get a connection to the database
     db = helpers.get_db()
@@ -182,7 +172,7 @@ def submit_flit() -> Response:
         # Check for various content validation conditions
         if content.strip() == "":
             return render_template("error.html", error="Message was blank.")
-        if len(content) > 10000:
+        if len(content) > 280:
             return render_template("error.html", error="Message was too long.")
         if "username" not in session:
             return render_template("error.html", error="You are not logged in.")
@@ -443,39 +433,6 @@ def singleflit(flit_id: str) -> Response:
             c.execute("SELECT * FROM flits WHERE id = ?", (flit["original_flit_id"],))
             original_flit = c.fetchone()
 
-        if "username" in session:
-            # If the user is logged in, check and update their interests in hashtags
-            c.execute(
-                "SELECT * FROM interests WHERE user=? AND hashtag=?",
-                (
-                    session["handle"],
-                    flit["hashtag"],
-                ),
-            )
-            interests = c.fetchall()
-
-            # Update user's interest in the hashtag if it exists, otherwise add a new interest
-            if len(interests) == 0:
-                c.execute(
-                    "INSERT INTO interests (user, hashtag, importance) VALUES (?, ?, ?)",
-                    (
-                        session["handle"],
-                        flit["hashtag"],
-                        1,
-                    ),
-                )
-                conn.commit()
-            else:
-                c.execute(
-                    "UPDATE interests SET importance=? WHERE user=? AND hashtag=?",
-                    (
-                        interests[0]["importance"] + 1,
-                        session["handle"],
-                        flit["hashtag"],
-                    ),
-                )
-                conn.commit()
-
         # Render the template with the flit's information
         return render_template(
             "flit.html",
@@ -523,7 +480,7 @@ def user_profile(username: str) -> Response:
 
     # If the user doesn't exist, redirect to the home page
     if not user:
-        return redirect("/home")
+        return redirect("/")
 
     # Query the database for the user's non-reflit flits, ordered by timestamp
     cursor.execute(
