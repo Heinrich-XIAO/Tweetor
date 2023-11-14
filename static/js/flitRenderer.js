@@ -68,7 +68,7 @@ async function renderFlits() {
       originalFlit.classList.add('flit');
       originalFlit.classList.add('originalFlit');
       originalFlit.dataset.flitId = flitJSON.original_flit_id;
-      renderSingleFlit(originalFlit);
+      await renderSingleFlit(originalFlit);
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
       flit.appendChild(flitContentDiv);
