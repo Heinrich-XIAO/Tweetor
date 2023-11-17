@@ -145,7 +145,7 @@ def get_flits():
 
 
 @app.route("/submit_flit", methods=["POST"])
-@limiter.limit("3/minute")
+@limiter.limit("4/minute")
 def submit_flit() -> Response:
     # Get a connection to the database
     db = helpers.get_db()
