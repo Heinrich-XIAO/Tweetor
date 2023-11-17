@@ -51,6 +51,27 @@ DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
 
+def get_blocked_users():
+    # Get a connection to the database
+    db = helpers.get_db()
+
+    # Create a cursor to interact with the database
+    cursor = db.cursor()
+
+    # Execute an SQL SELECT statement to get the list of blocked users
+    cursor.execute(
+        "SELECT blocked FROM blocked_users WHERE blocker = ?",
+        (session["username"],),
+    )
+
+    # Fetch the results of the SQL query
+    blocked_users = cursor.fetchall()
+
+    # Convert the list of tuples to a list of usernames
+    blocked_users = [user[0] for user in blocked_users]
+
+    return blocked_users
+
 def get_engaged_direct_messages(user_handle):
     db = helpers.get_db()
     cursor = db.cursor()
@@ -80,7 +101,8 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@sitemapper.include()
+
+
 @app.route("/")
 def home() -> Response:
     # Get a connection to the database
@@ -93,10 +115,27 @@ def home() -> Response:
     if "username" in session and session["handle"] == "admin":
         # If admin, retrieve all flits regardless of content
         cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
-    else:
-        # If not admin, retrieve only non-profane flits
+    elif "username" in session:
+        # If logged in user is not admin, retrieve only non-profane flits and exclude blocked users
         cursor.execute(
-            "SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY timestamp DESC"
+            """
+            SELECT f.* FROM flits f 
+            LEFT JOIN blocked_users b ON f.username = b.blocked 
+            WHERE (b.blocker != ? OR b.blocker IS NULL) AND f.id NOT IN 
+            (SELECT id FROM profane_flits) 
+            ORDER BY timestamp DESC
+            """, 
+            (session["username"],),
+        )
+    else:
+        # If user is not logged in, retrieve all non-profane flits
+        cursor.execute(
+            """
+            SELECT f.* FROM flits f 
+            WHERE f.id NOT IN 
+            (SELECT id FROM profane_flits) 
+            ORDER BY timestamp DESC
+            """,
         )
 
     # Fetch the results of the SQL query
@@ -123,13 +162,9 @@ def home() -> Response:
 
 @app.route("/api/get_flits")
 def get_flits():
-    skip = request.args.get("skip")
-    limit = request.args.get("limit")
-
-    # Get a connection to the database
+    ...
     db = helpers.get_db()
-
-    # Create a cursor to interact with the database
+    # Get a cursor to interact with the database
     cursor = db.cursor()
     try:
         limit = int(request.args.get("limit"))
@@ -139,13 +174,79 @@ def get_flits():
         limit = 10
         skip = 0
 
-    cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY id DESC LIMIT ? OFFSET ?", (limit, skip))
-    
+    if "username" in session:
+        cursor.execute(
+            """
+            SELECT f.* FROM flits f 
+            LEFT JOIN blocked_users b ON f.username = b.blocked 
+            WHERE (b.blocker != ? OR b.blocker IS NULL) AND f.id NOT IN 
+            (SELECT id FROM profane_flits) 
+            ORDER BY id DESC LIMIT ? OFFSET ?
+            """, 
+            (session["username"], limit, skip),
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT f.* FROM flits f 
+            WHERE f.id NOT IN 
+            (SELECT id FROM profane_flits) 
+            ORDER BY id DESC LIMIT ? OFFSET ?
+            """,
+            (limit, skip),
+        )
+
     return jsonify([dict(flit) for flit in cursor.fetchall()])
+
+@app.route("/block", methods=["POST"])
+def block():
+    # Get the user to block from the request data
+    user_to_block = request.form.get("username")
+
+    # Get a connection to the database
+    db = helpers.get_db()
+
+    # Create a cursor to interact with the database
+    cursor = db.cursor()
+
+    # Insert a new row into the blocked_users table
+    cursor.execute(
+        "INSERT INTO blocked_users (blocker, blocked) VALUES (?, ?)",
+        (session["username"], user_to_block),
+    )
+
+    # Commit the changes and close the connection
+    db.commit()
+
+    # Redirect the user back to the home page
+    return render_template("home.html", blocked_users=get_blocked_users())
+
+@app.route("/unblock", methods=["POST"])
+def unblock():
+    # Get the user to unblock from the request data
+    user_to_unblock = request.form.get("username")
+
+    # Get a connection to the database
+    db = helpers.get_db()
+
+    # Create a cursor to interact with the database
+    cursor = db.cursor()
+
+    # Delete the row from the blocked_users table
+    cursor.execute(
+        "DELETE FROM blocked_users WHERE blocker = ? AND blocked = ?",
+        (session["username"], user_to_unblock),
+    )
+
+    # Commit the changes and close the connection
+    db.commit()
+
+    # Redirect the user back to the home page
+    return render_template("home.html", blocked_users=get_blocked_users())
 
 
 @app.route("/submit_flit", methods=["POST"])
-@limiter.limit("2/minute")
+@limiter.limit("10/minute")
 def submit_flit() -> Response:
     # Get a connection to the database
     db = helpers.get_db()
@@ -194,13 +295,12 @@ def submit_flit() -> Response:
 
         # Insert the new flit into the database
         cursor.execute(
-            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO flits (username, content, userHandle, hashtag, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 session["username"],
                 content,
                 session["handle"],
                 hashtag,
-                profane_flit,
                 meme_url,
                 0,
                 -1,
@@ -489,15 +589,7 @@ def user_profile(username: str) -> Response:
     )
     flits = cursor.fetchall()
 
-    # Check if the logged-in user is following this user's profile
-    is_following = False
-    if "username" in session:
-        logged_in_username = session["username"]
-        cursor.execute(
-            "SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?",
-            (logged_in_username, user["handle"]),
-        )
-        is_following = cursor.fetchone() is not None
+
 
     # Calculate the user's activeness based on their tweet frequency
     latest_tweet_time = datetime.datetime.now()
@@ -524,7 +616,6 @@ def user_profile(username: str) -> Response:
         user=user,
         loggedIn=("username" in session),
         flits=flits,
-        is_following=is_following,
         activeness=activeness,
         engaged_dms=[]
         if "username" not in session
