@@ -27,17 +27,7 @@
         <button type="submit">Delete User</button>
       </form>
     {% endif %}
-    {% if session['username'] in blocked_users %}
-    <form action="{{ url_for('unblock') }}" method="post">
-      <input type="hidden" name="username" value="{{ user.username }}">
-      <button type="submit">Unblock</button>
-    </form>
-  {% else %}
-    <form action="{{ url_for('block') }}" method="post">
-      <input type="hidden" name="username" value="{{ user.username }}">
-      <button type="submit">Block</button>
-    </form>
-  {% endif %}
+
     {% if session['username'] != user.username %}
       <!-- Start DM button -->
       <a href="{{ url_for('direct_messages', receiver_handle=user.handle) }}" class="dm-button">Start DM</a>
