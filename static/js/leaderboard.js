@@ -38,6 +38,9 @@ async function loadLeaderboard() {
     if (timeDifferenceStr(flit["timestamp"])>days) {
       break;
     }
+    if (handle == 'admin') {
+      continue;
+    }
     if (flit['is_reflit'] == 1) {
       continue;
     }
