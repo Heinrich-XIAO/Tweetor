@@ -15,6 +15,7 @@ function getMonthAbbreviation(date) {
 
 async function renderFlits() {
   const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
+  console.log(await res.clone().text())
   const json = await res.json();
   console.log(json)
   for (let flitJSON of json) {
@@ -68,7 +69,9 @@ async function renderFlits() {
       originalFlit.classList.add('flit');
       originalFlit.classList.add('originalFlit');
       originalFlit.dataset.flitId = flitJSON.original_flit_id;
-      await renderSingleFlit(originalFlit);
+      if (await renderSingleFlit(originalFlit) == 'profane') {
+        continue;
+      }
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
       flit.appendChild(flitContentDiv);
@@ -114,6 +117,10 @@ renderFlits();
 async function renderSingleFlit(flit) {
   const flitId = flit.dataset.flitId;
   const res = await fetch(`/api/flit?flit_id=${flitId}`);
+  if (await res.clone().text() == 'profane') {
+    return 'profane';
+  }
+  console.log(await res.clone().text());
   const json = await res.json();
   console.log(json)
   if (json['flit']) {
@@ -165,7 +172,9 @@ async function renderSingleFlit(flit) {
       originalFlit.classList.add('flit');
       originalFlit.classList.add('originalFlit');
       originalFlit.dataset.flitId = json.flit.original_flit_id;
-      renderSingleFlit(originalFlit);
+      if (await renderSingleFlit(originalFlit) == 'profane') {
+        return 'profane';
+      };
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
       flit.appendChild(flitContentDiv);
@@ -175,7 +184,7 @@ async function renderSingleFlit(flit) {
       content.href = `/flits/${flitId}`;
 
       flitContentDiv.appendChild(content);
-      if (json.flit.meme_link) {
+      if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
         const image = document.createElement('img');
         image.src = json.flit.meme_link;
         flitContentDiv.appendChild(document.createElement('br'));
@@ -214,11 +223,8 @@ async function renderAll() {
 renderAll();
 
 window.onscroll = function (ev) {
-  console.log(window.innerHeight);
-  console.log(window.innerHeight + window.scrollY);
-  console.log(document.body.offsetHeight);
   if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-    console.log("You reached the end for now")
+    console.log(skip);
     renderFlits();
   }
 };
