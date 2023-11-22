@@ -752,9 +752,12 @@ def flitAPI():
     c = db.cursor()
     c.execute('SELECT * FROM flits WHERE id=?', (flit_id,))
     flit = c.fetchone()
+
+    if flit is None:
+        return "profane"
     
     if flit['profane_flit'] == 'yes':
-        return "Flit is profane"
+        return "profane"
     
     return jsonify({
         "flit": dict(flit)
