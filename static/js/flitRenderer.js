@@ -28,6 +28,7 @@ async function renderFlits() {
     const username = document.createElement('a');
     username.innerText = flitJSON.username;
     username.href = `user/${flitJSON.userHandle}`;
+    username.classList.add("user-handle");
 
     const handle = document.createElement('a');
     handle.innerText = '@' + flitJSON.userHandle;
@@ -57,7 +58,7 @@ async function renderFlits() {
     flit_data_div.appendChild(handle);
     flit_data_div.innerHTML += '&#160;·&#160;';
     flit_data_div.appendChild(timestampElement);
-    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openReportModal(${flitJSON.id})'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
+    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openReportModal(${flitJSON.id})' aria-label='report'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
 
     flit.appendChild(flit_data_div);
 
@@ -100,7 +101,7 @@ async function renderFlits() {
     reflitInput.name = 'original_flit_id';
     reflitInput.value = flitJSON.id;
     reflitForm.appendChild(reflitInput);
-    reflitForm.innerHTML += '<button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>';
+    reflitForm.innerHTML += '<button type="submit" class="retweet-button" aria-label="reflit"><span class="iconify" data-icon="ps:retweet-1"></span></button>';
 
     flit.appendChild(reflitForm);
 
@@ -131,6 +132,7 @@ async function renderSingleFlit(flit) {
     const username = document.createElement('a');
     username.innerText = json.flit.username;
     username.href = `user/${json.flit.userHandle}`;
+    username.classList.add("user-handle");
 
     const handle = document.createElement('a');
     handle.innerText = '@' + json.flit.userHandle;
