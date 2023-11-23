@@ -31,7 +31,7 @@ async function renderFlits() {
 
     const handle = document.createElement('a');
     handle.innerText = '@' + flitJSON.userHandle;
-    username.href = `user/${flitJSON.userHandle}`;
+    handle.href = `user/${flitJSON.userHandle}`;
     handle.classList.add("user-handle");
 
     let timestamp = new Date(flitJSON.timestamp.replace(/-/g, "/").replace(/T/, " "));
@@ -48,7 +48,7 @@ async function renderFlits() {
       formatted_timestamp = monthAbbreviation + " " + timestamp.getDate();
     }
 
-    const timestampElement = document.createElement("a");
+    const timestampElement = document.createElement("span");
     timestampElement.innerText = formatted_timestamp;
     timestampElement.classList.add("user-handle");
     
@@ -134,7 +134,7 @@ async function renderSingleFlit(flit) {
 
     const handle = document.createElement('a');
     handle.innerText = '@' + json.flit.userHandle;
-    username.href = `user/${json.flit.userHandle}`;
+    handle.href = `user/${json.flit.userHandle}`;
     handle.classList.add("user-handle");
 
     let timestamp = new Date(json.flit.timestamp.replace(/-/g, "/").replace(/T/, " "));
@@ -151,7 +151,7 @@ async function renderSingleFlit(flit) {
       formatted_timestamp = monthAbbreviation + " " + timestamp.getDate();
     }
 
-    const timestampElement = document.createElement("a");
+    const timestampElement = document.createElement("span");
     timestampElement.innerText = formatted_timestamp;
     timestampElement.classList.add("user-handle");
     
