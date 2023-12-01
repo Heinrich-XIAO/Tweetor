@@ -273,7 +273,7 @@ def signup() -> Response:
 
         # Prevent spam by checking if the captcha was already used
         if correct_captcha in used_captchas:
-            return "Why did you try to spam accounts bruh?"
+            return "This captcha has already been used. Try to refresh the captcha."
         used_captchas.append(correct_captcha)
 
         # Check if the user-provided captcha input matches the correct captcha
@@ -283,6 +283,10 @@ def signup() -> Response:
         # Check if the provided passwords match
         if password != passwordConformation:
             return redirect("/signup")
+        
+        # Check if the username has bad characters
+        if "|" in username:
+            return "Usernames cannot contain |"
 
         # Get a connection to the database
         db = helpers.get_db()
