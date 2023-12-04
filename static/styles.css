@@ -337,6 +337,7 @@ button:hover, button:focus {
   font-size: 16px;
   color: #555;
   text-decoration: none;
+  word-wrap: break-word;
 }
 
 .flit-timestamp {
@@ -501,8 +502,9 @@ hr {
   margin-bottom: 0;
 }
 
-main {
-  margin-left: 10%;
+.flit_form {
+  width: 75%;
+  margin: auto;
 }
 
 .menu{
@@ -512,19 +514,33 @@ main {
   background-color: var(--background, black);
 }
 
+.dm_with_person {
+  padding-left: 5px !important;
+}
+
 /* This is the media query for smaller screens */
 @media screen and (max-width: 600px) {
   /* This will override the default style when the screen width is less than or equal to 600px */
   menu {
-    width: 100% !important; /* This will make the div element take up the full width of the screen */
+    width: calc(100% - 67px) !important; /* This will make the div element take up the full width of the screen */
     min-width: auto !important; /* This will remove the minimum width constraint */
     float: none !important; /* This will make the div element stop floating */
+    margin-left: 60px !important;
   }
 
   main {
-    width: 100% !important; /* This will make the main element take up the full width of the screen */
+    width: calc(100% - 67px) !important; /* This will make the main element take up the full width of the screen */
     float: none !important; /* This will make the main element stop floating */
+    margin-left: 60px !important;
   }
+
+  .centered-form {
+    width: 300px !important;
+  }
+}
+
+main {
+  margin-left: 10%;
 }
 
 /* Define a keyframes animation named fade-out */
