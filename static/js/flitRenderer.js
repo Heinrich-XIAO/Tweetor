@@ -85,6 +85,7 @@ async function renderFlits() {
       if (flitJSON.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
         const image = document.createElement('img');
         image.src = flitJSON.meme_link;
+        image.width = 200;
         flitContentDiv.appendChild(document.createElement('br'));
         flitContentDiv.appendChild(image);
       }
@@ -189,6 +190,7 @@ async function renderSingleFlit(flit) {
       if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
         const image = document.createElement('img');
         image.src = json.flit.meme_link;
+        image.width = 100;
         flitContentDiv.appendChild(document.createElement('br'));
         flitContentDiv.appendChild(image);
       }

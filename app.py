@@ -51,6 +51,12 @@ DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
 
+@app.template_filter('username_trim')
+def trim_username(s, n):
+    if len(s) <= n:
+        return s
+    return s[:n-3]+'...'
+
 def get_engaged_direct_messages(user_handle):
     db = helpers.get_db()
     cursor = db.cursor()

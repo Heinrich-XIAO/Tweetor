@@ -46,7 +46,9 @@
         <hr>
         <div>
           {% for dm in engaged_dms %}
-            <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}" style="color: white;margin-bottom: 0rem !important;margin-top:0rem !important;" class="w3-bar-item w3-button">{{ dm['receiver_handle'] }}</a>
+            <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}" style="color: white;margin-bottom: 0rem !important;margin-top:0rem !important;" class="w3-bar-item w3-button dm_with_person">
+              {{ dm['receiver_handle'] | username_trim(6) }}
+            </a>
           {% endfor %}
         </div>
       {% endif %}
@@ -71,7 +73,7 @@
       </form>
     </div>
 
-  </div>
+  </main>
 
   <script>
     const reportModal = document.getElementById('reportModal');
