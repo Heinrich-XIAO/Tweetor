@@ -317,9 +317,6 @@ button:hover, button:focus {
   text-decoration: underline;
 }
 
-.flit-username a:not(.user-handle), .flit-content > a, .flit-content > a:hover {
-}
-
 .user-handle, .user-handle:hover {
   color: #555;
   font-weight: normal;
