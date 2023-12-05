@@ -164,6 +164,18 @@ def engaged_dms():
         print([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
         return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
 
+@app.route("/api/get_captcha")
+def get_captcha():
+    while True:
+        correct_captcha = "".join(
+            random.choices(
+                string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5
+            )
+        )
+        if correct_captcha not in used_captchas:
+            break
+    return correct_captcha
+
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
 def submit_flit() -> Response:
@@ -738,18 +750,6 @@ def unmute(handle):
     if session.get("handle") == "admin":
         muted.remove(handle)
         return "Completed"
-
-@app.route("/get_captcha")
-def get_captcha():
-    while True:
-        correct_captcha = "".join(
-            random.choices(
-                string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5
-            )
-        )
-        if correct_captcha not in used_captchas:
-            break
-    return correct_captcha
 
 @app.route("/sitemap.xml")
 def sitemap():

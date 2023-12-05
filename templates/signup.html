@@ -54,7 +54,7 @@
       captcha = document.getElementById("image");
       captcha_correct_element = document.getElementById("correct_captcha");
       
-      const res = await fetch("/get_captcha");
+      const res = await fetch("/api/get_captcha");
       const correct_captcha = await res.text();
       
       // Store generated input
