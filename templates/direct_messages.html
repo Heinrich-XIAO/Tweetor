@@ -4,10 +4,6 @@
 
 {% block body %}
   <h1>Direct Messages with {{ receiver_handle }}</h1>
-
-
-
-  <h2>Messages</h2>
   {% for message in messages|reverse %}
     {% if message["profane_dm"] == "no" %}
       <strong>{{ message["sender_handle"] }}:</strong> {{ message["content"] }}

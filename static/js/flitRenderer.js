@@ -1,4 +1,4 @@
-console.log("Flit renderer loaded");
+console.log("flitRenderer.js loaded");
 
 const flits = document.getElementById('flits');
 let skip = 0;

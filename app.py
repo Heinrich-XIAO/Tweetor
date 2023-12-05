@@ -51,12 +51,6 @@ DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
 
-@app.template_filter('username_trim')
-def trim_username(s, n):
-    if len(s) <= n:
-        return s
-    return s[:n-3]+'...'
-
 def get_engaged_direct_messages(user_handle):
     db = helpers.get_db()
     cursor = db.cursor()
@@ -110,22 +104,44 @@ def home() -> Response:
 
     # Check if the user is logged in
     if "username" in session:
-        # Get the user's handle from the session
-        user_handle = session["handle"]
-
-        # Get the list of engaged direct messages for the user
-        engaged_dms = get_engaged_direct_messages(user_handle)
-
         # Render the home template with user-specific data
         return render_template(
             "home.html",
             flits=flits,
             loggedIn=True,
-            engaged_dms=engaged_dms,
         )
     else:
         # Render the home template without user-specific data since not logged in
         return render_template("home.html", flits=flits, loggedIn=False)
+
+## APIs
+@app.route("/api/handle")
+def get_handle():
+    if "username" not in session:
+        return "Not Logged In"
+    else:
+        return session["handle"]
+
+@app.route("/api/flit")
+def flitAPI():
+    try:
+        flit_id = int(request.args.get("flit_id"))
+    except ValueError:
+        return jsonify("Flit ID is invalid")
+    db = helpers.get_db()
+    c = db.cursor()
+    c.execute('SELECT * FROM flits WHERE id=?', (flit_id,))
+    flit = c.fetchone()
+
+    if flit is None:
+        return "profane"
+    
+    if flit['profane_flit'] == 'yes':
+        return "profane"
+    
+    return jsonify({
+        "flit": dict(flit)
+    })
 
 @app.route("/api/get_flits")
 def get_flits():
@@ -149,6 +165,13 @@ def get_flits():
     
     return jsonify([dict(flit) for flit in cursor.fetchall()])
 
+@app.route("/api/engaged_dms")
+def engaged_dms():
+    if "username" not in session:
+        return "{\"logged_in\": false}"
+    else:
+        print([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
+        return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
@@ -256,10 +279,7 @@ def settings():
     if "username" not in session:
         return render_template('error.html', error="Are you signed in?")
     return render_template('settings.html',
-        loggedIn=("username" in session),
-        engaged_dms=[]
-        if "username" not in session
-        else get_engaged_direct_messages(session["username"])
+        loggedIn=("username" in session)
     )
 
 # Signup route
@@ -409,9 +429,6 @@ def change_password():
 def leaderboard():
     return render_template('leaderboard.html',
         loggedIn=("username" in session),
-        engaged_dms=[]
-        if "username" not in session
-        else get_engaged_direct_messages(session["username"])
     )
 
 c = sqlite3.connect(DATABASE).cursor()
@@ -449,9 +466,6 @@ def singleflit(flit_id: str) -> Response:
             flit=flit,
             loggedIn=("username" in session),
             original_flit=original_flit,
-            engaged_dms=[]
-            if "username" not in session
-            else get_engaged_direct_messages(session["username"]),
         )
 
     # If the flit doesn't exist, redirect to the home page
@@ -536,9 +550,6 @@ def user_profile(username: str) -> Response:
         flits=flits,
         is_following=is_following,
         activeness=activeness,
-        engaged_dms=[]
-        if "username" not in session
-        else get_engaged_direct_messages(session["username"]),
     )
 
 @app.route("/profanity")
@@ -677,9 +688,6 @@ def direct_messages(receiver_handle):
         messages=messages,
         receiver_handle=receiver_handle,
         loggedIn="username" in session,
-        engaged_dms=[]
-        if "username" not in session
-        else get_engaged_direct_messages(session["username"]),
     )
 
 
@@ -751,28 +759,6 @@ def get_captcha():
         if correct_captcha not in used_captchas:
             break
     return correct_captcha
-
-@app.route("/api/flit")
-def flitAPI():
-    try:
-        flit_id = int(request.args.get("flit_id"))
-    except ValueError:
-        return jsonify("Flit ID is invalid")
-    db = helpers.get_db()
-    c = db.cursor()
-    c.execute('SELECT * FROM flits WHERE id=?', (flit_id,))
-    flit = c.fetchone()
-
-    if flit is None:
-        return "profane"
-    
-    if flit['profane_flit'] == 'yes':
-        return "profane"
-    
-    return jsonify({
-        "flit": dict(flit)
-    })
-
 
 @app.route("/sitemap.xml")
 def sitemap():

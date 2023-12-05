@@ -516,10 +516,13 @@ hr {
 
 .dm_with_person {
   padding-left: 5px !important;
+  color: white;
+  margin-bottom: 0rem !important;
+  margin-top:0rem !important;
 }
 
 /* This is the media query for smaller screens */
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 1000px) {
   /* This will override the default style when the screen width is less than or equal to 600px */
   menu {
     width: calc(100% - 67px) !important; /* This will make the div element take up the full width of the screen */
