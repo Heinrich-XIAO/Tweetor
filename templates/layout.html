@@ -44,12 +44,7 @@
         <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="logout"><span class="iconify" data-icon="ci:exit"></span></a>
         {% block admin_buttons %}{% endblock %}
         <hr>
-        <div>
-          {% for dm in engaged_dms %}
-            <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}" style="color: white;margin-bottom: 0rem !important;margin-top:0rem !important;" class="w3-bar-item w3-button dm_with_person">
-              {{ dm['receiver_handle'] | username_trim(6) }}
-            </a>
-          {% endfor %}
+        <div id="dm_list">
         </div>
       {% endif %}
     </div>
@@ -95,22 +90,7 @@
     }
   </script>
   <script src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
-  {% if loggedIn %}
-    <script>
-      document.querySelectorAll(".like-btn").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-          const flitId = e.target.dataset.flitId;
-          const response = await fetch("/like_flit", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `flitId=${flitId}`,
-          });
-          if (response.ok) {
-            // Update the like count on the front-end
-          }
-        });
-      });
-    </script>
-  {% endif %}
+  <script src="{{ url_for('static', filename='js/renderDMs.js') }}"></script>
+
 </body>
 </html>
