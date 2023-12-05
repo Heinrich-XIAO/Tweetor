@@ -102,17 +102,8 @@ def home() -> Response:
     # Fetch the results of the SQL query
     flits = cursor.fetchall()
 
-    # Check if the user is logged in
-    if "username" in session:
-        # Render the home template with user-specific data
-        return render_template(
-            "home.html",
-            flits=flits,
-            loggedIn=True,
-        )
-    else:
-        # Render the home template without user-specific data since not logged in
-        return render_template("home.html", flits=flits, loggedIn=False)
+    # Render the home template
+    return render_template("home.html", flits=flits, loggedIn=False)
 
 ## APIs
 @app.route("/api/handle")
