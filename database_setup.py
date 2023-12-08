@@ -6,21 +6,6 @@ DATABASE = "tweetor.db"
 
 sqlite3.connect(DATABASE).cursor().execute(
     """
-    CREATE TABLE IF NOT EXISTS flits  (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT NOT NULL,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        userHandle TEXT NOT NULL,
-        username TEXT NOT NULL,
-        hashtag TEXT NOT NULL,
-        meme_link TEXT
-    )
-"""
-)
-
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
