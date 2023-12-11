@@ -27,6 +27,9 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import helpers
 import database_setup
+from mixpanel import Mixpanel
+ 
+mp = Mixpanel("f09bda290630d43ce6f9d145ebb0431d")
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
@@ -103,7 +106,7 @@ def home() -> Response:
     flits = cursor.fetchall()
 
     # Render the home template
-    return render_template("home.html", flits=flits, loggedIn=False)
+    return render_template("home.html", flits=flits, loggedIn="username" in session)
 
 ## APIs
 @app.route("/api/handle")
@@ -240,6 +243,12 @@ def submit_flit() -> Response:
         )
         db.commit()
         db.close()
+
+        # Note: you must supply the user_id who performed the event as the first parameter.
+        mp.track(session['handle'], 'ReFlit',  {
+            'Flit Id': cursor.lastrowid
+        })
+
         return redirect(url_for("home"))
 
     # Check for reflit
@@ -269,6 +278,10 @@ def submit_flit() -> Response:
             original_flit_id,
         ),
     )
+
+    mp.track(session['handle'], 'ReFlit',  {
+        'Original Flit Id': original_flit_id
+    })
 
     db.commit()
     db.close()
@@ -341,6 +354,11 @@ def signup() -> Response:
         db.commit()
         db.close()
 
+        # Note: you must supply the user_id who performed the event as the first parameter.
+        mp.track(handle, 'Signed Up',  {
+        'Signup Type': 'Referral'
+        })
+
         # Set session data for the newly registered user
         session["handle"] = handle
         session["username"] = username
@@ -354,7 +372,6 @@ def signup() -> Response:
 
     # Render the signup template with potential error messages
     return render_template("signup.html", error=error)
-
 
 # Login route
 @sitemapper.include()
