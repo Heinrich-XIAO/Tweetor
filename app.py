@@ -28,11 +28,12 @@ from flask_limiter.util import get_remote_address
 import helpers
 import database_setup
 from mixpanel import Mixpanel
- 
-mp = Mixpanel("f09bda290630d43ce6f9d145ebb0431d")
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
+MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
+
+mp = Mixpanel(MIXPANEL_SECRET)
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
