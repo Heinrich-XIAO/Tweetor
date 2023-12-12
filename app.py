@@ -1,6 +1,7 @@
 import sqlite3
 import hashlib
 import random
+import time
 from urllib.parse import quote
 import string
 import requests
@@ -54,6 +55,10 @@ Session(app)
 DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
+
+print(time.time_ns())
+
+online_users = {}
 
 def get_engaged_direct_messages(user_handle):
     db = helpers.get_db()
@@ -180,6 +185,13 @@ def get_captcha():
             break
     return correct_captcha
 
+@app.route("/api/render_online")
+def render_online():
+    if "handle" in session:
+        online_users[session["handle"]] = time.time_ns()
+        return "{'status': 'success'}"
+    return "{'status': 'error'}"
+
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
 def submit_flit() -> Response:
@@ -296,6 +308,23 @@ def settings():
     if "username" not in session:
         return render_template('error.html', error="Are you signed in?")
     return render_template('settings.html',
+        loggedIn=("username" in session)
+    )
+
+# Gets users to show if they are online
+@app.route('/users', methods=['GET', 'POST'])
+def users():
+    print(online_users)
+    current_ns_time = time.time_ns()
+    handles_to_remove = []
+    for handle in online_users.keys():
+        if online_users[handle] < current_ns_time - 1000000000 * 10:
+            handles_to_remove.append(handle)
+    for handle in handles_to_remove:
+        online_users.pop(handle)
+    print(online_users)
+    return render_template('users.html',
+        online=online_users,
         loggedIn=("username" in session)
     )
 
