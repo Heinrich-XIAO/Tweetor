@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}Online Users {% endblock %}
+
+{% block body %}
+<br>
+<br>
+<br>
+<div id="users">
+  <h1>Online</h1>
+  {% for handle in online %}
+    <div>
+      <p>{{ handle }}</p>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
