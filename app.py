@@ -224,8 +224,8 @@ def submit_flit() -> Response:
             return render_template("error.html", error="Message was too long.")
         if "username" not in session:
             return render_template("error.html", error="You are not logged in.")
-        if content == "urmom" or content == "ur mom":
-            return render_template("error.html", error='"ur mom" was too large for the servers to handle')
+        if content.lower() == "urmom" or content.lower() == "ur mom":
+            return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
 
         # Extract and validate hashtag from form data
         hashtag = request.form["hashtag"]
