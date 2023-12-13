@@ -260,7 +260,7 @@ def submit_flit() -> Response:
         db.close()
 
         # Note: you must supply the user_id who performed the event as the first parameter.
-        mp.track(session['handle'], 'ReFlit',  {
+        mp.track(session['handle'], 'Posted',  {
             'Flit Id': cursor.lastrowid
         })
 
