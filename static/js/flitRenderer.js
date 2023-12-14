@@ -34,7 +34,25 @@ async function renderFlits() {
     handle.innerText = '@' + flitJSON.userHandle;
     handle.href = `user/${flitJSON.userHandle}`;
     handle.classList.add("user-handle");
-
+       // Add the online status to the flitJSON object
+    const onlineStatus = flitJSON.onlineStatus;
+    if (onlineStatus) {
+      // Add a green circle next to the user's handle
+      const greenCircle = document.createElement("span");
+      greenCircle.style.backgroundColor = "green";
+      greenCircle.style.borderRadius = "50%";
+      greenCircle.style.width = "10px";
+      greenCircle.style.height = "10px";
+      greenCircle.style.display = "inline-block";
+      greenCircle.style.marginLeft = "5px";
+      handle.parentNode.insertBefore(greenCircle, handle.nextSibling);
+    } else {
+      // The user is offline, remove the green circle if it exists
+      const nextSibling = handle.nextSibling;
+      if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && nextSibling.style.backgroundColor === "green") {
+        nextSibling.parentNode.removeChild(nextSibling);
+      }
+    }
     let timestamp = new Date(flitJSON.timestamp.replace(/-/g, "/").replace(/T/, " "));
     
     // Format the Date object
