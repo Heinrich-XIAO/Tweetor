@@ -187,10 +187,10 @@ def get_captcha():
 
 @app.route("/api/render_online")
 def render_online():
-    if "handle" in session:
-        online_users[session["handle"]] = time.time_ns()
-        return "{'status': 'success'}"
-    return "{'status': 'error'}"
+   if "handle" in session:
+       online_users[session["handle"]] = time.time_ns()
+   return jsonify(online_users)
+
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
