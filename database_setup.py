@@ -83,6 +83,37 @@ with sqlite3.connect(DATABASE) as conn:
     """
     )
 
+def add_is_reflit_column_if_not_exists():
+  db = helpers.get_db()
+  cursor = db.cursor()
+
+  # Check if the is_reflit column exists
+  cursor.execute("PRAGMA table_info(flits)")
+  columns = cursor.fetchall()
+  column_names = [column[1] for column in columns]
+  if 'is_reflit' not in column_names:
+      # If the is_reflit column doesn't exist, add it
+      cursor.execute("ALTER TABLE flits ADD COLUMN is_reflit INTEGER")
+      db.commit()
+
+  db.close()
+
+def add_meme_link_column_if_not_exists():
+   db = helpers.get_db()
+   cursor = db.cursor()
+
+   # Check if the meme_link column exists
+   cursor.execute("PRAGMA table_info(flits)")
+   columns = cursor.fetchall()
+   column_names = [column[1] for column in columns]
+   if 'meme_link' not in column_names:
+       # If the meme_link column doesn't exist, add it
+       cursor.execute("ALTER TABLE flits ADD COLUMN meme_link VARCHAR(255)")
+       db.commit()
+
+   db.close()
+
+
 def create_admin_if_not_exists():
   db = helpers.get_db()
   cursor = db.cursor()
@@ -99,4 +130,24 @@ def create_admin_if_not_exists():
     db.commit()
     print("Admin account created")
 
+
+def add_original_flit_id_column_if_not_exists():
+ db = helpers.get_db()
+ cursor = db.cursor()
+
+ # Check if the original_flit_id column exists
+ cursor.execute("PRAGMA table_info(flits)")
+ columns = cursor.fetchall()
+ column_names = [column[1] for column in columns]
+ if 'original_flit_id' not in column_names:
+     # If the original_flit_id column doesn't exist, add it
+     cursor.execute("ALTER TABLE flits ADD COLUMN original_flit_id INTEGER")
+     db.commit()
+
+ db.close()
+
+
 create_admin_if_not_exists()
+add_meme_link_column_if_not_exists()
+add_is_reflit_column_if_not_exists()
+add_original_flit_id_column_if_not_exists()
