@@ -118,40 +118,5 @@
     memeImages.innerHTML = '';
     searchTenor(this.value);
   });
-
-  window.setInterval(()=> {
- fetch("/api/render_online")
- .then(response => response.json())
- .then(data => {
- // Get the list of online users
- const onlineUsers = Object.keys(data);
- console.log(onlineUsers); // Print the onlineUsers array to the console
-
- // Update the user page
- const userHandles = document.querySelectorAll(".user-handle");
- userHandles.forEach(handle => {
-  // Remove the green circle from the user
-  const nextSibling = handle.nextSibling;
-  if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && nextSibling.style.backgroundColor === "green") {
-    nextSibling.parentNode.removeChild(nextSibling);
-  }
-
-  // Check if the user is online
-  if (onlineUsers.includes(handle.innerText)) {
-    // Add a green circle next to the user's handle
-    const greenCircle = document.createElement("span");
-    greenCircle.style.backgroundColor = "green";
-    greenCircle.style.borderRadius = "50%";
-    greenCircle.style.width = "10px";
-    greenCircle.style.height = "10px";
-    greenCircle.style.display = "inline-block";
-    greenCircle.style.marginLeft = "5px";
-    handle.parentNode.insertBefore(greenCircle, handle.nextSibling);
-    console.log(handle.parentNode); // Print the parent node of the handle to the console
-  }
- });
- });
-}, 5000);
-
 </script>
 {% endblock %}
