@@ -20,6 +20,9 @@ async function renderFlits() {
     let flit = document.createElement("div");
     flit.classList.add("flit");
     flit = await renderFlitWithFlitJSON({"flit": flitJSON}, flit);
+    if (flit === 'profane') {
+      continue;
+    }
     flits.appendChild(flit);
   }
   checkGreenDot();
