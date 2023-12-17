@@ -7,6 +7,15 @@ console.log(notificationAudio);
 async function checkNotifications() {
   const res = await fetch(`/api/get_flits?skip=0&limit=${limit}`);
   if (!equals(await res.clone().json(), prevRecentMessages)) {
+    if (window.location.pathname == '/') {
+      console.log((await res.clone().json())[0]);
+      let flit = document.createElement("div");
+      flit.classList.add("flit");
+      flit.dataset.flitId = (await res.clone().json())[0]['id'];
+      flit = await renderSingleFlit(flit);
+      console.log(flit);
+      flits.insertBefore(flit, flits.firstChild);
+    }
     prevRecentMessages = await res.json();
     if (Notification.permission == 'granted') {
       console.log("Notification");
