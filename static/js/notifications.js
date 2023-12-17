@@ -9,7 +9,6 @@ async function checkNotifications() {
   if (!equals(await res.clone().json(), prevRecentMessages)) {
     prevRecentMessages = await res.json();
     if (Notification.permission == 'granted') {
-      notificationAudio.play()
       console.log("Notification");
       const notification = new Notification('Message in Main', {
         icon: '/static/logo.png',
@@ -30,4 +29,6 @@ if (Notification.permission !== 'denied') {
   prevRecentMessages = await res.json();
 })();
 
-window.setInterval(checkNotifications, 1000);
+if (localStorage.getItem('notifications') == 'true' || localStorage.getItem('notifications') == undefined) {
+  window.setInterval(checkNotifications, 1000);
+}
