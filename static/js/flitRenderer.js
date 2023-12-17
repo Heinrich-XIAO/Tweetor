@@ -41,6 +41,7 @@ async function renderSingleFlit(flit) {
 
   flit.href = `/flits/${flitId}`;
   checkGreenDot();
+  return flit;
 }
 
 async function renderFlitWithFlitJSON(json, flit) {
