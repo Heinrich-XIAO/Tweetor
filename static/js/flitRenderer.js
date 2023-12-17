@@ -153,6 +153,7 @@ window.onscroll = function (ev) {
 };
 
 async function checkGreenDot() {
+  console.log('checking green dot')
   const res = await fetch("/api/render_online");
   const data = await res.json();
   // Get the list of online users
@@ -160,7 +161,8 @@ async function checkGreenDot() {
 
   // Update the user page
   const handles = document.querySelectorAll(".user-handle");
-
+  console.log(handles);
+  console.log(onlineUsers)
 
   handles.forEach((handle, index) => {
     if (index % 3 != 0) {
@@ -171,6 +173,7 @@ async function checkGreenDot() {
     if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && (nextSibling.style.backgroundColor === "green" || nextSibling.style.backgroundColor === "grey")) {
       nextSibling.parentNode.removeChild(nextSibling);
     }
+    console.log(onlineUsers.includes(handle.innerText))
   
     // Check if the user is online
     if (onlineUsers.includes(handle.innerText)) {

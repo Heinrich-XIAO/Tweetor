@@ -187,9 +187,16 @@ def get_captcha():
 
 @app.route("/api/render_online")
 def render_online():
-   if "handle" in session:
-       online_users[session["handle"]] = time.time_ns()
-   return jsonify(online_users)
+    current_ns_time = time.time_ns()
+    handles_to_remove = []
+    for handle in online_users.keys():
+        if online_users[handle] < current_ns_time - 1000000000 * 10:
+            handles_to_remove.append(handle)
+    for handle in handles_to_remove:
+        online_users.pop(handle)
+    if "handle" in session:
+        online_users[session["handle"]] = time.time_ns()
+    return jsonify(online_users)
 
 
 @app.route("/submit_flit", methods=["POST"])
