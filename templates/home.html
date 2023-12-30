@@ -9,9 +9,12 @@
   <div class="row">
     <div class="flit_form">
       <form action="/submit_flit" method="post" id="post_flit">
+        <!-- Hidden Inputs -->
         <input type="hidden" name="text0" id="text0">
         <input type="hidden" name="text1" id="text1">
         <input type="hidden" name="meme_link" id="meme_link">
+        <input type="hidden" name="original_flit_id" id="original_flit_id">
+
         <div class="row">
           <div class="twelve columns">
             <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="flit-content-input u-full-width" placeholder="Type your flit here..."></textarea>
