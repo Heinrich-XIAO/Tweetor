@@ -208,47 +208,47 @@ def submit_flit() -> Response:
     # Create a cursor to interact with the database
     cursor = db.cursor()
 
+    # Extract form data for the new flit
+    content = str(request.form["content"])
+    meme_url = request.form["meme_link"]
+
+    # Validate meme URL format
+    if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
+        return render_template(
+            "error.html", error="Why is this meme not from tenor?"
+        )
+
+    # Check if the user is muted
+    if session.get("username") in muted:
+        return render_template("error.html", error="You were muted.")
+
+    # Check for various content validation conditions
+    if content.strip() == "":
+        return render_template("error.html", error="Message was blank.")
+    if len(content) > 280:
+        return render_template("error.html", error="Message was too long.")
+    if "username" not in session:
+        return render_template("error.html", error="You are not logged in.")
+    if content.lower() == "urmom" or content.lower() == "ur mom":
+        return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
+
+    # Extract and validate hashtag from form data
+    hashtag = request.form["hashtag"]
+
+    # Use the Sightengine result to check for profanity
+    sightengine_result = is_profanity(content)
+    profane_flit = "no"
+    if (
+        sightengine_result["status"] == "success"
+        and len(sightengine_result["profanity"]["matches"]) > 0
+    ):
+        profane_flit = "yes"
+        return render_template(
+            "error.html", error="Do you really think that's appropriate?"
+        )
+
     # Check if the original_flit_id field is present in the form data
-    if request.form.get("original_flit_id") is None:
-        # Extract form data for the new flit
-        content = str(request.form["content"])
-        meme_url = request.form["meme_link"]
-
-        # Validate meme URL format
-        if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
-            return render_template(
-                "error.html", error="Why is this meme not from tenor?"
-            )
-
-        # Check if the user is muted
-        if session.get("username") in muted:
-            return render_template("error.html", error="You were muted.")
-
-        # Check for various content validation conditions
-        if content.strip() == "":
-            return render_template("error.html", error="Message was blank.")
-        if len(content) > 280:
-            return render_template("error.html", error="Message was too long.")
-        if "username" not in session:
-            return render_template("error.html", error="You are not logged in.")
-        if content.lower() == "urmom" or content.lower() == "ur mom":
-            return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
-
-        # Extract and validate hashtag from form data
-        hashtag = request.form["hashtag"]
-
-        # Use the Sightengine result to check for profanity
-        sightengine_result = is_profanity(content)
-        profane_flit = "no"
-        if (
-            sightengine_result["status"] == "success"
-            and len(sightengine_result["profanity"]["matches"]) > 0
-        ):
-            profane_flit = "yes"
-            return render_template(
-                "error.html", error="Do you really think that's appropriate?"
-            )
-
+    if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
         # Insert the new flit into the database
         cursor.execute(
             "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -283,19 +283,17 @@ def submit_flit() -> Response:
 
         if original_flit:  # If the original flit exists
             is_reflit = True
-            # Instead of using form content as new flit content, indicate it's a reflit
-            content = "Reflit: " + str(original_flit_id)
 
     # Insert the reflit or empty flit into the database
     cursor.execute(
         "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (
             session["username"],
-            "",
+            content,
             session["handle"],
-            "",
-            "no",
-            "",
+            hashtag,
+            profane_flit,
+            meme_url,
             int(is_reflit),
             original_flit_id,
         ),
