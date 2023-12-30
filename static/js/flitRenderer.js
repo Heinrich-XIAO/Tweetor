@@ -1,6 +1,7 @@
 console.log("flitRenderer.js loaded");
 
 const flits = document.getElementById('flits');
+const addedElements = document.getElementById('addedElements');
 let skip = 0;
 let limit = 10;
 
@@ -70,7 +71,7 @@ async function renderFlitWithFlitJSON(json, flit) {
       let options = { year: 'numeric', month: 'short', day: 'numeric' };
       formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
     } else {
-      let monthAbbreviation = getMonthAbbreviation(timestamp);
+    let monthAbbreviation = getMonthAbbreviation(timestamp);
       formatted_timestamp = monthAbbreviation + " " + timestamp.getDate();
     }
 
@@ -90,6 +91,23 @@ async function renderFlitWithFlitJSON(json, flit) {
     const flitContentDiv = document.createElement('div');
     flitContentDiv.classList.add('flit-content');
 
+
+
+    const content = document.createElement('a');
+    content.innerText = json.flit.content + ' ' + json.flit.hashtag;
+    content.href = `/flits/${json.flit.id}`;
+
+    flitContentDiv.appendChild(content);
+    if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
+      const image = document.createElement('img');
+      image.src = json.flit.meme_link;
+      image.width = 100;
+      flitContentDiv.appendChild(document.createElement('br'));
+      flitContentDiv.appendChild(image);
+    }
+
+    flit.appendChild(flitContentDiv);
+    
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
       originalFlit.classList.add('flit');
@@ -101,37 +119,9 @@ async function renderFlitWithFlitJSON(json, flit) {
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
       flit.appendChild(flitContentDiv);
-    } else {
-      const content = document.createElement('a');
-      content.innerText = json.flit.content + ' ' + json.flit.hashtag;
-      content.href = `/flits/${json.flit.id}`;
-
-      flitContentDiv.appendChild(content);
-      if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
-        const image = document.createElement('img');
-        image.src = json.flit.meme_link;
-        image.width = 100;
-        flitContentDiv.appendChild(document.createElement('br'));
-        flitContentDiv.appendChild(image);
-      }
-
-      flit.appendChild(flitContentDiv);
     }
-
-    const reflitForm = document.createElement('form');
-    reflitForm.action = '/submit_flit';
-    reflitForm.method = 'POST';
-
-    const reflitInput = document.createElement('input');
-    reflitInput.type = 'hidden';
-    reflitInput.name = 'original_flit_id';
-    reflitInput.value = json.flit.id;
-    reflitForm.appendChild(reflitInput);
-    reflitForm.innerHTML += '<button type="submit" class="retweet-button"><span class="iconify" data-icon="ps:retweet-1"></span></button>';
-
-    flit.appendChild(reflitForm);
-
-    flit.innerHTML += '';
+    
+    flit.innerHTML += `<button class="retweet-button" onclick="reflit(${json.flit.id})"><span class="iconify" data-icon="ps:retweet-1"></span></button>`;
   }
   return flit;
 }
@@ -151,6 +141,19 @@ window.onscroll = function (ev) {
     renderFlits();
   }
 };
+
+async function reflit(id) {
+  const res = await fetch(`/api/flit?flit_id=${id}`);
+  const json = await res.json();
+  
+  let flit = document.createElement('div');
+  flit.classList.add('flit');
+  flit = await renderFlitWithFlitJSON(json, flit);
+  addedElements.appendChild(flit);
+  const original_flit_id_input = document.getElementById('original_flit_id');
+
+  original_flit_id_input.value = json.flit.id;
+}
 
 async function checkGreenDot() {
   console.log('checking green dot')
