@@ -5,6 +5,12 @@ const addedElements = document.getElementById('addedElements');
 let skip = 0;
 let limit = 10;
 
+function convertUSTtoEST(date) {
+  const ustDate = new Date(date);
+  const estDate = new Date(ustDate.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  return estDate;
+}
+
 // Function to get the abbreviated month name
 function getMonthAbbreviation(date) {
   const months = [
@@ -60,20 +66,17 @@ async function renderFlitWithFlitJSON(json, flit) {
     handle.innerText = '@' + json.flit.userHandle;
     handle.href = `user/${json.flit.userHandle}`;
     handle.classList.add("user-handle");
+    
+    let timestamp = new Date(json.flit.timestamp);
 
-    let timestamp = new Date(json.flit.timestamp.replace(/-/g, "/").replace(/T/, " "));
-
+    timestamp = convertUSTtoEST(Date.UTC(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate(), timestamp.getHours(), timestamp.getMinutes()));
+    console.log(timestamp, json.flit.timestamp);
     // Format the Date object
     let now = new Date();
     let formatted_timestamp;
 
-    if (timestamp.getFullYear() !== now.getFullYear()) {
-      let options = { year: 'numeric', month: 'short', day: 'numeric' };
-      formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
-    } else {
-    let monthAbbreviation = getMonthAbbreviation(timestamp);
-      formatted_timestamp = monthAbbreviation + " " + timestamp.getDate();
-    }
+    let options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+    formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
 
     const timestampElement = document.createElement("span");
     timestampElement.innerText = formatted_timestamp;
