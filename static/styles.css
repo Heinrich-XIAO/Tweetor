@@ -302,6 +302,7 @@ button:hover, button:focus {
 
 .flit {
   padding: 20px;
+  padding-bottom: 5px;
   margin-bottom: -1px;
   border-style: solid;
   border-color: #555;
@@ -482,7 +483,8 @@ hr {
   background-color: transparent;
   border: none;
   cursor: pointer;
-  padding: 5px;
+  padding: 0px;
+  margin: 0px;
 }
 
 .retweet-button:hover {
