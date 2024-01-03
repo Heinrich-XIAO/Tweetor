@@ -33,11 +33,13 @@ if (Notification.permission !== 'denied') {
 }
 
 (async () => {
-  const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`);
+  let res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`);
   console.log(await res.clone().json());
   prevRecentMessages = await res.json();
+
+  res = await fetch(`/api/get_handle`);
+  if (localStorage.getItem('notifications') == 'true' || localStorage.getItem('notifications') == undefined && (await res.text()) != 'Not Logged In') {
+    window.setInterval(checkNotifications, 1000);
+  }
 })();
 
-if (localStorage.getItem('notifications') == 'true' || localStorage.getItem('notifications') == undefined) {
-  window.setInterval(checkNotifications, 1000);
-}

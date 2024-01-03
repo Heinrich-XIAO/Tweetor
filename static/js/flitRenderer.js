@@ -67,10 +67,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     handle.href = `user/${json.flit.userHandle}`;
     handle.classList.add("user-handle");
     
-
-    console.log(typeof json.flit.timestamp)
     let timestamp = new Date(json.flit.timestamp.replace(" ", "T") + "Z");
-
     timestamp = convertUSTtoEST(timestamp);
     console.log(timestamp, json.flit.timestamp);
     // Format the Date object
@@ -161,7 +158,6 @@ async function reflit(id) {
 }
 
 async function checkGreenDot() {
-  console.log('checking green dot')
   const res = await fetch("/api/render_online");
   const data = await res.json();
   // Get the list of online users
@@ -169,8 +165,6 @@ async function checkGreenDot() {
 
   // Update the user page
   const handles = document.querySelectorAll(".user-handle");
-  console.log(handles);
-  console.log(onlineUsers)
 
   handles.forEach((handle, index) => {
     if (index % 3 != 0) {
@@ -181,7 +175,6 @@ async function checkGreenDot() {
     if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && (nextSibling.style.backgroundColor === "green" || nextSibling.style.backgroundColor === "grey")) {
       nextSibling.parentNode.removeChild(nextSibling);
     }
-    console.log(onlineUsers.includes(handle.innerText))
   
     // Check if the user is online
     if (onlineUsers.includes(handle.innerText)) {
