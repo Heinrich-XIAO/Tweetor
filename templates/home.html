@@ -16,8 +16,9 @@
         <input type="hidden" name="original_flit_id" id="original_flit_id">
 
         <div class="row">
-          <div class="twelve columns">
+          <div class="twelve columns flit-input-box">
             <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="flit-content-input u-full-width" placeholder="Type your flit here..."></textarea>
+            <div id="character-counter">0/280</div>
             <input type="text" name="hashtag" autocomplete="off" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
         </div>
@@ -61,11 +62,13 @@
   // Get the textarea element and the form input element
   const textarea = document.getElementById('field');
   const flitInput = document.querySelector('form#post_flit input[name="content"]');
+  const characterCounter = document.getElementById('character-counter');
 
   textarea.addEventListener('input', function() {
     let content = textarea.value;
     // Update the form input value with the formatted content
     textarea.value = content.trimEllip(280);
+    characterCounter.innerHTML = `${textarea.value.length}/280`;
   });
 </script>
 {% endif %}

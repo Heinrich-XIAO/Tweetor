@@ -231,10 +231,21 @@ button:hover, button:focus {
   font-size: x-large;
   height: 10em;
   width: 100%;
+  resize: none;
   
   -webkit-appearance:none;
   -moz-appearance:none;
   appearance:none;
+}
+
+#character-counter {
+  position: absolute;
+  right: 5px;
+  top: 0;
+}
+
+.flit-input-box {
+  position: relative;
 }
 
 .logo img {
