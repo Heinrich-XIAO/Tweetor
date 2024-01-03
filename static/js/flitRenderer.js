@@ -68,7 +68,6 @@ async function renderFlitWithFlitJSON(json, flit) {
     handle.classList.add("user-handle");
     
     let timestamp = new Date(json.flit.timestamp.replace(" ", "T") + "Z");
-
     timestamp = convertUSTtoEST(timestamp);
     console.log(timestamp, json.flit.timestamp);
     // Format the Date object
