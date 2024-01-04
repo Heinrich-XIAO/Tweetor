@@ -4,30 +4,35 @@ import hashlib
 
 DATABASE = "tweetor.db"
 
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        turbo INTEGER DEFAULT 0,
-        handle TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
-    )
-"""
-)
 
-sqlite3.connect(DATABASE).cursor().execute(
+
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            turbo INTEGER DEFAULT 0,
+            handle TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL
+        )
     """
-    CREATE TABLE IF NOT EXISTS profane_flits  (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        userHandle TEXT NOT NULL,
-        username TEXT NOT NULL,
-        hashtag TEXT NOT NULL
     )
-"""
-)
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS profane_flits  (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            userHandle TEXT NOT NULL,
+            username TEXT NOT NULL,
+            hashtag TEXT NOT NULL
+        )
+    """
+    )
 
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(

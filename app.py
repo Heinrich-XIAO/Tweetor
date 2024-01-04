@@ -1,7 +1,6 @@
 import sqlite3
 import hashlib
 import random
-import time
 from urllib.parse import quote
 import string
 import requests
