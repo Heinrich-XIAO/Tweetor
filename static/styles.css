@@ -323,10 +323,16 @@ button:hover, button:focus {
 
 .flit-username a, .flit-content a {
   text-decoration: none;
+  overflow: ellipsis;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .flit-username a:hover, .flit-content a:hover {
   text-decoration: underline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-handle, .user-handle:hover {
