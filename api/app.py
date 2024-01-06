@@ -72,12 +72,7 @@ limiter = Limiter(get_remote_address, app=app)
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "redis"
-app.config['SESSION_REDIS'] = redis.StrictRedis(
-    host=os.environ.get('REDIS_HOST', 'https://composed-starling-42400.kv.vercel-storage.com'),
-    port=int(os.environ.get('REDIS_PORT', 42400)),
-    db=int(os.environ.get('REDIS_DB', 0)),
-    password=os.environ.get('REDIS_PASSWORD')
-)
+app.config['SESSION_REDIS'] = redis.StrictRedis.from_url(os.environ.get('REDIS_URL'))
 Session(app)
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
