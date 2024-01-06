@@ -808,6 +808,3 @@ def unmute(handle):
 @app.route("/sitemap.xml")
 def sitemap():
   return sitemapper.generate()
-
-if __name__ == "__main__":
-    app.run(debug=False)
