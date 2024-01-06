@@ -72,6 +72,8 @@ limiter = Limiter(get_remote_address, app=app)
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "redis"
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_REDIS'] = redis.StrictRedis.from_url(os.environ.get('REDIS_URL'))
 Session(app)
 
