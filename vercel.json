@@ -15,6 +15,14 @@
   ],
   "routes": [
     {
+      "src": "/helpers",
+      "dest": "api/helpers.py"
+    },
+    {
+      "src": "/database_setup",
+      "dest": "api/database_setup.py"
+    },
+    {
       "src": "/(.*)",
       "dest": "api/app.py"
     }
