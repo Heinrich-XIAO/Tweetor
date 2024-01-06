@@ -11,6 +11,16 @@ function convertUSTtoEST(date) {
   return estDate;
 }
 
+function convertDateFormat(inputDate) {
+  // Parse the input date string
+  const dateObject = new Date(inputDate);
+
+  // Format the date in the desired output format
+  const outputDate = dateObject.toISOString().replace(/T/, ' ').replace(/\.\d+Z$/, '');
+
+  return outputDate;
+}
+
 // Function to get the abbreviated month name
 function getMonthAbbreviation(date) {
   const months = [
@@ -63,19 +73,15 @@ async function renderFlitWithFlitJSON(json, flit) {
     username.classList.add("user-handle");
 
     const handle = document.createElement('a');
-    handle.innerText = '@' + json.flit.userHandle;
-    handle.href = `user/${json.flit.userHandle}`;
+    handle.innerText = '@' + json.flit.userhandle;
+    handle.href = `user/${json.flit.userhandle}`;
     handle.classList.add("user-handle");
     
-    let timestamp = new Date(json.flit.timestamp.replace(/\s/g, 'T') + "Z");
-    timestamp = convertUSTtoEST(timestamp);
-    console.log(timestamp, json.flit.timestamp);
+    let timestamp = new Date(convertDateFormat(json.flit.timestamp));
     // Format the Date object
     let now = new Date();
-    let formatted_timestamp;
-
     let options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'};
-    formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
+    let formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
 
     const timestampElement = document.createElement("span");
     timestampElement.innerText = formatted_timestamp;

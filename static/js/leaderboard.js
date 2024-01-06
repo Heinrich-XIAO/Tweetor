@@ -31,10 +31,11 @@ async function loadLeaderboard() {
 
   const res = await fetch("/api/get_flits?skip=0&limit=1000");
   const json = await res.json();
+  console.log(json)
   let userData = {};
   for (let i = 0; i < json.length; i++) {
     const flit = json[i];
-    const handle = flit["userHandle"];
+    const handle = flit["userhandle"];
     if (timeDifferenceStr(flit["timestamp"])>days) {
       break;
     }

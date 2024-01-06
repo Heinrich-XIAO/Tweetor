@@ -25,6 +25,7 @@ from flask_session import Session
 from flask_sitemapper import Sitemapper
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from psycopg2 import extras
 import helpers
 import database_setup
 from mixpanel import Mixpanel
@@ -61,15 +62,15 @@ online_users = {}
 
 def get_engaged_direct_messages(user_handle):
     db = helpers.get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     cursor.execute(
         """
         SELECT DISTINCT receiver_handle FROM direct_messages
-        WHERE sender_handle = ?
+        WHERE sender_handle = %s
         UNION
         SELECT DISTINCT sender_handle FROM direct_messages
-        WHERE receiver_handle = ?
+        WHERE receiver_handle = %s
     """,
         (user_handle, user_handle),
     )
@@ -95,7 +96,7 @@ def home() -> Response:
     db = helpers.get_db()
 
     # Create a cursor to interact with the database
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     # Check if the user is logged in and is an admin
     if "username" in session and session["handle"] == "admin":
@@ -128,8 +129,8 @@ def flitAPI():
     except ValueError:
         return jsonify("Flit ID is invalid")
     db = helpers.get_db()
-    c = db.cursor()
-    c.execute('SELECT * FROM flits WHERE id=?', (flit_id,))
+    c = db.cursor(cursor_factory=extras.DictCursor)
+    c.execute('SELECT * FROM flits WHERE id=%s', (flit_id,))
     flit = c.fetchone()
 
     if flit is None:
@@ -151,7 +152,7 @@ def get_flits():
     db = helpers.get_db()
 
     # Create a cursor to interact with the database
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
     try:
         limit = int(request.args.get("limit"))
         skip = int(request.args.get("skip"))
@@ -160,7 +161,7 @@ def get_flits():
         limit = 10
         skip = 0
 
-    cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY id DESC LIMIT ? OFFSET ?", (limit, skip))
+    cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY id DESC LIMIT %s OFFSET %s", (limit, skip))
     
     return jsonify([dict(flit) for flit in cursor.fetchall()])
 
@@ -205,7 +206,7 @@ def submit_flit() -> Response:
     db = helpers.get_db()
 
     # Create a cursor to interact with the database
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     # Extract form data for the new flit
     content = str(request.form["content"])
@@ -247,10 +248,10 @@ def submit_flit() -> Response:
         )
 
     # Check if the original_flit_id field is present in the form data
-    if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
+    if request.form.get("original_flit_id") is None or request.form["original_flit_id"] == '':
         # Insert the new flit into the database
         cursor.execute(
-            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
             (
                 session["username"],
                 content,
@@ -271,13 +272,12 @@ def submit_flit() -> Response:
         })
 
         return redirect(url_for("home"))
-
     # Check for reflit
     is_reflit = False
-    original_flit_id = request.form.get("original_flit_id")  # Get original_flit_id from form data
+    original_flit_id = request.form["original_flit_id"]  # Get original_flit_id from form data
     if original_flit_id is not None:
         # Look for the original flit in the database
-        cursor.execute("SELECT id FROM flits WHERE id = ?", (original_flit_id,))
+        cursor.execute("SELECT id FROM flits WHERE id = %s", (original_flit_id,))
         original_flit = cursor.fetchone()
 
         if original_flit:  # If the original flit exists
@@ -285,7 +285,7 @@ def submit_flit() -> Response:
 
     # Insert the reflit or empty flit into the database
     cursor.execute(
-        "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
         (
             session["username"],
             content,
@@ -370,10 +370,10 @@ def signup() -> Response:
         db = helpers.get_db()
 
         # Create a cursor to interact with the database
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=extras.DictCursor)
 
         # Check if the username already exists in the database
-        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         
         # If the username is taken, modify the handle to make it unique
         if len(cursor.fetchall()) != 0:
@@ -384,7 +384,7 @@ def signup() -> Response:
 
         # Insert the new user data into the database
         cursor.execute(
-            "INSERT INTO users (username, password, handle, turbo) VALUES (?, ?, ?, ?)",
+            "INSERT INTO users (username, password, handle, turbo) VALUES (%s, %s, %s, %s)",
             (username, hashed_password, handle, 0),
         )
         db.commit()
@@ -422,11 +422,12 @@ def login() -> Response:
         db = helpers.get_db()
 
         # Create a cursor to interact with the database
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=extras.DictCursor)
 
         # Query the database for the user with the provided handle
-        cursor.execute("SELECT * FROM users WHERE handle = ?", (handle,))
+        cursor.execute("SELECT * FROM users WHERE handle = %s", (handle,))
         users = cursor.fetchall()
+        print(users)
 
         # If there is no or more than one matching user, redirect to the login page
         if len(users) != 1:
@@ -436,9 +437,9 @@ def login() -> Response:
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         # If the password matches the stored hashed password, set session data for the user
-        if users[0]["password"] == hashed_password:
+        if users[0][4] == hashed_password:
             session["handle"] = handle
-            session["username"] = users[0]["username"]
+            session["username"] = users[0][1]
         else:
             # If the password doesn't match, redirect to the login page
             return redirect("/login")
@@ -461,8 +462,8 @@ def change_password():
         new_password = request.form['new_password']
 
         db = helpers.get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT password FROM users WHERE username = ?", (session["username"],))
+        cursor = db.cursor(cursor_factory=extras.DictCursor)
+        cursor.execute("SELECT password FROM users WHERE username = %s", (session["username"],))
         user = cursor.fetchone()
 
         hashed_password = hashlib.sha256(current_password.encode()).hexdigest()
@@ -470,7 +471,7 @@ def change_password():
         if user['password'] == hashed_password:
             new_hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
             cursor.execute(
-                "UPDATE users SET password = ? WHERE username = ?",
+                "UPDATE users SET password = %s WHERE username = %s",
                 (new_hashed_password, session["username"]),
             )
             db.commit()
@@ -506,14 +507,14 @@ def singleflit(flit_id: str) -> Response:
     c = conn.cursor()
 
     # Retrieve the specified flit's information from the database
-    c.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
+    c.execute("SELECT * FROM flits WHERE id=%s", (flit_id,))
     flit = c.fetchone()
 
     if flit:
         original_flit = None
         if flit["is_reflit"] == 1:
             # Retrieve the original flit's information if this flit is a reflit
-            c.execute("SELECT * FROM flits WHERE id = ?", (flit["original_flit_id"],))
+            c.execute("SELECT * FROM flits WHERE id = %s", (flit["original_flit_id"],))
             original_flit = c.fetchone()
 
         # Render the template with the flit's information
@@ -555,7 +556,7 @@ def user_profile(username: str) -> Response:
     cursor = conn.cursor()
 
     # Query the database for the user profile with the specified username
-    cursor.execute("SELECT * FROM users WHERE handle = ?", (username,))
+    cursor.execute("SELECT * FROM users WHERE handle = %s", (username,))
     user = cursor.fetchone()
 
     # If the user doesn't exist, redirect to the home page
@@ -564,7 +565,7 @@ def user_profile(username: str) -> Response:
 
     # Query the database for the user's non-reflit flits, ordered by timestamp
     cursor.execute(
-        "SELECT * FROM flits WHERE userHandle = ? ORDER BY timestamp DESC",
+        "SELECT * FROM flits WHERE userHandle = %s ORDER BY timestamp DESC",
         (username,),
     )
     flits = cursor.fetchall()
@@ -574,7 +575,7 @@ def user_profile(username: str) -> Response:
     if "username" in session:
         logged_in_username = session["username"]
         cursor.execute(
-            "SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?",
+            "SELECT * FROM follows WHERE followerHandle = %s AND followingHandle = %s",
             (logged_in_username, user["handle"]),
         )
         is_following = cursor.fetchone() is not None
@@ -616,7 +617,7 @@ def profanity() -> Response:
         )
 
     db = helpers.get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute(
         "SELECT * FROM flits WHERE profane_flit = 'yes' ORDER BY timestamp DESC"
     )
@@ -661,9 +662,9 @@ def delete_flit() -> Response:
 
     flit_id = request.args.get("flit_id")
     db = helpers.get_db()
-    cursor = db.cursor()
-    cursor.execute("DELETE FROM flits WHERE id = ?", (flit_id,))
-    cursor.execute("DELETE FROM reported_flits WHERE flit_id=?", (flit_id,))
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
+    cursor.execute("DELETE FROM flits WHERE id = %s", (flit_id,))
+    cursor.execute("DELETE FROM reported_flits WHERE flit_id=%s", (flit_id,))
     db.commit()
 
     return redirect(url_for("reported_flits"))
@@ -678,8 +679,8 @@ def delete_user() -> Response:
 
     user_handle = request.form["user_handle"]
     db = helpers.get_db()
-    cursor = db.cursor()
-    cursor.execute("DELETE FROM users WHERE handle = ?", (user_handle,))
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
+    cursor.execute("DELETE FROM users WHERE handle = %s", (user_handle,))
     db.commit()
 
     return redirect(url_for("home"))
@@ -692,9 +693,9 @@ def report_flit():
     reason = request.form["reason"]
 
     db = helpers.get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute(
-        "INSERT INTO reported_flits (flit_id, reporter_handle, reason) VALUES (?, ?, ?)",
+        "INSERT INTO reported_flits (flit_id, reporter_handle, reason) VALUES (%s, %s, %s)",
         (flit_id, reporter_handle, reason),
     )
     db.commit()
@@ -710,7 +711,7 @@ def reported_flits():
         )
 
     db = helpers.get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute("SELECT * FROM reported_flits")
     reports = cursor.fetchall()
 
@@ -725,13 +726,13 @@ def direct_messages(receiver_handle):
     sender_handle = session["handle"]
 
     db = helpers.get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     cursor.execute(
         """
         SELECT * FROM direct_messages
-        WHERE (sender_handle = ? AND receiver_handle = ?)
-        OR (sender_handle = ? AND receiver_handle = ?) AND profane_dm = 'no'
+        WHERE (sender_handle = %s AND receiver_handle = %s)
+        OR (sender_handle = %s AND receiver_handle = %s) AND profane_dm = 'no'
         ORDER BY timestamp DESC
     """,
         (sender_handle, receiver_handle, receiver_handle, sender_handle),
@@ -768,12 +769,12 @@ def submit_dm(receiver_handle):
         profane_dm = "yes"
 
     db = helpers.get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     cursor.execute(
         """
         INSERT INTO direct_messages (sender_handle, receiver_handle, content, profane_dm)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """,
         (sender_handle, receiver_handle, content, profane_dm),
     )
