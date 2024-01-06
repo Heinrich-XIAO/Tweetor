@@ -28,6 +28,7 @@ from flask_limiter.util import get_remote_address
 from psycopg2 import extras
 from mixpanel import Mixpanel
 import psycopg2
+import redis
 from psycopg2 import sql
 
 # Retrieve database connection parameters from environment variables
@@ -70,7 +71,13 @@ limiter = Limiter(get_remote_address, app=app)
 
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_TYPE"] = "redis"
+app.config['SESSION_REDIS'] = redis.StrictRedis(
+    host=os.environ.get('REDIS_HOST', 'https://composed-starling-42400.kv.vercel-storage.com'),
+    port=int(os.environ.get('REDIS_PORT', 42400)),
+    db=int(os.environ.get('REDIS_DB', 0)),
+    password=os.environ.get('REDIS_PASSWORD')
+)
 Session(app)
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
