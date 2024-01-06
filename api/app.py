@@ -80,7 +80,7 @@ print(time.time_ns())
 online_users = {}
 
 def get_engaged_direct_messages(user_handle):
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     cursor.execute(
@@ -112,7 +112,7 @@ def login_required(f):
 @app.route("/")
 def home() -> Response:
     # Get a connection to the database
-    db = helpers.get_db()
+    db = get_db()
 
     # Create a cursor to interact with the database
     cursor = db.cursor(cursor_factory=extras.DictCursor)
@@ -147,7 +147,7 @@ def flitAPI():
         flit_id = int(request.args.get("flit_id"))
     except ValueError:
         return jsonify("Flit ID is invalid")
-    db = helpers.get_db()
+    db = get_db()
     c = db.cursor(cursor_factory=extras.DictCursor)
     c.execute('SELECT * FROM flits WHERE id=%s', (flit_id,))
     flit = c.fetchone()
@@ -168,7 +168,7 @@ def get_flits():
     limit = request.args.get("limit")
 
     # Get a connection to the database
-    db = helpers.get_db()
+    db = get_db()
 
     # Create a cursor to interact with the database
     cursor = db.cursor(cursor_factory=extras.DictCursor)
@@ -222,7 +222,7 @@ def render_online():
 @limiter.limit("4/minute")
 def submit_flit() -> Response:
     # Get a connection to the database
-    db = helpers.get_db()
+    db = get_db()
 
     # Create a cursor to interact with the database
     cursor = db.cursor(cursor_factory=extras.DictCursor)
@@ -386,7 +386,7 @@ def signup() -> Response:
             return "Usernames cannot contain |"
 
         # Get a connection to the database
-        db = helpers.get_db()
+        db = get_db()
 
         # Create a cursor to interact with the database
         cursor = db.cursor(cursor_factory=extras.DictCursor)
@@ -438,7 +438,7 @@ def login() -> Response:
         password = request.form["password"]
 
         # Get a connection to the database
-        db = helpers.get_db()
+        db = get_db()
 
         # Create a cursor to interact with the database
         cursor = db.cursor(cursor_factory=extras.DictCursor)
@@ -480,7 +480,7 @@ def change_password():
         current_password = request.form['current_password']
         new_password = request.form['new_password']
 
-        db = helpers.get_db()
+        db = get_db()
         cursor = db.cursor(cursor_factory=extras.DictCursor)
         cursor.execute("SELECT password FROM users WHERE username = %s", (session["username"],))
         user = cursor.fetchone()
@@ -507,7 +507,7 @@ def leaderboard():
         loggedIn=("username" in session),
     )
 
-c = sqlite3.connect(DATABASE).cursor()
+c = get_db().cursor()
 
 
 def get_all_flit_ids():
@@ -520,7 +520,7 @@ def get_all_flit_ids():
 @app.route("/flits/<flit_id>")
 def singleflit(flit_id: str) -> Response:
     # Get a connection to the database
-    conn = helpers.get_db()
+    conn = get_db()
 
     # Create a cursor to interact with the database
     c = conn.cursor()
@@ -569,7 +569,7 @@ def get_all_user_handles():
 @app.route("/user/<path:username>")
 def user_profile(username: str) -> Response:
     # Get a connection to the database
-    conn = helpers.get_db()
+    conn = get_db()
 
     # Create a cursor to interact with the database
     cursor = conn.cursor()
@@ -635,7 +635,7 @@ def profanity() -> Response:
             "error.html", error="You are not authorized to view this page."
         )
 
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute(
         "SELECT * FROM flits WHERE profane_flit = 'yes' ORDER BY timestamp DESC"
@@ -680,7 +680,7 @@ def delete_flit() -> Response:
         )
 
     flit_id = request.args.get("flit_id")
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute("DELETE FROM flits WHERE id = %s", (flit_id,))
     cursor.execute("DELETE FROM reported_flits WHERE flit_id=%s", (flit_id,))
@@ -697,7 +697,7 @@ def delete_user() -> Response:
         )
 
     user_handle = request.form["user_handle"]
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute("DELETE FROM users WHERE handle = %s", (user_handle,))
     db.commit()
@@ -711,7 +711,7 @@ def report_flit():
     reporter_handle = session["handle"]
     reason = request.form["reason"]
 
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute(
         "INSERT INTO reported_flits (flit_id, reporter_handle, reason) VALUES (%s, %s, %s)",
@@ -729,7 +729,7 @@ def reported_flits():
             "error.html", error="You don't have permission to access this page."
         )
 
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
     cursor.execute("SELECT * FROM reported_flits")
     reports = cursor.fetchall()
@@ -744,7 +744,7 @@ def direct_messages(receiver_handle):
 
     sender_handle = session["handle"]
 
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     cursor.execute(
@@ -787,7 +787,7 @@ def submit_dm(receiver_handle):
     ):
         profane_dm = "yes"
 
-    db = helpers.get_db()
+    db = get_db()
     cursor = db.cursor(cursor_factory=extras.DictCursor)
 
     cursor.execute(
