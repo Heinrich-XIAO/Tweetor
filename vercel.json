@@ -1,7 +1,15 @@
 {
   "builds": [
     {
-      "src": "api/",
+      "src": "api/app.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/helpers.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/database_setup.py",
       "use": "@vercel/python"
     }
   ],
