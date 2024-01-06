@@ -548,14 +548,6 @@ def logout() -> Response:
     # Redirect the user to the home page, whether they were logged in or not
     return redirect("/")
 
-
-def get_all_user_handles():
-    c.execute("SELECT handle FROM users")
-    user_handles = [i[0] for i in c.fetchall()]
-    return user_handles
-
-
-@sitemapper.include(url_variables={"username": get_all_user_handles()})
 @app.route("/user/<path:username>")
 def user_profile(username: str) -> Response:
     # Get a connection to the database
