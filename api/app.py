@@ -507,16 +507,6 @@ def leaderboard():
         loggedIn=("username" in session),
     )
 
-c = get_db().cursor()
-
-
-def get_all_flit_ids():
-    c.execute("SELECT id FROM flits")
-    flit_ids = [i[0] for i in c.fetchall()]
-    return flit_ids
-
-
-@sitemapper.include(url_variables={"flit_id": get_all_flit_ids()})
 @app.route("/flits/<flit_id>")
 def singleflit(flit_id: str) -> Response:
     # Get a connection to the database
