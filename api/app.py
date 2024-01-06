@@ -26,8 +26,8 @@ from flask_sitemapper import Sitemapper
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from psycopg2 import extras
-import helpers
-import database_setup
+from . import helpers
+from . import database_setup
 from mixpanel import Mixpanel
 
 load_dotenv()
