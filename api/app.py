@@ -71,8 +71,6 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "redis"
 Session(app)
 
-DATABASE = "tweetor.db"
-
 staff_accounts = ["ItsMe", "Dude_Pog"]
 
 print(time.time_ns())
