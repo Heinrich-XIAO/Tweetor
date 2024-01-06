@@ -26,9 +26,28 @@ from flask_sitemapper import Sitemapper
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from psycopg2 import extras
-from . import helpers
-from . import database_setup
 from mixpanel import Mixpanel
+import psycopg2
+from psycopg2 import sql
+
+# Retrieve database connection parameters from environment variables
+DATABASE = os.environ.get("DB_NAME", "postgres")
+USER = os.environ.get("DB_USER")
+PASSWORD = os.environ.get("DB_PASSWORD")
+HOST = os.environ.get("DB_HOST", "localhost")
+PORT = os.environ.get("DB_PORT", "5432")
+
+def get_db():
+    connection_params = {
+        "dbname": DATABASE,
+        "user": USER,
+        "password": PASSWORD,
+        "host": HOST,
+        "port": PORT
+    }
+    db = psycopg2.connect(**connection_params)
+    db.autocommit = True
+    return db
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
