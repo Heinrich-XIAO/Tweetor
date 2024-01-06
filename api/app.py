@@ -75,7 +75,7 @@ app.config["SESSION_TYPE"] = "redis"
 app.config['SESSION_REDIS'] = redis.StrictRedis(
     host=os.environ.get('REDIS_HOST', 'https://composed-starling-42400.kv.vercel-storage.com'),
     port=int(os.environ.get('REDIS_PORT', 42400)),
-    db=int(os.environ.get('REDIS_DB', 0)),
+    db=int(os.environ.get('REDIS_DB', 'default')),
     password=os.environ.get('REDIS_PASSWORD')
 )
 Session(app)
