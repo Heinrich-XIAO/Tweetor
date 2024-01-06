@@ -1,6 +1,27 @@
-import helpers
 import sqlite3
 import hashlib
+import psycopg2
+from psycopg2 import sql
+import os
+
+# Retrieve database connection parameters from environment variables
+DATABASE = os.environ.get("DB_NAME", "postgres")
+USER = os.environ.get("DB_USER")
+PASSWORD = os.environ.get("DB_PASSWORD")
+HOST = os.environ.get("DB_HOST", "localhost")
+PORT = os.environ.get("DB_PORT", "5432")
+
+def get_db():
+    connection_params = {
+        "dbname": DATABASE,
+        "user": USER,
+        "password": PASSWORD,
+        "host": HOST,
+        "port": PORT
+    }
+    db = psycopg2.connect(**connection_params)
+    db.autocommit = True
+    return db
 
 # Define the table creation queries
 table_queries = [
@@ -59,28 +80,28 @@ table_queries = [
 
 # Function to execute table creation queries
 def create_tables():
-    with helpers.get_db() as conn:
+    with get_db() as conn:
         with conn.cursor() as cursor:
             for query in table_queries:
                 cursor.execute(query)
 
 # Functions to add columns if they don't exist
 def add_is_reflit_column_if_not_exists():
-    with helpers.get_db() as db:
+    with get_db() as db:
         with db.cursor() as cursor:
             cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'flits' AND column_name = 'is_reflit'")
             if not cursor.fetchone():
                 cursor.execute("ALTER TABLE flits ADD COLUMN is_reflit INTEGER")
 
 def add_meme_link_column_if_not_exists():
-    with helpers.get_db() as db:
+    with get_db() as db:
         with db.cursor() as cursor:
             cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'flits' AND column_name = 'meme_link'")
             if not cursor.fetchone():
                 cursor.execute("ALTER TABLE flits ADD COLUMN meme_link VARCHAR(255)")
 
 def add_original_flit_id_column_if_not_exists():
-    with helpers.get_db() as db:
+    with get_db() as db:
         with db.cursor() as cursor:
             cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'flits' AND column_name = 'original_flit_id'")
             if not cursor.fetchone():
@@ -88,7 +109,7 @@ def add_original_flit_id_column_if_not_exists():
 
 # Function to create admin account if not exists
 def create_admin_if_not_exists():
-    with helpers.get_db() as db:
+    with get_db() as db:
         with db.cursor() as cursor:
             cursor.execute("SELECT * FROM users WHERE username = 'admin'")
             admin_account = cursor.fetchone()
