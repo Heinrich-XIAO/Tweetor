@@ -70,7 +70,7 @@ limiter = Limiter(get_remote_address, app=app)
 
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_TYPE"] = "redis"
 Session(app)
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
