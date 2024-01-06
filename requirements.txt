@@ -23,7 +23,6 @@ mdurl==0.1.2
 mixpanel==4.10.0
 ordered-set==4.1.0
 packaging==23.2
-psycopg2==2.9.9
 Pygments==2.16.1
 python-dotenv==1.0.0
 requests==2.31.0
