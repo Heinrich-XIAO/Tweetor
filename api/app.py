@@ -127,8 +127,9 @@ def home() -> Response:
     # Create a cursor to interact with the database
     cursor = db.cursor(cursor_factory=extras.DictCursor)
 
+    loggedIn = "username" in session
     # Check if the user is logged in and is an admin
-    if "username" in session and session["handle"] == "admin":
+    if loggedIn and session["handle"] == "admin":
         # If admin, retrieve all flits regardless of content
         cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
     else:
@@ -141,7 +142,7 @@ def home() -> Response:
     flits = cursor.fetchall()
 
     # Render the home template
-    return render_template("home.html", flits=flits, loggedIn="username" in session)
+    return render_template("home.html", flits=flits, loggedIn=loggedIn)
 
 ## APIs
 @app.route("/api/handle")
@@ -219,7 +220,7 @@ def render_online():
     current_ns_time = time.time_ns()
     handles_to_remove = []
     for handle in online_users.keys():
-        if online_users[handle] < current_ns_time - 1000000000 * 10:
+        if online_users[handle] < current_ns_time - 1000000000 * 25:
             handles_to_remove.append(handle)
     for handle in handles_to_remove:
         online_users.pop(handle)
@@ -564,7 +565,7 @@ def user_profile(username: str) -> Response:
     conn = get_db()
 
     # Create a cursor to interact with the database
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=extras.DictCursor)
 
     # Query the database for the user profile with the specified username
     cursor.execute("SELECT * FROM users WHERE handle = %s", (username,))
@@ -581,43 +582,12 @@ def user_profile(username: str) -> Response:
     )
     flits = cursor.fetchall()
 
-    # Check if the logged-in user is following this user's profile
-    is_following = False
-    if "username" in session:
-        logged_in_username = session["username"]
-        cursor.execute(
-            "SELECT * FROM follows WHERE followerHandle = %s AND followingHandle = %s",
-            (logged_in_username, user["handle"]),
-        )
-        is_following = cursor.fetchone() is not None
-
-    # Calculate the user's activeness based on their tweet frequency
-    latest_tweet_time = datetime.datetime.now()
-    first_tweet_time = flits[-1]["timestamp"]
-    first_tweet_time = datetime.datetime.strptime(first_tweet_time, "%Y-%m-%d %H:%M:%S")
-    diff = latest_tweet_time - first_tweet_time
-    weeks = diff.total_seconds() / 3600 / 24 / 7
-    activeness = round(0 if weeks == 0 else len(flits) / weeks * 1000)
-
-    # Initialize a list for user badges
-    badges = []
-
-    # Add badges based on activeness and staff status
-    if activeness > 5000:
-        badges.append(("badges/creator.png", "Activeness of over 5000"))
-
-    if user["handle"] in staff_accounts:
-        badges.append(("badges/staff.png", "Staff at Tweetor!"))
-
     # Render the user profile template with relevant data
     return render_template(
         "user.html",
-        badges=badges,
         user=user,
         loggedIn=("username" in session),
         flits=flits,
-        is_following=is_following,
-        activeness=activeness,
     )
 
 @app.route("/profanity")
