@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+{% if loggedIn %}
+  <br>
+  <br>
+  <div class="row">
+    <div class="flit_form">
+      <form action="/submit_flit" method="post" id="post_flit">
+        <!-- Hidden Inputs -->
+        <input type="hidden" name="text0" id="text0">
+        <input type="hidden" name="text1" id="text1">
+        <input type="hidden" name="meme_link" id="meme_link">
+        <input type="hidden" name="original_flit_id" id="original_flit_id">
+
+        <div class="row">
+          <div class="twelve columns flit-input-box">
+            <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="flit-content-input u-full-width" placeholder="Type your flit here..."></textarea>
+            <div id="character-counter">0/280</div>
+            <input type="text" name="hashtag" autocomplete="off" id="hashtag" class="u-full-width" placeholder="Hashtag">
+          </div>
+        </div>
+        <div class="row">
+          <button style="border: none;" onclick="makeMeme()" form="" aria-label="meme"><span class="iconify" data-icon="arcticons:meme-generator" data-width="50"></span></button>
+        </div>
+        <div id="addedElements">
+
+        </div>
+        <div class="row">
+          <div class="twelve columns">
+            <button type="submit" style="color: black;" class="button-primary">Flit</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <br>
+  <br>
+  <br>
+{% endif %}
+<div id="flits">
+</div>
+
+<a href="#" class="top">Back to Top ↑</a>
+
+<div class="form-popup" id="memePopup">
+  <h1>Make-A-Meme</h1>
+
+  <input type="text" name="search-tenor" autocomplete="off" id="search-tenor" placeholder="Search Tenor">
+  <div id="memeBackgrounds"></div>
+  <button type="button" class="btn cancel" onclick="closeMeme()">Cancel</button>
+</div>
+
+{% if loggedIn %}
+<script>
+  String.prototype.trimEllip = function (length) {
+    return this.length > length ? this.substring(0, length) : this;
+  }
+
+  // Get the textarea element and the form input element
+  const textarea = document.getElementById('field');
+  const flitInput = document.querySelector('form#post_flit input[name="content"]');
+  const characterCounter = document.getElementById('character-counter');
+
+  textarea.addEventListener('input', function() {
+    let content = textarea.value;
+    // Update the form input value with the formatted content
+    textarea.value = content.trimEllip(280);
+    characterCounter.innerHTML = `${textarea.value.length}/280`;
+  });
+</script>
+{% endif %}
+<script defer>
+  let meme = document.querySelector('#memePopup');
+  let memeImages = document.querySelector('#memeBackgrounds');
+  let addMemeButton = document.querySelector('#addMeme');
+  let finalMemeURL;
+  let selectedMemeBG;
+  function closeMeme() {
+    meme.style.display = 'none';
+  }
+
+  function makeMeme() {
+    meme.style.display = 'block';
+  }
+
+  async function searchTenor(q) {
+    const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${q}&key=AIzaSyCnBiZhrL7yJSl4GUc3K9VO1pVWNUnNaTI&client_key=my_test_app&limit=8`);
+    const data = await response.json();
+
+    if (data['error']) {
+      console.error(data['error']);
+      return;
+    }
+
+    for (const result of data['results']) {
+      // Create an img element
+      const img = document.createElement("img");
+
+      // Set the src attribute to the gif url
+      img.src = result.media_formats.gif.url;
+      img.height = 100;
+      img.dataset['id'] = result.id;
+      img.onclick = (e) => {
+        const img = document.createElement("img");
+        img.src = e.srcElement.src;
+        img.width = e.srcElement.width*3;
+        img.dataset = e.srcElement.dataset;
+        memeImages.innerHTML = '';
+        document.getElementById("addedElements").innerHTML = "";
+        document.getElementById("addedElements").appendChild(img);
+        document.getElementById("meme_link").value = img.src;
+        closeMeme();
+      }
+
+      // Append the img element to the div
+      memeImages.appendChild(img);
+    }
+  }
+
+  document.getElementById("search-tenor").addEventListener("input", function (e) {
+    memeImages.innerHTML = '';
+    searchTenor(this.value);
+  });
+</script>
+{% endblock %}

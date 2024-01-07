@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+
+{% block title %}Settings{% endblock %}
+
+{% block body %}
+<h1>Settings</h1>
+<h2>Change Password</h2>
+<form action="{{ url_for('change_password') }}" method="post">
+    <label for="current_password">Current Password: </label>
+    <br/>
+    <input type="password" id="current_password" name="current_password" required>
+    <br/>
+    <label for="new_password">New Password: </label>
+    <br/>
+    <input type="password" id="new_password" name="new_password" required>
+    <br/>
+    <button type="submit">Change Password</button>
+</form>
+
+<h2>Appearance</h2>
+<label for="theme_input">Theme</label>
+<select name="theme_input" id="theme_input">
+    <option value="dark">Dark Mode</option>
+    <option value="light">Light Mode</option>
+</select>
+<input type="button" value="Select Theme" id="theme_submit">
+<br/>
+<label for="render_gifs">Render Memes</label>
+<input type="checkbox" name="render_gifs" id="render_gifs">
+<br/>
+<label for="notifications">Notifications from Main</label>
+<input type="checkbox" name="notifications" id="notifications">
+
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

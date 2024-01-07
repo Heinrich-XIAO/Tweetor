@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}{% endblock %} | Tweetor</title>
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <script src="{{ url_for('static', filename='js/appearance.js') }}"></script>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <!--<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png')}}">
+  <meta name="keywords" content="Social Media, Tweetor">
+  <meta name="description" content="Non-toxic social media friendly to all with algorithms that stop toxic behavior">
+  <meta name="author" content="Heinrich Xiao">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-site-verification" content="PZyaKbseAJRzXebWrgKl4zp3WopGyygMK7QL-qAhPck" />
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "h9gh740rsd");
+  </script>
+</head>
+<body>
+  <div class="menu w3-sidebar w3-bar-block">
+    <div class="logo">
+      <a href="/">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="fliter Logo">
+      </a>
+    </div>
+    <div class="pages">
+      {% if not loggedIn %}
+        <div>
+            <a href="{{ url_for('login') }}" class="w3-bar-item w3-button">Login</a>
+            <a href="{{ url_for('signup') }}" class="w3-bar-item w3-button">Signup</a>
+        </div>
+        
+      {% else %}
+        <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="home"><span class="iconify" data-icon="ic:round-home"></span></a>
+        <a href="{{ url_for('leaderboard') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="material-symbols:trophy"></span></a>
+        <a href="{{ url_for('users') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="clarity:users-solid"></span></a>
+        <a href="{{ url_for('settings') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="settings"><span class="iconify" data-icon="ic:round-settings"></span></a>
+        <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="logout"><span class="iconify" data-icon="ci:exit"></span></a>
+        {% block admin_buttons %}{% endblock %}
+        <hr>
+        <div id="dm_list">
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <main>
+    {% block body %}
+
+    {% endblock %}
+    <div class="form-popup" id="reportModal">
+      <form action="{{ url_for('report_flit') }}" class="form-container" method="post">
+        <h1>Report flit</h1>
+      
+        <label for="modalflitId">flit ID (Do not change if filled out automatically): </label>
+        <input type="number" name="flit_id" id="modalflitId" placeholder="Flit ID: "/>
+      
+        <label for="reportReason"><b>Reason: </b></label>
+        <input type="text" placeholder="Enter Reason" name="reason" id="reportReason" required>
+      
+        <button type="submit" class="btn">Submit Report</button>
+        <button type="button" class="btn cancel" onclick="closeForm()">Cancel</button>
+      </form>
+    </div>
+
+  </main>
+
+  <script>
+    const reportModal = document.getElementById('reportModal');
+    const modalflitId = document.getElementById('modalflitId');
+
+    function openReportModal(flitId) {
+      modalflitId.value = flitId;
+      reportModal.style.display = 'block';
+    }
+
+    window.onclick = function (event) {
+      if (event.target == reportModal) {
+        reportModal.style.display = 'none';
+      }
+    }
+
+    function closeForm() {
+      reportModal.style.display = 'none';
+    }
+  </script>
+  <audio id="notification">
+    <source src="{{ url_for('static', filename='notification.mp3') }}" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <script src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/renderOnline.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/renderDMs.js') }}"></script>
+
+</body>
+</html>
