@@ -37,7 +37,7 @@ if (Notification.permission !== 'denied') {
   console.log(await res.clone().json());
   prevRecentMessages = await res.json();
 
-  res = await fetch(`/api/get_handle`);
+  res = await fetch(`/api/handle`);
   if (localStorage.getItem('notifications') == 'true' || localStorage.getItem('notifications') == undefined && (await res.text()) != 'Not Logged In') {
     window.setInterval(checkNotifications, 1000);
   }
