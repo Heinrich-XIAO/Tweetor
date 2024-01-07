@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ user.username|striptags }}'s profile {% endblock %}
+
+{% block body %}
+<div id="error">
+  <h1>Not Found</h1>
+  <p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>  
+</div>
+<br>
+<br>
+<br>
+<div class="row">
+  <div class="twelve columns">
+    <div>
+      <h1>{{ user.username|striptags }}'s Profile</h1>
+      <div style="background-color: #333; width: max-content; border-radius: 10%;">
+        {% for badge in badges %}
+          <img src="{{ url_for('static', filename=badge[0]) }}" alt="{{ badge[1] }}" width="40px" style="padding: 5px;top: 50%;bottom: 50%;">
+        {% endfor %}
+        #{{ user.id-1 }}
+      </div>
+    </div>
+    {% if loggedIn and session.username == "admin" %}
+      <form action="{{ url_for('delete_user') }}" method="post">
+        <input type="hidden" name="user_handle" value="{{ user.handle }}" />
+        <button type="submit">Delete User</button>
+      </form>
+    {% endif %}
+
+    {% if session['username'] != user.username %}
+      <!-- Start DM button -->
+      <a href="{{ url_for('direct_messages', receiver_handle=user.handle) }}" class="dm-button">Start DM</a>
+    {% endif %}
+  </div>
+</div>
+<div>
+  {% for flit in flits %}
+    <div class="flit" data-flit-id="{{ flit.id }}">
+    </div>
+  {% endfor %}
+</ul>
+<script>
+  // Get the current URL path
+  let path = window.location.pathname;
+  // Split the path by / and get the last part as the username
+  let username = "{{ user.username }}";
+  // Get the error element
+  let error = document.getElementById("error");
+  // Check if the username contains a forward slash
+  if (username.includes("/")) {
+    // Show the error element
+    error.style.display = "block";
+    // Set a timeout of 2 seconds to start fading out the error element
+    setTimeout(function() {
+      // Add a CSS class of fade-out to the error element
+      error.style.display = "none";
+    }, 2000);
+  } else {
+    error.style.display = "none";
+  }
+</script>
+
+{% endblock %}

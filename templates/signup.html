@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block title %}Signup{% endblock %}
+
+{% block body %}
+  <div class="container">
+    <div class="centered">
+      <div class="centered-form">
+        <h2>Signup for Tweetor</h2>
+        <form method="POST" action="{{ url_for('signup') }}">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+          <label for="passwordConformation">Password Confirmation:</label>
+          <input type="password" id="passwordConformation" name="passwordConformation" required>
+          
+          <!-- Add the custom CAPTCHA code -->
+          <label for="user_input">CAPTCHA:</label>
+          <input type="text" id="image" readonly value="{{ correct_captcha }}" class="captcha-image">
+          <input type="text" id="user_input" name="input" placeholder="Enter CAPTCHA" required>
+          <button type="button" onclick="generate()" class="captcha-refresh">Refresh</button>
+          <input type="hidden" name="correct_captcha" id="correct_captcha" value="...">
+          
+          <input type="submit" value="Signup">
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .captcha-image {
+      border: 1px solid #ccc;
+      padding: 5px;
+      font-size: 20px;
+      font-weight: bold;
+      width: 100px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .captcha-refresh {
+      margin-left: 10px;
+    }
+  </style>
+
+  <script>
+    async function generate() {
+      // Clear old input
+      document.getElementById("user_input").value = "";
+
+      // Access the element to store
+      // the generated captcha
+      captcha = document.getElementById("image");
+      captcha_correct_element = document.getElementById("correct_captcha");
+      
+      const res = await fetch("/api/get_captcha");
+      const correct_captcha = await res.text();
+      
+      // Store generated input
+      captcha.value = correct_captcha;
+      captcha_correct_element.value = correct_captcha;
+    }
+
+    // Call generate function on page load
+    generate();
+  </script>
+{% endblock %}

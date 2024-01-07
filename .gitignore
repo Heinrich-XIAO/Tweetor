@@ -155,4 +155,3 @@ cython_debug/
 __pycache__/
 flask_session/
 tweetor.db
-.vercel

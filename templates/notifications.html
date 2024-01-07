@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block body %}
+  <h1>Notifications</h1>
+
+  <ul>
+    {% for notification in notifications %}
+      <li>
+        <span class="notification-content">{{ notification }}</span>
+        <span class="notification-time">{{ notification.timestamp }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

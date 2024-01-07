@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reported Flits</title>
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <!-- Add your CSS styles here -->
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reported Flits</h1>
+  <table>
+    <tr>
+      <th>Flit ID</th>
+      <th>Reporter Handle</th>
+      <th>Reason</th>
+    </tr>
+    {% for report in reports %}
+      <tr>
+        <td><a href="{{ url_for('singleflit', flit_id=report.flit_id) }}">{{ report.flit_id }}</a></td>
+        <td>{{ report.reporter_handle }}</td>
+        <td>{{ report.reason }}</td>
+        <td><a href="{{ url_for('delete_flit', flit_id=report.flit_id) }}"><button><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a></td>
+      </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
