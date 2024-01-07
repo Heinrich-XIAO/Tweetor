@@ -76,9 +76,9 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'tweetor_prefix'
 app.config['SESSION_REDIS'] = redis.Redis(
-  host='us1-organic-lion-37651.upstash.io',
-  port=37651,
-  password=os.getenv("REDIS_PASS"),
+  host=os.getenv("REDIS_REST_API_URL"),
+  port=42400,
+  password=os.getenv("REDIS_PASSWORD"),
 )
 app.config['SESSION_USE_SIGNER'] = False
 Session(app)
