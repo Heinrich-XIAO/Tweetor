@@ -75,7 +75,11 @@ app.config["SESSION_TYPE"] = "redis"
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'tweetor_prefix'
-app.config['SESSION_REDIS'] = redis.StrictRedis.from_url(os.environ.get('KV_URL'), max_connections=5)
+app.config['SESSION_REDIS'] = redis.Redis(
+  host = 'us1-organic-lion-37651.upstash.io',
+  port = 37651,
+  password = '2f7418c4ee394112b6b45f8b4d1c8891'
+)
 Session(app)
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
