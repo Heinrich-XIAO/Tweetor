@@ -78,7 +78,7 @@ app.config['SESSION_KEY_PREFIX'] = 'tweetor_prefix'
 app.config['SESSION_REDIS'] = redis.Redis(
   host = 'us1-organic-lion-37651.upstash.io',
   port = 37651,
-  password = '2f7418c4ee394112b6b45f8b4d1c8891'
+  password = os.getenv("REDIS_PASS")
 )
 Session(app)
 
