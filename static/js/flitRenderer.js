@@ -146,11 +146,11 @@ async function renderFlitWithFlitJSON(json, flit) {
 
 
     // Create a button element
-    let reflit = document.createElement("button");
-    reflit.classList.add("retweet-button");
+    let reflit_button = document.createElement("button");
+    reflit_button.classList.add("retweet-button");
 
     // Add an event listener to the button
-    reflit.addEventListener("click", function() {
+    reflit_button.addEventListener("click", function() {
         reflit(json.flit.id);
     });
 
@@ -160,10 +160,10 @@ async function renderFlitWithFlitJSON(json, flit) {
     icon.setAttribute("data-icon", "ps:retweet-1");
 
     // Append the icon to the button
-    reflit.appendChild(icon);
+    reflit_button.appendChild(icon);
 
     // Append the button to the flit
-    flit.appendChild(reflit);
+    flit.appendChild(reflit_button);
   }
   return flit;
 }
