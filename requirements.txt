@@ -31,7 +31,7 @@ sightengine==1.4.0
 six==1.16.0
 typing_extensions==4.8.0
 urllib3==2.0.7
-Werkzeug==3.0.1
+Werkzeug==3.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
 wrapt==1.15.0
 zope.event==5.0
 zope.interface==6.0
