@@ -353,7 +353,10 @@ button:hover, button:focus {
   color: #555;
   text-decoration: none;
   word-wrap: break-word;
-}
+  word-break: break-all;
+ }
+ 
+ 
 
 .flit-timestamp {
   font-size: 14px;
