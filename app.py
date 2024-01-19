@@ -230,6 +230,9 @@ def submit_flit() -> Response:
         return render_template("error.html", error="You are not logged in.")
     if content.lower() == "urmom" or content.lower() == "ur mom":
         return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
+    for word in content.split(" "):
+        if len(word) > 15:
+            return render_template("error.html", error="words too long")
 
     # Extract and validate hashtag from form data
     hashtag = request.form["hashtag"]
