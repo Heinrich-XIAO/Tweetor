@@ -129,7 +129,6 @@ async function renderFlitWithFlitJSON(json, flit) {
       flitContentDiv.appendChild(image);
     }
 
-    flit.appendChild(flitContentDiv);
     
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
@@ -141,10 +140,10 @@ async function renderFlitWithFlitJSON(json, flit) {
       };
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
-      flit.appendChild(flitContentDiv);
+      console.log(flitContentDiv);
     }
 
-
+    flit.appendChild(flitContentDiv);
     // Create a button element
     let reflit_button = document.createElement("button");
     reflit_button.classList.add("retweet-button");
@@ -172,7 +171,7 @@ const flitsList = document.getElementsByClassName('flit');
 
 async function renderAll() {
   for (let i = 0; i < flitsList.length; i++) {
-    await renderSingleFlit(flitsList[i]);
+    renderSingleFlit(flitsList[i]);
   }
 }
 
