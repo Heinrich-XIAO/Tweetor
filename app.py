@@ -180,7 +180,7 @@ def get_captcha():
                 string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5
             )
         )
-        if correct_captcha not in used_captchas:
+        if correct_captcha not in used_captchas and 'I' not in correct_captcha and 'l' not in correct_captcha:
             break
     return correct_captcha
 
