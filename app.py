@@ -32,6 +32,7 @@ from mixpanel import Mixpanel
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
+TENOR_SECRET = os.getenv("TENOR_SECRET")
 
 mp = Mixpanel(MIXPANEL_SECRET)
 
@@ -134,10 +135,10 @@ def flitAPI():
 
     if flit is None:
         return "profane"
-    
+
     if flit['profane_flit'] == 'yes':
         return "profane"
-    
+
     return jsonify({
         "flit": dict(flit)
     })
@@ -161,7 +162,7 @@ def get_flits():
         skip = 0
 
     cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY id DESC LIMIT ? OFFSET ?", (limit, skip))
-    
+
     return jsonify([dict(flit) for flit in cursor.fetchall()])
 
 @app.route("/api/engaged_dms")
@@ -197,6 +198,14 @@ def render_online():
         online_users[session["handle"]] = time.time_ns()
     return jsonify(online_users)
 
+@app.route("/api/get_gif", methods=["POST"])
+def get_gif():
+    return requests.get(f"https://tenor.googleapis.com/v2/search", {
+        "key": TENOR_SECRET,
+        "q": request.json['q'],
+        "limit": 8,
+        "client_key": session["handle"]
+    }).json()
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
@@ -364,7 +373,7 @@ def signup() -> Response:
         # Check if the provided passwords match
         if password != passwordConformation:
             return redirect("/signup")
-        
+
         # Check if the username has bad characters
         if "|" in username:
             return "Usernames cannot contain |"
@@ -377,7 +386,7 @@ def signup() -> Response:
 
         # Check if the username already exists in the database
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-        
+
         # If the username is taken, modify the handle to make it unique
         if len(cursor.fetchall()) != 0:
             handle = f"{username}{len(cursor.fetchall())}"
@@ -537,7 +546,7 @@ def logout() -> Response:
         # Remove session data for the user
         session.pop("handle", None)
         session.pop("username", None)
-    
+
     # Redirect the user to the home page, whether they were logged in or not
     return redirect("/")
 

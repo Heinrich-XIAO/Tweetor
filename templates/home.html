@@ -87,13 +87,22 @@
   }
 
   async function searchTenor(q) {
-    const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${q}&key=AIzaSyCnBiZhrL7yJSl4GUc3K9VO1pVWNUnNaTI&client_key=my_test_app&limit=8`);
+    if (q == '')  
+      return;
+    const response = await fetch(`/api/get_gif`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({q}),
+    });
     const data = await response.json();
 
     if (data['error']) {
       console.error(data['error']);
       return;
     }
+    data['results'] = data['results'].slice(0, 8);
 
     for (const result of data['results']) {
       // Create an img element
