@@ -407,7 +407,8 @@ button:hover, button:focus {
 /* Add styles to the form container */
 .form-container {
   max-width: 300px;
-  padding: 10px;
+  padding: 10px; 
+  background-color: #222;
 }
 
 /* Full-width input fields */

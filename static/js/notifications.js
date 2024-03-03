@@ -4,6 +4,7 @@ let prevRecentMessages;
 const notificationAudio = document.getElementById("notification");
 console.log(notificationAudio);
 
+
 function findAddedElements(oldArray, newArray) {
     const addedElements = newArray.filter(newObj => !oldArray.some(oldObj => oldObj["id"] === newObj["id"]));
     return addedElements;
@@ -23,7 +24,7 @@ async function checkNotifications() {
         flit = await renderSingleFlit(flit);
         console.log(flit);
         flits.insertBefore(flit, flits.firstChild);
-      }    
+      }
     }
     prevRecentMessages = await res.json();
     if (Notification.permission == 'granted') {
@@ -46,7 +47,7 @@ if (Notification.permission !== 'denied') {
   console.log(await res.clone().json());
   prevRecentMessages = await res.json();
 
-  res = await fetch(`/api/get_handle`);
+  res = await fetch(`/api/handle`);
   if (localStorage.getItem('notifications') == 'true' || localStorage.getItem('notifications') == undefined && (await res.text()) != 'Not Logged In') {
     window.setInterval(checkNotifications, 5000);
   }
