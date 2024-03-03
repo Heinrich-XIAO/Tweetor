@@ -82,7 +82,8 @@
     meme.style.display = 'none';
   }
 
-  function makeMeme() {
+  function makeMeme()  {
+
     meme.style.display = 'block';
   }
 
@@ -103,6 +104,7 @@
       return;
     }
     data['results'] = data['results'].slice(0, 8);
+    const images = document.createElement('div');
 
     for (const result of data['results']) {
       // Create an img element
@@ -125,13 +127,15 @@
       }
 
       // Append the img element to the div
-      memeImages.appendChild(img);
+      images.appendChild(img);
     }
+    memeImages.innerHTML = '';
+    memeImages.appendChild(images);
   }
 
-  document.getElementById("search-tenor").addEventListener("input", function (e) {
+  document.getElementById("search-tenor").addEventListener("input", async function (e) {
     memeImages.innerHTML = '';
-    searchTenor(this.value);
+    await searchTenor(this.value);
   });
 </script>
 {% endblock %}
