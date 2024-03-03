@@ -60,8 +60,7 @@
       <form action="{{ url_for('report_flit') }}" class="form-container" method="post">
         <h1>Report flit</h1>
       
-        <label for="modalflitId">flit ID (Do not change if filled out automatically): </label>
-        <input type="number" name="flit_id" id="modalflitId" placeholder="Flit ID: "/>
+        <input type="hidden" name="flit_id" id="modalflitId" placeholder="Flit ID: "/>
       
         <label for="reportReason"><b>Reason: </b></label>
         <input type="text" placeholder="Enter Reason" name="reason" id="reportReason" required>
