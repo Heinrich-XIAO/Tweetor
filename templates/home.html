@@ -135,7 +135,7 @@
 
   document.getElementById("search-tenor").addEventListener("input", async function (e) {
     memeImages.innerHTML = '';
-    await searchTenor(this.value);
+    searchTenor(this.value);
   });
 </script>
 {% endblock %}
