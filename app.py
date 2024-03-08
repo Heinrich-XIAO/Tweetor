@@ -243,6 +243,13 @@ def submit_flit() -> Response:
         if len(word) > 15:
             return render_template("error.html", error="words too long")
 
+    cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC LIMIT 1")
+    latest_flit = cursor.fetchone()
+
+    if latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
+        return redirect("/")
+
+
     # Extract and validate hashtag from form data
     hashtag = request.form["hashtag"]
 
