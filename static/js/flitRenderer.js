@@ -99,10 +99,11 @@ async function renderFlitWithFlitJSON(json, flit) {
 
 
     const content = document.createElement('a');
-    content.innerText = json.flit.content + ' ' + json.flit.hashtag;
+    content.innerText = json.flit.content;
+    content.classList.add('flit-content');
     content.href = `/flits/${json.flit.id}`;
 
-    flitContentDiv.appendChild(content);
+    flit.appendChild(content);
     if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
       const image = document.createElement('img');
       image.src = json.flit.meme_link;
