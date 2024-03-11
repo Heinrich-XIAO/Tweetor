@@ -121,7 +121,6 @@ async function renderFlitWithFlitJSON(json, flit) {
       if (await renderSingleFlit(originalFlit) == 'profane') {
         return 'profane';
       };
-      flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
       console.log(flitContentDiv);
     }
