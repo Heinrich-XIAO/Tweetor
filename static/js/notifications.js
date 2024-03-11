@@ -29,9 +29,9 @@ async function checkNotifications() {
     prevRecentMessages = await res.json();
     if (Notification.permission == 'granted') {
       console.log("Notification");
-      const notification = new Notification('Message in Main', {
+      const notification = new Notification(`@${newElements[0].userHandle}`, {
         icon: '/static/logo.png',
-        body: 'Somebody sent something on tweetor'
+        body: newElements[0].userHandle
       })
     }
   }
