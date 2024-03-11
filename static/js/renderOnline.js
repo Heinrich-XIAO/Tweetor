@@ -4,4 +4,4 @@ fetch("/api/render_online");
 
 window.setInterval(()=> {
   fetch("/api/render_online");
-}, 5000)
+}, 10000)
