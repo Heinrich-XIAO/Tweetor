@@ -243,12 +243,10 @@ def submit_flit() -> Response:
     cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC LIMIT 1")
     latest_flit = cursor.fetchone()
 
-    if latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
+    if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
         return redirect("/")
 
 
-    # Extract and validate hashtag from form data
-    hashtag = request.form["hashtag"]
 
     # Use the Sightengine result to check for profanity
     sightengine_result = is_profanity(content)
@@ -271,7 +269,7 @@ def submit_flit() -> Response:
                 session["username"],
                 content,
                 session["handle"],
-                hashtag,
+                "",
                 profane_flit,
                 meme_url,
                 0,
@@ -306,7 +304,7 @@ def submit_flit() -> Response:
             session["username"],
             content,
             session["handle"],
-            hashtag,
+            "",
             profane_flit,
             meme_url,
             int(is_reflit),
