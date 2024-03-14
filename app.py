@@ -824,5 +824,13 @@ def unmute(handle):
 def sitemap():
   return sitemapper.generate()
 
+# Easter Eggs
+@app.route("/pi")
+def pi():
+  return render_template(
+        "pi.html",
+        loggedIn="username" in session,
+    )
+
 if __name__ == "__main__":
     app.run(debug=False)
