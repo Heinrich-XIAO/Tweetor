@@ -1,7 +1,6 @@
 import sqlite3
 import hashlib
 import random
-from urllib.parse import quote
 import string
 import requests
 import datetime
@@ -17,16 +16,14 @@ from flask import (
     redirect,
     url_for,
     session,
-    g,
     jsonify,
 )
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from flask_session import Session
 from flask_sitemapper import Sitemapper
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import helpers
-import database_setup
 from mixpanel import Mixpanel
 
 load_dotenv()
