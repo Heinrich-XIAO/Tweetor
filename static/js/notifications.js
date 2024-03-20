@@ -1,4 +1,4 @@
-console.log('notifications.js Loaded')
+('notifications.js Loaded')
 const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let prevRecentMessages;
 const notificationAudio = document.getElementById("notification");
@@ -31,7 +31,7 @@ async function checkNotifications() {
       console.log("Notification");
       const notification = new Notification(`@${newElements[0].userHandle}`, {
         icon: '/static/logo.png',
-        body: newElements[0].userHandle
+        body: newElements[0].content
       })
     }
   }
