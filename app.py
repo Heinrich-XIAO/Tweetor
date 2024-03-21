@@ -10,7 +10,6 @@ from functools import wraps
 from dotenv import load_dotenv
 from flask import (
     Flask,
-    Response,
     render_template,
     request,
     redirect,
@@ -25,6 +24,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import helpers
 from mixpanel import Mixpanel
+from werkzeug.wrappers.response import Response
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
@@ -88,7 +88,7 @@ def login_required(f):
 
 @sitemapper.include()
 @app.route("/")
-def home() -> Response:
+def home() -> str:
     # Get a connection to the database
     db = helpers.get_db()
 
@@ -141,9 +141,12 @@ def flitAPI():
     })
 
 @app.route("/api/get_flits")
-def get_flits():
+def get_flits() -> Response | str:
     skip = request.args.get("skip")
     limit = request.args.get("limit")
+    
+    if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
+        return "either skip or limit is not an integer"
 
     # Get a connection to the database
     db = helpers.get_db()
@@ -163,7 +166,7 @@ def get_flits():
     return jsonify([dict(flit) for flit in cursor.fetchall()])
 
 @app.route("/api/engaged_dms")
-def engaged_dms():
+def engaged_dms() -> str | Response:
     if "username" not in session:
         return "{\"logged_in\": false}"
     else:
@@ -171,7 +174,7 @@ def engaged_dms():
         return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
 
 @app.route("/api/get_captcha")
-def get_captcha():
+def get_captcha() -> str:
     while True:
         correct_captcha = "".join(
             random.choices(
@@ -183,7 +186,7 @@ def get_captcha():
     return correct_captcha
 
 @app.route("/api/render_online")
-def render_online():
+def render_online() -> Response:
     current_ns_time = time.time_ns()
     handles_to_remove = []
     for handle in online_users.keys():
@@ -196,17 +199,19 @@ def render_online():
     return jsonify(online_users)
 
 @app.route("/api/get_gif", methods=["POST"])
-def get_gif():
-    return requests.get(f"https://tenor.googleapis.com/v2/search", {
-        "key": TENOR_SECRET,
-        "q": request.json['q'],
-        "limit": 8,
-        "client_key": session["handle"]
-    }).json()
+def get_gif() -> str:
+    if request.json is not None:
+        return requests.get(f"https://tenor.googleapis.com/v2/search", {
+            "key": TENOR_SECRET,
+            "q": request.json['q'],
+            "limit": 8,
+            "client_key": session["handle"]
+        }).json()
+    return "no json was provided"
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
-def submit_flit() -> Response:
+def submit_flit() -> str | Response:
     # Get a connection to the database
     db = helpers.get_db()
 
@@ -350,7 +355,7 @@ def users():
 # Signup route
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
-def signup() -> Response:
+def signup():
     error = None
 
     # If the HTTP request method is POST, handle form submission
@@ -425,7 +430,7 @@ def signup() -> Response:
 # Login route
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
-def login() -> Response:
+def login() -> str | Response:
     # Handle form submission if the request method is POST
     if request.method == "POST":
         handle = request.form["handle"]
@@ -511,7 +516,7 @@ def get_all_flit_ids():
 
 @sitemapper.include(url_variables={"flit_id": get_all_flit_ids()})
 @app.route("/flits/<flit_id>")
-def singleflit(flit_id: str) -> Response:
+def singleflit(flit_id: str) -> str | Response:
     # Get a connection to the database
     conn = helpers.get_db()
 
@@ -560,7 +565,7 @@ def get_all_user_handles():
 
 @sitemapper.include(url_variables={"username": get_all_user_handles()})
 @app.route("/user/<path:username>")
-def user_profile(username: str) -> Response:
+def user_profile(username: str) -> str | Response:
     # Get a connection to the database
     conn = helpers.get_db()
 
@@ -622,7 +627,7 @@ def user_profile(username: str) -> Response:
     )
 
 @app.route("/profanity")
-def profanity() -> Response:
+def profanity() -> str | Response:
     if "username" in session and session["handle"] != "admin":
         return render_template(
             "error.html", error="You are not authorized to view this page."
@@ -666,7 +671,7 @@ def is_profanity(text):
 
 
 @app.route("/delete_flit", methods=["GET"])
-def delete_flit() -> Response:
+def delete_flit() -> str | Response:
     if "username" in session and session["handle"] != "admin":
         return render_template(
             "error.html", error="You are not authorized to perform this action."
@@ -683,7 +688,7 @@ def delete_flit() -> Response:
 
 
 @app.route("/delete_user", methods=["POST"])
-def delete_user() -> Response:
+def delete_user() -> str | Response:
     if "username" in session and session["handle"] != "admin":
         return render_template(
             "error.html", error="You are not authorized to perform this action."
@@ -699,7 +704,7 @@ def delete_user() -> Response:
 
 
 @app.route("/report_flit", methods=["POST"])
-def report_flit():
+def report_flit() -> Response:
     flit_id = request.form["flit_id"]
     reporter_handle = session["handle"]
     reason = request.form["reason"]
@@ -716,7 +721,7 @@ def report_flit():
 
 
 @app.route("/reported_flits")
-def reported_flits():
+def reported_flits() -> str:
     if "username" in session and session["handle"] != "admin":
         return render_template(
             "error.html", error="You don't have permission to access this page."
@@ -731,7 +736,7 @@ def reported_flits():
 
 
 @app.route("/dm/<path:receiver_handle>")
-def direct_messages(receiver_handle):
+def direct_messages(receiver_handle) -> str:
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
 
@@ -761,7 +766,7 @@ def direct_messages(receiver_handle):
 
 
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
-def submit_dm(receiver_handle):
+def submit_dm(receiver_handle) -> str | Response:
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
 
@@ -806,16 +811,18 @@ def submit_dm(receiver_handle):
 muted = []
 
 @app.route("/mute/<handle>")
-def mute(handle):
+def mute(handle) -> str:
     if session.get("handle") == "admin":
         muted.append(handle)
         return "Completed"
+    return "you are not admin"
 
 @app.route("/unmute/<handle>")
-def unmute(handle):
+def unmute(handle) -> str:
     if session.get("handle") == "admin":
         muted.remove(handle)
         return "Completed"
+    return "you are not admin"
 
 @app.route("/sitemap.xml")
 def sitemap():
