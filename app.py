@@ -249,9 +249,6 @@ def submit_flit() -> str | Response:
         return redirect("/")
 
 
-    # Extract and validate hashtag from form data
-    hashtag = request.form["hashtag"]
-
     # Use the Sightengine result to check for profanity
     sightengine_result = is_profanity(content)
     profane_flit = "no"
@@ -273,7 +270,7 @@ def submit_flit() -> str | Response:
                 session["username"],
                 content,
                 session["handle"],
-                hashtag,
+                "",
                 profane_flit,
                 meme_url,
                 0,
@@ -308,7 +305,7 @@ def submit_flit() -> str | Response:
             session["username"],
             content,
             session["handle"],
-            hashtag,
+            "",
             profane_flit,
             meme_url,
             int(is_reflit),
