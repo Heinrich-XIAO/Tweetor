@@ -239,6 +239,8 @@ def submit_flit() -> str | Response:
         return render_template("error.html", error="Message was too long.")
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
+    if "technical" in content:
+        return render_template("error.html", error="Don't be so technical")
     if content.lower() == "urmom" or content.lower() == "ur mom":
         return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
 
