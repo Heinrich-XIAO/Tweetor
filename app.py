@@ -334,7 +334,6 @@ def settings():
     return render_template('settings.html',
         loggedIn=("username" in session)
     )
-
 # Gets users to show if they are online
 @app.route('/users', methods=['GET', 'POST'])
 def users():
@@ -351,7 +350,10 @@ def users():
         online=online_users,
         loggedIn=("username" in session)
     )
-
+@sitemapper.include()
+@app.route('/terms')
+def terms():
+    return render_template('TERMS.html')
 # Signup route
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
@@ -383,6 +385,10 @@ def signup():
         # Check if the username has bad characters
         if "|" in username:
             return "Usernames cannot contain |"
+#Check if the user has agreed to our TOS agreement
+        tos_agreement = request.form.get('tos_agreement')
+        if not tos_agreement:
+            return render_template("signup.html", error="You must agree to the Terms of Service and Privacy Policy.")
 
         # Get a connection to the database
         db = helpers.get_db()
