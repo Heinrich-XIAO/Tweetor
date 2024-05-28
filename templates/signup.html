@@ -21,7 +21,9 @@
           <input type="text" id="user_input" name="input" placeholder="Enter CAPTCHA" required>
           <button type="button" onclick="generate()" class="captcha-refresh">Refresh</button>
           <input type="hidden" name="correct_captcha" id="correct_captcha" value="...">
-          
+	 <br> </br> 
+   <input type="checkbox" id="tosAgreement" name="tos_agreement" required>
+    <label for="tosAgreement"><a href="{{ url_for('terms') }}" style="color: blue; text-decoration: underline;">By continuing to this service, I agree to the TOS and Privacy Policy.</a></label><br>
           <input type="submit" value="Signup">
         </form>
       </div>
