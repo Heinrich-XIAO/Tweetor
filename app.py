@@ -247,8 +247,9 @@ def submit_flit() -> str | Response:
     cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC LIMIT 1")
     latest_flit = cursor.fetchone()
 
-    if latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
+    if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
         return redirect("/")
+
 
 
     # Use the Sightengine result to check for profanity
@@ -586,15 +587,7 @@ def user_profile(username: str) -> str | Response:
     )
     flits = cursor.fetchall()
 
-    # Check if the logged-in user is following this user's profile
-    is_following = False
-    if "username" in session:
-        logged_in_username = session["username"]
-        cursor.execute(
-            "SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?",
-            (logged_in_username, user["handle"]),
-        )
-        is_following = cursor.fetchone() is not None
+
 
     # Calculate the user's activeness based on their tweet frequency
     latest_tweet_time = datetime.datetime.now()
@@ -621,7 +614,6 @@ def user_profile(username: str) -> str | Response:
         user=user,
         loggedIn=("username" in session),
         flits=flits,
-        is_following=is_following,
         activeness=activeness,
     )
 
