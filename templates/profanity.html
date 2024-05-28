@@ -12,10 +12,10 @@
       <a href="/user/{{ flit.userHandle }}">{{ flit.username|striptags }}</a>&#160;&#160;
       <a href="/user/{{ flit.userHandle }}" class="user-handle">@{{ flit.userHandle|striptags }}</a>
       <span>&#160;·&#160;</span>
-      <a href="/flits/{{ flit.id }}" class="user-handle">{{ flit.timestamp|format_timestamp }}</a>
+      <a href="/flits/{{ flit.id }}" class="user-handle"</a>
     </div>
     <div class="flit-content">
-      <a href="/flits/{{ flit.id }}">{{ flit.content|format_flit|striptags }} {{ flit.hashtag|striptags }}</a>
+      <a href="/flits/{{ flit.id }}">{{ flit.content|striptags }} {{ flit.hashtag|striptags }}</a>
     </div>
   </div>
 {% endfor %}
