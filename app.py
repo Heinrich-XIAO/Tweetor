@@ -25,7 +25,7 @@ from flask_limiter.util import get_remote_address
 import helpers
 from mixpanel import Mixpanel
 from werkzeug.wrappers.response import Response
-
+import logging
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
@@ -228,6 +228,12 @@ def submit_flit() -> str | Response:
     cursor = db.cursor()
     #muh telematry
     client_ip = get_client_ip()
+
+    if client_ip.startswith('54'):
+        # Log an alert message
+        logging.info(f"Blocked flit submission from IP starting with 54: {client_ip}")
+        # Optionally, you could also send an email or another type of notification here
+        return render_template("error.html", error="Your IP has been blocked from submitting flits.")
 
     # Extract form data for the new flit
     content = str(request.form["content"])

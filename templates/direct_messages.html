@@ -3,7 +3,7 @@
 {% block title %}@{{ receiver_handle }} {% endblock %}
 
 {% block body %}
-  <h1>Direct Messages with {{ receiver_handle }}</h1>
+
   {% for message in messages|reverse %}
     {% set sender_handle = message["sender_handle"] %}
     {% if sender_handle not in blocked_users %}
