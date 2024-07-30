@@ -5,9 +5,12 @@
 {% block body %}
   <h1>Direct Messages with {{ receiver_handle }}</h1>
   {% for message in messages|reverse %}
-    {% if message["profane_dm"] == "no" %}
-      <strong>{{ message["sender_handle"] }}:</strong> {{ message["content"] }}
-      <br>
+    {% set sender_handle = message["sender_handle"] %}
+    {% if sender_handle not in blocked_users %}
+      {% if message["profane_dm"] == "no" %}
+        <strong>{{ sender_handle }}:</strong> {{ message["content"] }}
+        <br>
+      {% endif %}
     {% endif %}
   {% endfor %}
   <form action="{{ url_for('submit_dm', receiver_handle=receiver_handle) }}" method="POST">

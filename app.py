@@ -739,13 +739,27 @@ def reported_flits() -> str:
 
     return render_template("reported_flits.html", reports=reports)
 
+def get_blocked_users(current_user_handle):
+    conn = helpers.get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT blocked_handle FROM blocks WHERE blocker_handle = ?
+    """, (current_user_handle,))
+    blocked_users = cursor.fetchall()
+    conn.close()
+
+    # Convert the result to a list of usernames
+    blocked_usernames = [row[0] for row in blocked_users]
+    return blocked_usernames
+
 
 @app.route("/dm/<path:receiver_handle>")
-def direct_messages(receiver_handle) -> str:
+def direct_messages(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
 
     sender_handle = session["handle"]
+    blocked_handles = get_blocked_users(sender_handle)  # Retrieve the list of blocked users
 
     db = helpers.get_db()
     cursor = db.cursor()
@@ -767,7 +781,10 @@ def direct_messages(receiver_handle) -> str:
         messages=messages,
         receiver_handle=receiver_handle,
         loggedIn="username" in session,
+        blocked_users=blocked_handles,  # Pass blocked users to the template
     )
+
+
 
 
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
@@ -832,6 +849,62 @@ def unmute(handle) -> str:
 @app.route("/sitemap.xml")
 def sitemap():
   return sitemapper.generate()
+@app.route('/block_unblock', methods=['GET', 'POST'])
+def block_unblock():
+    if request.method == 'POST':
+        # Extract the action and user_handle from the form
+        action = request.form['action']
+        user_handle = request.form['user_handle']
+        
+        # Connect to the database
+        conn = helpers.get_db()
+        cursor = conn.cursor()
+        
+        if action == 'block':
+            # Attempt to insert or update the block based on existence
+            cursor.execute("""
+                INSERT INTO blocks (blocker_handle, blocked_handle) VALUES (?, ?)
+                ON CONFLICT(blocker_handle, blocked_handle) DO UPDATE SET blocker_handle = excluded.blocker_handle
+            """, (session['handle'], user_handle))
+        elif action == 'unblock':
+            # Delete the block based on existence
+            cursor.execute("""
+                DELETE FROM blocks WHERE blocker_handle = ? AND blocked_handle = ?
+            """, (session['handle'], user_handle))
+        
+        conn.commit()
+        conn.close()
+        
+        return redirect(url_for('view_blocks'))  # Redirect to the view_blocks page or wherever you want
+        
+    else:
+        # Render the block/unblock form
+        return render_template('block_unblock.html')
+
+
+
+@app.route('/view_blocks')
+def view_blocks():
+    # Connect to the database
+    conn = helpers.get_db()
+    cursor = conn.cursor()
+    
+    # Get the current user's handle
+    current_user_handle = session['handle']
+    
+    # Fetch all blocks where the blocker_handle matches the current user's handle
+    cursor.execute("""
+        SELECT blocked_handle FROM blocks WHERE blocker_handle = ?
+    """, (current_user_handle,))
+    
+    blocks = cursor.fetchall()
+    
+    conn.close()
+    
+    # Render the blocks view
+    return render_template('view_blocks.html', blocks=[block[0] for block in blocks])
+
+
 
 if __name__ == "__main__":
     app.run(debug=False)
