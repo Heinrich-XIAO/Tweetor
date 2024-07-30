@@ -209,6 +209,15 @@ def get_gif() -> str:
         }).json()
     return "no json was provided"
 
+#Helper function for logging ips, becuase muh telematry
+
+def get_client_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip = request.remote_addr
+    return ip
+
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
 def submit_flit() -> str | Response:
@@ -217,6 +226,8 @@ def submit_flit() -> str | Response:
 
     # Create a cursor to interact with the database
     cursor = db.cursor()
+    #muh telematry
+    client_ip = get_client_ip()
 
     # Extract form data for the new flit
     content = str(request.form["content"])
@@ -267,8 +278,9 @@ def submit_flit() -> str | Response:
     # Check if the original_flit_id field is present in the form data
     if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
         # Insert the new flit into the database
+# Insert the new flit into the database including the IP address
         cursor.execute(
-            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 session["username"],
                 content,
@@ -278,6 +290,7 @@ def submit_flit() -> str | Response:
                 meme_url,
                 0,
                 -1,
+                client_ip,  # Include the client's IP address here
             ),
         )
         db.commit()
@@ -303,7 +316,7 @@ def submit_flit() -> str | Response:
 
     # Insert the reflit or empty flit into the database
     cursor.execute(
-        "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             session["username"],
             content,
@@ -313,6 +326,7 @@ def submit_flit() -> str | Response:
             meme_url,
             int(is_reflit),
             original_flit_id,
+            client_ip,
         ),
     )
 
