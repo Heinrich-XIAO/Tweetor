@@ -28,6 +28,7 @@ import helpers
 from mixpanel import Mixpanel
 from werkzeug.wrappers.response import Response
 import logging
+
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
@@ -201,6 +202,8 @@ def get_captcha() -> str:
         )
         if correct_captcha not in used_captchas and 'I' not in correct_captcha and 'l' not in correct_captcha:
             break
+    
+    session['correct_captcha'] = correct_captcha
     return correct_captcha
 
 @app.route("/api/render_online")
@@ -392,8 +395,7 @@ def signup():
         password = request.form["password"]
         passwordConformation = request.form["passwordConformation"]
         user_captcha_input = request.form["input"]
-        correct_captcha = request.form["correct_captcha"]
-
+        correct_captcha = session.get('correct_captcha', '')
         # Prevent spam by checking if the captcha was already used
         if correct_captcha in used_captchas:
             return "This captcha has already been used. Try to refresh the captcha."
@@ -410,7 +412,11 @@ def signup():
         # Check if the username has bad characters
         if "|" in username:
             return "Usernames cannot contain |"
-
+        
+        if len(username) > 15 or len(handle) > 15:
+            return render_template(
+            "error.html", error="Your username is too long"
+            )
         # Get a connection to the database
         db = helpers.get_db()
 
