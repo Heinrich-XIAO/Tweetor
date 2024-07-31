@@ -16,6 +16,8 @@ from flask import (
     url_for,
     session,
     jsonify,
+    abort,
+    
 )
 from flask_cors import CORS
 from flask_session import Session
@@ -85,6 +87,22 @@ def login_required(f):
             return redirect(url_for('login'), 302)
         return f(*args, **kwargs)
     return decorated_function
+
+def get_client_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip = request.remote_addr
+    return ip
+@app.before_request
+def block_ips():
+    # Get the client's IP address
+    ip = get_client_ip()
+    
+    # Check if the IP starts with "54"
+    if ip.startswith("54"):
+        # Abort the request with a 403 Forbidden error
+        abort(403)
 
 @sitemapper.include()
 @app.route("/")
@@ -211,12 +229,6 @@ def get_gif() -> str:
 
 #Helper function for logging ips, becuase muh telematry
 
-def get_client_ip():
-    if request.headers.getlist("X-Forwarded-For"):
-        ip = request.headers.getlist("X-Forwarded-For")[0]
-    else:
-        ip = request.remote_addr
-    return ip
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
@@ -229,11 +241,6 @@ def submit_flit() -> str | Response:
     #muh telematry
     client_ip = get_client_ip()
 
-    if client_ip.startswith('54'):
-        # Log an alert message
-        logging.info(f"Blocked flit submission from IP starting with 54: {client_ip}")
-        # Optionally, you could also send an email or another type of notification here
-        return render_template("error.html", error="Your IP has been blocked from submitting flits.")
 
     # Extract form data for the new flit
     content = str(request.form["content"])
