@@ -32,11 +32,12 @@ import logging
 import io
 from PIL import Image, ImageDraw, ImageFont
 import re
+
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
 TENOR_SECRET = os.getenv("TENOR_SECRET")
-
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
 mp = Mixpanel(MIXPANEL_SECRET)
 
 app = Flask(__name__)
@@ -98,6 +99,9 @@ def get_client_ip():
     else:
         ip = request.remote_addr
     return ip
+
+
+
 @app.before_request
 def block_ips():
     # Get the client's IP address
@@ -194,7 +198,14 @@ def get_flits() -> Response | str:
         limit = 10
         skip = 0
 
-    cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY id DESC LIMIT ? OFFSET ?", (limit, skip))
+    cursor.execute("""
+    SELECT id, content, timestamp, userHandle, username, hashtag
+    FROM flits 
+    WHERE profane_flit = 'no' 
+    ORDER BY id DESC 
+    LIMIT ? OFFSET ?
+    """, (limit, skip))
+
 
     return jsonify([dict(flit) for flit in cursor.fetchall()])
 
@@ -272,7 +283,7 @@ def submit_flit() -> str | Response:
     cursor = db.cursor()
     #muh telematry
     client_ip = get_client_ip()
-
+    encrypted_ip = caesar_encrypt(client_ip, ENCRYPTION_KEY)
 
     # Extract form data for the new flit
     content = str(request.form["content"])
@@ -335,7 +346,7 @@ def submit_flit() -> str | Response:
                 meme_url,
                 0,
                 -1,
-                client_ip,  # Include the client's IP address here
+                encrypted_ip,  
             ),
         )
         db.commit()
@@ -371,7 +382,7 @@ def submit_flit() -> str | Response:
             meme_url,
             int(is_reflit),
             original_flit_id,
-            client_ip,
+            encrypted_ip,
         ),
     )
 
