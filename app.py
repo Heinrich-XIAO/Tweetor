@@ -37,7 +37,7 @@ load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
 TENOR_SECRET = os.getenv("TENOR_SECRET")
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+
 mp = Mixpanel(MIXPANEL_SECRET)
 
 app = Flask(__name__)
@@ -283,7 +283,6 @@ def submit_flit() -> str | Response:
     cursor = db.cursor()
     #muh telematry
     client_ip = get_client_ip()
-    encrypted_ip = caesar_encrypt(client_ip, ENCRYPTION_KEY)
 
     # Extract form data for the new flit
     content = str(request.form["content"])
@@ -346,7 +345,7 @@ def submit_flit() -> str | Response:
                 meme_url,
                 0,
                 -1,
-                encrypted_ip,  
+                client_ip,  
             ),
         )
         db.commit()
@@ -382,7 +381,7 @@ def submit_flit() -> str | Response:
             meme_url,
             int(is_reflit),
             original_flit_id,
-            encrypted_ip,
+            client_ip,
         ),
     )
 
