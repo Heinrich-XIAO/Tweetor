@@ -41,11 +41,11 @@
 	    .then(response => response.blob()) // Read the response as a blob
 	n.then(blob => {
       // Create a URL for the blob
-      const imageUrl = URL.createObjectURL(blob);
-      document.getElementById("captchaImage").src = imageUrl;
+	    const imageUrl = URL.createObjectURL(blob);
+	    document.getElementById("captchaImage").src = imageUrl;
     })
     .catch(error => console.error('Error fetching CAPTCHA:', error));
-}
-    generate();
+      }
+//    generate();
   </script>
 {% endblock %}

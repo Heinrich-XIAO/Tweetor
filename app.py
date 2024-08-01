@@ -207,7 +207,6 @@ def engaged_dms() -> str | Response:
         return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
 
 
-
 @app.route("/api/get_captcha")
 def get_captcha():
     while True:
@@ -226,6 +225,9 @@ def get_captcha():
     buf = io.BytesIO()
     captcha_img.save(buf, format='PNG')
     buf.seek(0)
+    
+    # Log the correct_captcha for debugging purposes
+    app.logger.info(f'Setting correct_captcha in session: {correct_captcha}')
     
     return send_file(buf, mimetype='image/png')
 
@@ -255,6 +257,9 @@ def get_gif() -> str:
     return "no json was provided"
 
 #Helper function for logging ips, becuase muh telematry
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @app.route("/submit_flit", methods=["POST"])
@@ -420,7 +425,8 @@ def signup():
         passwordConformation = request.form["passwordConformation"]
         user_captcha_input = request.form["input"]
         correct_captcha = session.get('correct_captcha', '')
-
+        
+        app.logger.info(f'Correct CAPTCHA: {correct_captcha}')
 
         # Check if the user-provided captcha input matches the correct captcha
         if user_captcha_input != correct_captcha:
