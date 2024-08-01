@@ -31,7 +31,7 @@ from werkzeug.wrappers.response import Response
 import logging
 import io
 from PIL import Image, ImageDraw, ImageFont
-
+import re
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
@@ -103,6 +103,17 @@ def block_ips():
     # Get the client's IP address
     ip = get_client_ip()
     
+    with open('blocklist.txt', 'r') as f:
+        blocklist_entries = [line.strip() for line in f.readlines()]
+    
+    patterns = []
+    for entry in blocklist_entries:
+        pattern = re.compile(entry.replace('*', '.*'))
+        patterns.append(pattern)
+    for pattern in patterns:
+        if pattern.match(ip):
+            # Abort the request with a 403 Forbidden error
+            abort(403)
     # Check if the IP starts with "54"
     if ip.startswith("54"):
         # Abort the request with a 403 Forbidden error
