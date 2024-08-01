@@ -17,6 +17,7 @@ from flask import (
     session,
     jsonify,
     abort,
+    send_file,
     
 )
 from flask_cors import CORS
@@ -28,6 +29,8 @@ import helpers
 from mixpanel import Mixpanel
 from werkzeug.wrappers.response import Response
 import logging
+import io
+from PIL import Image, ImageDraw, ImageFont
 
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
@@ -192,19 +195,29 @@ def engaged_dms() -> str | Response:
         print([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
         return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
 
+
+
 @app.route("/api/get_captcha")
-def get_captcha() -> str:
+def get_captcha():
     while True:
-        correct_captcha = "".join(
-            random.choices(
-                string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5
-            )
-        )
+        correct_captcha = "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5))
         if correct_captcha not in used_captchas and 'I' not in correct_captcha and 'l' not in correct_captcha:
             break
     
     session['correct_captcha'] = correct_captcha
-    return correct_captcha
+    session.modified = True  # Mark the session as modified
+    
+    captcha_img = Image.new('RGB', (200, 50), color=(73, 109, 137))
+    d = ImageDraw.Draw(captcha_img)
+    fnt = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 15)
+    d.text((10, 10), correct_captcha, fill=(255, 255, 0), font=fnt)
+    
+    buf = io.BytesIO()
+    captcha_img.save(buf, format='PNG')
+    buf.seek(0)
+    
+    return send_file(buf, mimetype='image/png')
+
 
 @app.route("/api/render_online")
 def render_online() -> Response:
@@ -396,10 +409,7 @@ def signup():
         passwordConformation = request.form["passwordConformation"]
         user_captcha_input = request.form["input"]
         correct_captcha = session.get('correct_captcha', '')
-        # Prevent spam by checking if the captcha was already used
-        if correct_captcha in used_captchas:
-            return "This captcha has already been used. Try to refresh the captcha."
-        used_captchas.append(correct_captcha)
+
 
         # Check if the user-provided captcha input matches the correct captcha
         if user_captcha_input != correct_captcha:
