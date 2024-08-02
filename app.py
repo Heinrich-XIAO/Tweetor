@@ -199,7 +199,7 @@ def get_flits() -> Response | str:
         skip = 0
 
     cursor.execute("""
-    SELECT id, content, timestamp, userHandle, username, hashtag
+    SELECT id, content, timestamp, userHandle, username, hashtag, is_reflit
     FROM flits 
     WHERE profane_flit = 'no' 
     ORDER BY id DESC 
