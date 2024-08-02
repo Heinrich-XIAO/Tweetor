@@ -281,16 +281,18 @@ def submit_flit() -> str | Response:
     user_agent = request.headers.get('User-Agent')
     app.logger.info(f'User Agent: {user_agent}')
     common_browsers = [
-        'Mozilla',  # Common prefix for Firefox, Chrome, Safari, etc.
+        'Mozilla', 
         'Chrome',
         'Firefox',
         'Safari',
         'Edge',
+        'Chromium',
+        'Emacs',
         'Opera',
-        'MSIE',  # Internet Explorer
-        'Trident',  # Internet Explorer 11
-        'Gecko',  # Used by Firefox
-        'Presto',  # Used by Opera
+        'MSIE', 
+        'Trident',
+        'Gecko',  
+        'Presto',  # Used by (old) Opera
     ]
     
     # Check if the User-Agent contains any of the common browser substrings
