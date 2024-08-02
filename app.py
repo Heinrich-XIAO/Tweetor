@@ -32,7 +32,7 @@ import logging
 import io
 from PIL import Image, ImageDraw, ImageFont
 import re
-
+from flask_wtf.csrf import CSRFProtect
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
@@ -41,8 +41,10 @@ TENOR_SECRET = os.getenv("TENOR_SECRET")
 mp = Mixpanel(MIXPANEL_SECRET)
 
 app = Flask(__name__)
-app.secret_key = "super secret key"
+app.secret_key = "pigeonmast3r"
 cors = CORS(app)
+csrf = CSRFProtect(app)
+
 app.config["CORS_HEADERS"] = "Content-Type"
 
 sitemapper = Sitemapper()
@@ -277,6 +279,7 @@ logger = logging.getLogger(__name__)
 @limiter.limit("4/minute")
 def submit_flit() -> str | Response:
     # Get a connection to the database
+
     db = helpers.get_db()
     user_agent = request.headers.get('User-Agent')
     app.logger.info(f'User Agent: {user_agent}')

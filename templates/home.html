@@ -10,6 +10,8 @@
     <div class="flit_form">
       <form action="/submit_flit" method="post" id="post_flit">
         <!-- Hidden Inputs -->
+	
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="text0" id="text0">
         <input type="hidden" name="text1" id="text1">
         <input type="hidden" name="meme_link" id="meme_link">
