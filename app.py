@@ -278,6 +278,24 @@ logger = logging.getLogger(__name__)
 def submit_flit() -> str | Response:
     # Get a connection to the database
     db = helpers.get_db()
+    user_agent = request.headers.get('User-Agent')
+    app.logger.info(f'User Agent: {user_agent}')
+    common_browsers = [
+        'Mozilla',  # Common prefix for Firefox, Chrome, Safari, etc.
+        'Chrome',
+        'Firefox',
+        'Safari',
+        'Edge',
+        'Opera',
+        'MSIE',  # Internet Explorer
+        'Trident',  # Internet Explorer 11
+        'Gecko',  # Used by Firefox
+        'Presto',  # Used by Opera
+    ]
+    
+    # Check if the User-Agent contains any of the common browser substrings
+    if not user_agent or not any(browser in user_agent for browser in common_browsers):
+        return "Unauthorized", 401
 
     # Create a cursor to interact with the database
     cursor = db.cursor()
