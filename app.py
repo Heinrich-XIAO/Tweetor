@@ -104,6 +104,12 @@ def get_client_ip():
 
 
 
+def get_user_handle():
+    if "username" not in session:
+        return "Not Logged In"
+    else:
+        return session["handle"]
+
 @app.before_request
 def block_ips():
     # Get the client's IP address
@@ -131,9 +137,9 @@ def home() -> str:
     # Get a connection to the database
     db = helpers.get_db()
 
+
     # Create a cursor to interact with the database
     cursor = db.cursor()
-
     # Check if the user is logged in and is an admin
     if "username" in session and session["handle"] == "admin":
         # If admin, retrieve all flits regardless of content
@@ -147,16 +153,14 @@ def home() -> str:
     # Fetch the results of the SQL query
     flits = cursor.fetchall()
 
+
     # Render the home template
     return render_template("home.html", flits=flits, loggedIn="username" in session)
 
 ## APIs
 @app.route("/api/handle")
 def get_handle():
-    if "username" not in session:
-        return "Not Logged In"
-    else:
-        return session["handle"]
+    return get_user_handle()
 
 @app.route("/api/flit")
 def flitAPI():
@@ -179,38 +183,43 @@ def flitAPI():
         "flit": dict(flit)
     })
 
+
 @app.route("/api/get_flits")
-def get_flits() -> Response | str:
+def get_flits():
     skip = request.args.get("skip")
     limit = request.args.get("limit")
-    
-    if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
-        return "either skip or limit is not an integer"
-
-    # Get a connection to the database
     db = helpers.get_db()
-
-    # Create a cursor to interact with the database
     cursor = db.cursor()
+    # Validate skip and limit parameters
+    if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
+        return "either skip or limit is not an integer", 400
+
     try:
         limit = int(request.args.get("limit"))
         skip = int(request.args.get("skip"))
     except ValueError:
-        # Handle the error, e.g., return an error response or set default values
         limit = 10
         skip = 0
 
+    current_user_handle = get_user_handle()
+    if "username" in session:
+        blocked_handles = get_blocked_users(current_user_handle)
+        app.logger.info(f'Blocked handles: {blocked_handles}')
+
     cursor.execute("""
-    SELECT id, content, timestamp, userHandle, username, hashtag, is_reflit, original_flit_id, meme_link
-    FROM flits 
-    WHERE profane_flit = 'no' 
-    ORDER BY id DESC 
-    LIMIT ? OFFSET ?
-    """, (limit, skip))
+        SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
+        FROM flits AS f
+        LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
+        WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
+        ORDER BY f.id DESC 
+        LIMIT ? OFFSET ?
+    """, (current_user_handle, limit, skip))
 
+    # Fetch the results and convert them to dictionaries
+    flits = cursor.fetchall()
+    flits_list = [dict(flit) for flit in flits]
 
-    return jsonify([dict(flit) for flit in cursor.fetchall()])
-
+    return jsonify(flits_list)
 @app.route("/api/engaged_dms")
 def engaged_dms() -> str | Response:
     if "username" not in session:
