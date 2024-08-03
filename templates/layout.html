@@ -63,7 +63,7 @@
     <div class="form-popup" id="reportModal">
       <form action="{{ url_for('report_flit') }}" class="form-container" method="post">
         <h1>Report flit</h1>
-      
+	<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="flit_id" id="modalflitId" placeholder="Flit ID: "/>
       
         <label for="reportReason"><b>Reason: </b></label>
