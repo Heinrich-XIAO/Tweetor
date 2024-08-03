@@ -16,7 +16,10 @@
     <br/>
     <button type="submit">Change Password</button>
 </form>
+<h2> Blocking</h2>
 
+<p><a href="{{ url_for('view_blocks') }}">View Blocked Users</a></p>
+<p><a href="{{ url_for('block_unblock') }}">Manage Blocks</a></p>
 <h2>Appearance</h2>
 <label for="theme_input">Theme</label>
 <select name="theme_input" id="theme_input">
