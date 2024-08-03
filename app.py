@@ -57,7 +57,7 @@ limiter = Limiter(get_remote_address, app=app)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-
+global DATABASE
 DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
@@ -66,54 +66,11 @@ print(time.time_ns())
 
 online_users = {}
 
-def get_engaged_direct_messages(user_handle):
-    db = helpers.get_db()
-    cursor = db.cursor()
-
-    cursor.execute(
-        """
-        SELECT DISTINCT receiver_handle FROM direct_messages
-        WHERE sender_handle = ?
-        UNION
-        SELECT DISTINCT sender_handle FROM direct_messages
-        WHERE receiver_handle = ?
-    """,
-        (user_handle, user_handle),
-    )
-
-    engaged_dms = cursor.fetchall()
-
-    db.commit()
-
-    return engaged_dms
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'), 302)
-        return f(*args, **kwargs)
-    return decorated_function
-
-def get_client_ip():
-    if request.headers.getlist("X-Forwarded-For"):
-        ip = request.headers.getlist("X-Forwarded-For")[0]
-    else:
-        ip = request.remote_addr
-    return ip
-
-
-
-def get_user_handle():
-    if "username" not in session:
-        return "Not Logged In"
-    else:
-        return session["handle"]
 
 @app.before_request
 def block_ips():
     # Get the client's IP address
-    ip = get_client_ip()
+    ip = helpers.get_client_ip()
     
     with open('blocklist.txt', 'r') as f:
         blocklist_entries = [line.strip() for line in f.readlines()]
@@ -160,7 +117,7 @@ def home() -> str:
 ## APIs
 @app.route("/api/handle")
 def get_handle():
-    return get_user_handle()
+    return helpers.get_user_handle()
 
 @app.route("/api/flit")
 def flitAPI():
@@ -201,7 +158,7 @@ def get_flits() -> Response | str:
         limit = 10
         skip = 0
 
-    current_user_handle = get_user_handle()
+    current_user_handle = helpers.get_user_handle()
     if "username" in session:
         blocked_handles = get_blocked_users(current_user_handle)
         app.logger.info(f'Blocked handles: {blocked_handles}')
@@ -225,8 +182,8 @@ def engaged_dms() -> str | Response:
     if "handle" not in session:
         return "{\"logged_in\": false}"
     else:
-        print([list(dm)[0] for dm in get_engaged_direct_messages(session["handle"])])
-        return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["handle"])])
+        print([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
+        return jsonify([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
 
 
 @app.route("/api/get_captcha")
@@ -314,7 +271,7 @@ def submit_flit() -> str | Response:
     # Create a cursor to interact with the database
     cursor = db.cursor()
     #muh telematry
-    client_ip = get_client_ip()
+    client_ip = helpers.get_client_ip()
 
     # Extract form data for the new flit
     content = str(request.form["content"])
@@ -583,7 +540,7 @@ def login() -> str | Response:
     return render_template("login.html")
 
 @app.route('/change_password', methods=['GET', 'POST'])
-@login_required
+@helpers.login_required
 def change_password():
     if request.method == 'POST':
         current_password = request.form['current_password']
