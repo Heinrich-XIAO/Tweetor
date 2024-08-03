@@ -605,7 +605,7 @@ def change_password():
         else:
             return 'Current password is incorrect'
 
-    return render_template('change_password.html')
+    return render_template('change_password.html', loggedIn="username" in session)
 
 
 @app.route('/leaderboard')
@@ -833,7 +833,7 @@ def reported_flits() -> str:
     cursor.execute("SELECT * FROM reported_flits")
     reports = cursor.fetchall()
 
-    return render_template("reported_flits.html", reports=reports)
+    return render_template("reported_flits.html", reports=reports,  loggedIn="username" in session )
 
 def get_blocked_users(current_user_handle):
     conn = helpers.get_db()
@@ -976,7 +976,7 @@ def block_unblock():
         
     else:
         # Render the block/unblock form
-        return render_template('block_unblock.html')
+        return render_template('block_unblock.html', loggedIn="username" in session)
 
 
 
@@ -999,7 +999,7 @@ def view_blocks():
     conn.close()
     
     # Render the blocks view
-    return render_template('view_blocks.html', blocks=[block[0] for block in blocks])
+    return render_template('view_blocks.html', blocks=[block[0] for block in blocks],  loggedIn="username" in session)
 
 
 
