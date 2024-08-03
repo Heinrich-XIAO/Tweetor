@@ -222,11 +222,11 @@ def get_flits() -> Response | str:
     return jsonify(flits_list)
 @app.route("/api/engaged_dms")
 def engaged_dms() -> str | Response:
-    if "username" not in session:
+    if "handle" not in session:
         return "{\"logged_in\": false}"
     else:
-        print([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
-        return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
+        print([list(dm)[0] for dm in get_engaged_direct_messages(session["handle"])])
+        return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["handle"])])
 
 
 @app.route("/api/get_captcha")
@@ -481,11 +481,13 @@ def signup():
             return redirect("/signup")
 
         # Disallowed characters list
-        disallowedCharachters = ["|", ".", "&", "<", ">", "\"", "'"]
+        disallowedCharacters = ["|", ".", "&", "<", ">", "\"", "'"]
         
         # Check if the username has disallowed characters
-        if disallowedCharacters:
-            return "Usernames cannot contain invalid characters(|, ., &, <, >, \", ') "
+
+        for char in username:
+            if char in disallowedCharacters:
+                return "Usernames cannot contain invalid characters(|, ., &, <, >, \", '). Please choose another username."
         
         if len(username) > 15 or len(handle) > 15:
             return render_template(
@@ -589,7 +591,7 @@ def change_password():
 
         db = helpers.get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT password FROM users WHERE username = ?", (session["username"],))
+        cursor.execute("SELECT password FROM users WHERE handle = ?", (session["handle"],))
         user = cursor.fetchone()
 
         hashed_password = hashlib.sha256(current_password.encode()).hexdigest()
@@ -597,21 +599,21 @@ def change_password():
         if user['password'] == hashed_password:
             new_hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
             cursor.execute(
-                "UPDATE users SET password = ? WHERE username = ?",
-                (new_hashed_password, session["username"]),
+                "UPDATE users SET password = ? WHERE handle = ?",
+                (new_hashed_password, session["handle"]),
             )
             db.commit()
             return redirect('/')
         else:
             return 'Current password is incorrect'
 
-    return render_template('change_password.html', loggedIn="username" in session)
+    return render_template('change_password.html', loggedIn="handle" in session)
 
 
 @app.route('/leaderboard')
 def leaderboard():
     return render_template('leaderboard.html',
-        loggedIn=("username" in session),
+        loggedIn=("handle" in session),
     )
 
 c = sqlite3.connect(DATABASE).cursor()
@@ -647,7 +649,7 @@ def singleflit(flit_id: str) -> str | Response:
         return render_template(
             "flit.html",
             flit=flit,
-            loggedIn=("username" in session),
+            loggedIn=("handle" in session),
             original_flit=original_flit,
         )
 
@@ -833,7 +835,7 @@ def reported_flits() -> str:
     cursor.execute("SELECT * FROM reported_flits")
     reports = cursor.fetchall()
 
-    return render_template("reported_flits.html", reports=reports,  loggedIn="username" in session )
+    return render_template("reported_flits.html", reports=reports,  loggedIn="handle" in session )
 
 def get_blocked_users(current_user_handle):
     conn = helpers.get_db()
@@ -876,7 +878,7 @@ def direct_messages(receiver_handle):
         "direct_messages.html",
         messages=messages,
         receiver_handle=receiver_handle,
-        loggedIn="username" in session,
+        loggedIn="handle" in session,
         blocked_users=blocked_handles,  # Pass blocked users to the template
     )
 
@@ -921,7 +923,7 @@ def submit_dm(receiver_handle) -> str | Response:
         url_for(
             "direct_messages",
             receiver_handle=receiver_handle,
-            loggedIn="username" in session,
+            loggedIn="handle" in session,
         )
     )
 
@@ -976,7 +978,7 @@ def block_unblock():
         
     else:
         # Render the block/unblock form
-        return render_template('block_unblock.html', loggedIn="username" in session)
+        return render_template('block_unblock.html', loggedIn="handle" in session)
 
 
 
