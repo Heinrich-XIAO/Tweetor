@@ -185,7 +185,7 @@ def flitAPI():
 
 
 @app.route("/api/get_flits")
-def get_flits():
+def get_flits() -> Response | str:
     skip = request.args.get("skip")
     limit = request.args.get("limit")
     db = helpers.get_db()
