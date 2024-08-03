@@ -1,5 +1,4 @@
 import sqlite3
-import re
 import hashlib
 import random
 import string
