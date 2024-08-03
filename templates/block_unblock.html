@@ -9,6 +9,7 @@
     </select>
     <label for="user_handle">User Handle:</label>
     <input type="text" id="user_handle" name="user_handle" required>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit">Perform Action</button>
 </form>
 {% endblock %}

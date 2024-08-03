@@ -76,7 +76,7 @@ python app.py
 - [x] Improve security (e.g., password hashing, CSRF protection)
 - [ ] Implement email notifications for important events (e.g., new followers, mentions)
 - [ ] Perform code optimization and refactoring for better performance and maintainability
-
+x
 ## Contributing
 
 Contributions are welcome! If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
