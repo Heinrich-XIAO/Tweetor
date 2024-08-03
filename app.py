@@ -471,8 +471,11 @@ def signup():
         if password != passwordConformation:
             return redirect("/signup")
 
-        # Check if the username has bad characters
-        if "|" in username or "." in username or "&" in username or "<" in username or ">" in username or "\"" in username or "'" in username:
+        # Disallowed characters list
+        disallowedCharachters = ["|", ".", "&", "<", ">", "\"", "'"]
+        
+        # Check if the username has disallowed characters
+        if disallowedCharacters:
             return "Usernames cannot contain invalid characters(|, ., &, <, >, \", ') "
         
         if len(username) > 15 or len(handle) > 15:
@@ -792,6 +795,7 @@ def delete_user() -> str | Response:
 
 
 @app.route("/report_flit", methods=["POST"])
+@limiter.limit("1/minute")
 def report_flit() -> Response:
     flit_id = request.form["flit_id"]
     reporter_handle = session["handle"]
@@ -871,6 +875,7 @@ def direct_messages(receiver_handle):
 
 
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
+@limiter.limit("5/minute")
 def submit_dm(receiver_handle) -> str | Response:
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
