@@ -445,8 +445,10 @@ def users():
     )
 
 # Signup route
+# Added rate limiting so that people can only sign up 3 times a day
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
+@limiter.limit("3 per day")
 def signup():
     error = None
 
@@ -469,9 +471,12 @@ def signup():
         if password != passwordConformation:
             return redirect("/signup")
 
-        # Check if the username has bad characters
-        if "|" in username:
-            return "Usernames cannot contain |"
+        # Disallowed characters list
+        disallowedCharachters = ["|", ".", "&", "<", ">", "\"", "'"]
+        
+        # Check if the username has disallowed characters
+        if disallowedCharacters:
+            return "Usernames cannot contain invalid characters(|, ., &, <, >, \", ') "
         
         if len(username) > 15 or len(handle) > 15:
             return render_template(
@@ -521,8 +526,10 @@ def signup():
     return render_template("signup.html", error=error)
 
 # Login route
+# Added rate limiting to prevent brute force attacks
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("2/minute")
 def login() -> str | Response:
     # Handle form submission if the request method is POST
     if request.method == "POST":
@@ -788,6 +795,7 @@ def delete_user() -> str | Response:
 
 
 @app.route("/report_flit", methods=["POST"])
+@limiter.limit("1/minute")
 def report_flit() -> Response:
     flit_id = request.form["flit_id"]
     reporter_handle = session["handle"]
@@ -867,6 +875,7 @@ def direct_messages(receiver_handle):
 
 
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
+@limiter.limit("5/minute")
 def submit_dm(receiver_handle) -> str | Response:
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
