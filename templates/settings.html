@@ -9,6 +9,7 @@
     <label for="current_password">Current Password: </label>
     <br/>
     <input type="password" id="current_password" name="current_password" required>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <br/>
     <label for="new_password">New Password: </label>
     <br/>
