@@ -40,11 +40,15 @@
         </div>
         
       {% else %}
-        <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="home"><span class="iconify" data-icon="ic:round-home"></span></a>
-        <a href="{{ url_for('leaderboard') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="material-symbols:trophy"></span></a>
-        <a href="{{ url_for('users') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="clarity:users-solid"></span></a>
-        <a href="{{ url_for('settings') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="settings"><span class="iconify" data-icon="ic:round-settings"></span></a>
-        <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="logout"><span class="iconify" data-icon="ci:exit"></span></a>
+        <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="home"><span class="iconify" data-icon="ic:round-home"> </span> Home</a>
+        <a href="{{ url_for('leaderboard') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="material-symbols:trophy"></span> Leaderboard</a>
+        <a href="{{ url_for('users') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="clarity:users-solid"></span>Online Users</a>
+        <a href="{{ url_for('settings') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="settings"><span class="iconify" data-icon="ic:round-settings"></span> Settings</a>
+        <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="logout"><span class="iconify" data-icon="ci:exit"></span> Logout</a>
+	   {% if session['handle'] == 'admin' %}
+	<a href="{{ url_for('profanity') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="profanity"><span class="iconify" data-icon="ic:baseline-alarm"></span> Profanity</a>
+	<a href="{{ url_for('reported_flits') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="profanity"><span class="iconify" data-icon="material-symbols:report"></span> Reports</a>
+    {% endif %}
         {% block admin_buttons %}{% endblock %}
         <hr>
         <div id="dm_list">
