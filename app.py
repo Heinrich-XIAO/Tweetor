@@ -1,4 +1,5 @@
 import sqlite3
+import re
 import hashlib
 import random
 import string
@@ -445,8 +446,10 @@ def users():
     )
 
 # Signup route
+# Added rate limiting so that people can only sign up 3 times a day
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
+@limiter.limit("3 per day")
 def signup():
     error = None
 
@@ -470,8 +473,8 @@ def signup():
             return redirect("/signup")
 
         # Check if the username has bad characters
-        if "|" in username:
-            return "Usernames cannot contain |"
+        if "|" in username or "." in username or "&" in username or "<" in username or ">" in username or "\"" in username or "'" in username:
+            return "Usernames cannot contain invalid characters(|, ., &, <, >, \", ') "
         
         if len(username) > 15 or len(handle) > 15:
             return render_template(
@@ -521,8 +524,10 @@ def signup():
     return render_template("signup.html", error=error)
 
 # Login route
+# Added rate limiting to prevent brute force attacks
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("2/minute")
 def login() -> str | Response:
     # Handle form submission if the request method is POST
     if request.method == "POST":
