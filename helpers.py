@@ -48,10 +48,37 @@ def get_client_ip():
         ip = request.remote_addr
     return ip
 
+def get_all_user_handles():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT handle FROM users")
+    user_handles = [i[0] for i in cursor.fetchall()]
+    return user_handles
 
 
 def get_user_handle():
-    if "username" not in session:
+  db = get_db()
+  cursor = db.cursor()
+  if "username" not in session:
         return "Not Logged In"
-    else:
+  else:
         return session["handle"]
+def get_all_flit_ids():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT id FROM flits")
+    flit_ids = [i[0] for i in cursor.fetchall()]
+    return flit_ids
+
+def get_blocked_users(current_user_handle):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT blocked_handle FROM blocks WHERE blocker_handle = ?
+    """, (current_user_handle,))
+    blocked_users = cursor.fetchall()
+    conn.close()
+
+    # Convert the result to a list of usernames
+    blocked_usernames = [row[0] for row in blocked_users]
+    return blocked_usernames
