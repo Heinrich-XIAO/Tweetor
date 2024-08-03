@@ -16,6 +16,9 @@ from flask import (
     url_for,
     session,
     jsonify,
+    abort,
+    send_file,
+    
 )
 from flask_cors import CORS
 from flask_session import Session
@@ -25,7 +28,11 @@ from flask_limiter.util import get_remote_address
 import helpers
 from mixpanel import Mixpanel
 from werkzeug.wrappers.response import Response
-
+import logging
+import io
+from PIL import Image, ImageDraw, ImageFont
+import re
+from flask_wtf.csrf import CSRFProtect
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
@@ -34,8 +41,10 @@ TENOR_SECRET = os.getenv("TENOR_SECRET")
 mp = Mixpanel(MIXPANEL_SECRET)
 
 app = Flask(__name__)
-app.secret_key = "super secret key"
+app.secret_key = "pigeonmast3r"
 cors = CORS(app)
+csrf = CSRFProtect(app)
+
 app.config["CORS_HEADERS"] = "Content-Type"
 
 sitemapper = Sitemapper()
@@ -85,6 +94,36 @@ def login_required(f):
             return redirect(url_for('login'), 302)
         return f(*args, **kwargs)
     return decorated_function
+
+def get_client_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip = request.remote_addr
+    return ip
+
+
+
+@app.before_request
+def block_ips():
+    # Get the client's IP address
+    ip = get_client_ip()
+    
+    with open('blocklist.txt', 'r') as f:
+        blocklist_entries = [line.strip() for line in f.readlines()]
+    
+    patterns = []
+    for entry in blocklist_entries:
+        pattern = re.compile(entry.replace('*', '.*'))
+        patterns.append(pattern)
+    for pattern in patterns:
+        if pattern.match(ip):
+            # Abort the request with a 403 Forbidden error
+            abort(403)
+    # Check if the IP starts with "54"
+    if ip.startswith("54"):
+        # Abort the request with a 403 Forbidden error
+        abort(403)
 
 @sitemapper.include()
 @app.route("/")
@@ -161,7 +200,14 @@ def get_flits() -> Response | str:
         limit = 10
         skip = 0
 
-    cursor.execute("SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY id DESC LIMIT ? OFFSET ?", (limit, skip))
+    cursor.execute("""
+    SELECT id, content, timestamp, userHandle, username, hashtag, is_reflit, original_flit_id, meme_link
+    FROM flits 
+    WHERE profane_flit = 'no' 
+    ORDER BY id DESC 
+    LIMIT ? OFFSET ?
+    """, (limit, skip))
+
 
     return jsonify([dict(flit) for flit in cursor.fetchall()])
 
@@ -173,17 +219,31 @@ def engaged_dms() -> str | Response:
         print([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
         return jsonify([list(dm)[0] for dm in get_engaged_direct_messages(session["username"])])
 
+
 @app.route("/api/get_captcha")
-def get_captcha() -> str:
+def get_captcha():
     while True:
-        correct_captcha = "".join(
-            random.choices(
-                string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5
-            )
-        )
+        correct_captcha = "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5))
         if correct_captcha not in used_captchas and 'I' not in correct_captcha and 'l' not in correct_captcha:
             break
-    return correct_captcha
+    
+    session['correct_captcha'] = correct_captcha
+    session.modified = True  # Mark the session as modified
+    
+    captcha_img = Image.new('RGB', (200, 50), color=(73, 109, 137))
+    d = ImageDraw.Draw(captcha_img)
+    fnt = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 15)
+    d.text((10, 10), correct_captcha, fill=(255, 255, 0), font=fnt)
+    
+    buf = io.BytesIO()
+    captcha_img.save(buf, format='PNG')
+    buf.seek(0)
+    
+    # Log the correct_captcha for debugging purposes
+    app.logger.info(f'Setting correct_captcha in session: {correct_captcha}')
+    
+    return send_file(buf, mimetype='image/png')
+
 
 @app.route("/api/render_online")
 def render_online() -> Response:
@@ -209,14 +269,43 @@ def get_gif() -> str:
         }).json()
     return "no json was provided"
 
+#Helper function for logging ips, becuase muh telematry
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("4/minute")
 def submit_flit() -> str | Response:
     # Get a connection to the database
+
     db = helpers.get_db()
+    user_agent = request.headers.get('User-Agent')
+    app.logger.info(f'User Agent: {user_agent}')
+    common_browsers = [
+        'Mozilla', 
+        'Chrome',
+        'Firefox',
+        'Safari',
+        'Edge',
+        'Chromium',
+        'Emacs',
+        'Opera',
+        'MSIE', 
+        'Trident',
+        'Gecko',  
+        'Presto',  # Used by (old) Opera
+    ]
+    
+    # Check if the User-Agent contains any of the common browser substrings
+    if not user_agent or not any(browser in user_agent for browser in common_browsers):
+        return "Unauthorized", 401
 
     # Create a cursor to interact with the database
     cursor = db.cursor()
+    #muh telematry
+    client_ip = get_client_ip()
 
     # Extract form data for the new flit
     content = str(request.form["content"])
@@ -267,8 +356,9 @@ def submit_flit() -> str | Response:
     # Check if the original_flit_id field is present in the form data
     if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
         # Insert the new flit into the database
+# Insert the new flit into the database including the IP address
         cursor.execute(
-            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 session["username"],
                 content,
@@ -278,6 +368,7 @@ def submit_flit() -> str | Response:
                 meme_url,
                 0,
                 -1,
+                client_ip,  
             ),
         )
         db.commit()
@@ -303,7 +394,7 @@ def submit_flit() -> str | Response:
 
     # Insert the reflit or empty flit into the database
     cursor.execute(
-        "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             session["username"],
             content,
@@ -313,6 +404,7 @@ def submit_flit() -> str | Response:
             meme_url,
             int(is_reflit),
             original_flit_id,
+            client_ip,
         ),
     )
 
@@ -365,12 +457,9 @@ def signup():
         password = request.form["password"]
         passwordConformation = request.form["passwordConformation"]
         user_captcha_input = request.form["input"]
-        correct_captcha = request.form["correct_captcha"]
-
-        # Prevent spam by checking if the captcha was already used
-        if correct_captcha in used_captchas:
-            return "This captcha has already been used. Try to refresh the captcha."
-        used_captchas.append(correct_captcha)
+        correct_captcha = session.get('correct_captcha', '')
+        
+        app.logger.info(f'Correct CAPTCHA: {correct_captcha}')
 
         # Check if the user-provided captcha input matches the correct captcha
         if user_captcha_input != correct_captcha:
@@ -383,7 +472,11 @@ def signup():
         # Check if the username has bad characters
         if "|" in username:
             return "Usernames cannot contain |"
-
+        
+        if len(username) > 15 or len(handle) > 15:
+            return render_template(
+            "error.html", error="Your username is too long"
+            )
         # Get a connection to the database
         db = helpers.get_db()
 
@@ -725,13 +818,27 @@ def reported_flits() -> str:
 
     return render_template("reported_flits.html", reports=reports)
 
+def get_blocked_users(current_user_handle):
+    conn = helpers.get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT blocked_handle FROM blocks WHERE blocker_handle = ?
+    """, (current_user_handle,))
+    blocked_users = cursor.fetchall()
+    conn.close()
+
+    # Convert the result to a list of usernames
+    blocked_usernames = [row[0] for row in blocked_users]
+    return blocked_usernames
+
 
 @app.route("/dm/<path:receiver_handle>")
-def direct_messages(receiver_handle) -> str:
+def direct_messages(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
 
     sender_handle = session["handle"]
+    blocked_handles = get_blocked_users(sender_handle)  # Retrieve the list of blocked users
 
     db = helpers.get_db()
     cursor = db.cursor()
@@ -753,7 +860,10 @@ def direct_messages(receiver_handle) -> str:
         messages=messages,
         receiver_handle=receiver_handle,
         loggedIn="username" in session,
+        blocked_users=blocked_handles,  # Pass blocked users to the template
     )
+
+
 
 
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
@@ -818,6 +928,62 @@ def unmute(handle) -> str:
 @app.route("/sitemap.xml")
 def sitemap():
   return sitemapper.generate()
+@app.route('/block_unblock', methods=['GET', 'POST'])
+def block_unblock():
+    if request.method == 'POST':
+        # Extract the action and user_handle from the form
+        action = request.form['action']
+        user_handle = request.form['user_handle']
+        
+        # Connect to the database
+        conn = helpers.get_db()
+        cursor = conn.cursor()
+        
+        if action == 'block':
+            # Attempt to insert or update the block based on existence
+            cursor.execute("""
+                INSERT INTO blocks (blocker_handle, blocked_handle) VALUES (?, ?)
+                ON CONFLICT(blocker_handle, blocked_handle) DO UPDATE SET blocker_handle = excluded.blocker_handle
+            """, (session['handle'], user_handle))
+        elif action == 'unblock':
+            # Delete the block based on existence
+            cursor.execute("""
+                DELETE FROM blocks WHERE blocker_handle = ? AND blocked_handle = ?
+            """, (session['handle'], user_handle))
+        
+        conn.commit()
+        conn.close()
+        
+        return redirect(url_for('view_blocks'))  # Redirect to the view_blocks page or wherever you want
+        
+    else:
+        # Render the block/unblock form
+        return render_template('block_unblock.html')
+
+
+
+@app.route('/view_blocks')
+def view_blocks():
+    # Connect to the database
+    conn = helpers.get_db()
+    cursor = conn.cursor()
+    
+    # Get the current user's handle
+    current_user_handle = session['handle']
+    
+    # Fetch all blocks where the blocker_handle matches the current user's handle
+    cursor.execute("""
+        SELECT blocked_handle FROM blocks WHERE blocker_handle = ?
+    """, (current_user_handle,))
+    
+    blocks = cursor.fetchall()
+    
+    conn.close()
+    
+    # Render the blocks view
+    return render_template('view_blocks.html', blocks=[block[0] for block in blocks])
+
+
 
 if __name__ == "__main__":
     app.run(debug=False)

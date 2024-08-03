@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %} "Block/Unblock"  {% endblock %}
+{% block body %}
+<h1> Block/Unblock User </hi>
+<form method="post" action="{{ url_for('block_unblock') }}">
+    <select name="action">
+        <option value="block">Block User</option>
+        <option value="unblock">Unblock User</option>
+    </select>
+    <label for="user_handle">User Handle:</label>
+    <input type="text" id="user_handle" name="user_handle" required>
+    <button type="submit">Perform Action</button>
+</form>
+{% endblock %}
