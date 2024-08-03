@@ -57,7 +57,6 @@ limiter = Limiter(get_remote_address, app=app)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-global DATABASE
 DATABASE = "tweetor.db"
 
 staff_accounts = ["ItsMe", "Dude_Pog"]
@@ -88,6 +87,7 @@ def block_ips():
         # Abort the request with a 403 Forbidden error
         abort(403)
 
+
 @sitemapper.include()
 @app.route("/")
 def home() -> str:
@@ -112,7 +112,7 @@ def home() -> str:
 
 
     # Render the home template
-    return render_template("home.html", flits=flits, loggedIn="username" in session)
+    return render_template("home.html", flits=flits, loggedIn="handle" in session)
 
 ## APIs
 @app.route("/api/handle")
@@ -160,7 +160,7 @@ def get_flits() -> Response | str:
 
     current_user_handle = helpers.get_user_handle()
     if "username" in session:
-        blocked_handles = get_blocked_users(current_user_handle)
+        blocked_handles = helpers.get_blocked_users(current_user_handle)
         app.logger.info(f'Blocked handles: {blocked_handles}')
 
     cursor.execute("""
@@ -390,7 +390,7 @@ def settings():
     if "username" not in session:
         return render_template('error.html', error="Are you signed in?")
     return render_template('settings.html',
-        loggedIn=("username" in session)
+        loggedIn=("handle" in session)
     )
 
 # Gets users to show if they are online
@@ -407,7 +407,7 @@ def users():
     print(online_users)
     return render_template('users.html',
         online=online_users,
-        loggedIn=("username" in session)
+        loggedIn=("handle" in session)
     )
 
 # Signup route
@@ -573,16 +573,8 @@ def leaderboard():
         loggedIn=("handle" in session),
     )
 
-c = sqlite3.connect(DATABASE).cursor()
 
-
-def get_all_flit_ids():
-    c.execute("SELECT id FROM flits")
-    flit_ids = [i[0] for i in c.fetchall()]
-    return flit_ids
-
-
-@sitemapper.include(url_variables={"flit_id": get_all_flit_ids()})
+@sitemapper.include(url_variables={"flit_id": helpers.get_all_flit_ids()})
 @app.route("/flits/<flit_id>")
 def singleflit(flit_id: str) -> str | Response:
     # Get a connection to the database
@@ -625,13 +617,8 @@ def logout() -> Response:
     return redirect("/")
 
 
-def get_all_user_handles():
-    c.execute("SELECT handle FROM users")
-    user_handles = [i[0] for i in c.fetchall()]
-    return user_handles
 
-
-@sitemapper.include(url_variables={"username": get_all_user_handles()})
+@sitemapper.include(url_variables={"username": helpers.get_all_user_handles()})
 @app.route("/user/<path:username>")
 def user_profile(username: str) -> str | Response:
     # Get a connection to the database
@@ -680,7 +667,7 @@ def user_profile(username: str) -> str | Response:
         "user.html",
         badges=badges,
         user=user,
-        loggedIn=("username" in session),
+        loggedIn=("handle" in session),
         flits=flits,
         activeness=activeness,
     )
@@ -794,27 +781,13 @@ def reported_flits() -> str:
 
     return render_template("reported_flits.html", reports=reports,  loggedIn="handle" in session )
 
-def get_blocked_users(current_user_handle):
-    conn = helpers.get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT DISTINCT blocked_handle FROM blocks WHERE blocker_handle = ?
-    """, (current_user_handle,))
-    blocked_users = cursor.fetchall()
-    conn.close()
-
-    # Convert the result to a list of usernames
-    blocked_usernames = [row[0] for row in blocked_users]
-    return blocked_usernames
-
-
 @app.route("/dm/<path:receiver_handle>")
 def direct_messages(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
 
     sender_handle = session["handle"]
-    blocked_handles = get_blocked_users(sender_handle)  # Retrieve the list of blocked users
+    blocked_handles = helpers.get_blocked_users(sender_handle)  # Retrieve the list of blocked users
 
     db = helpers.get_db()
     cursor = db.cursor()
@@ -958,7 +931,7 @@ def view_blocks():
     conn.close()
     
     # Render the blocks view
-    return render_template('view_blocks.html', blocks=[block[0] for block in blocks],  loggedIn="username" in session)
+    return render_template('view_blocks.html', blocks=[block[0] for block in blocks],  loggedIn="handle" in session )
 
 
 
