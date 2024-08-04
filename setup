@@ -43,6 +43,17 @@ try source ./venv/bin/activate
 try python3 -m pip install -r requirements.txt
 try touch ./blocklist.txt
 try touch .env
-try echo -e "SIGHTENGINE_SECRET = "sightengine_secret_here" \nMIXPANEL_SECRET = "mixpanel_secret_here"\nTENOR_SECRET="tenor_secret_here"" >> ./.env
+declare -A SECRETS=(
+    ["MIXPANEL_SECRET"]="mixpanel_secret_here"
+    ["SIGHT_ENGINE_SECRET"]="sightengine_secret_here"
+    ["TENOR_SECRET"]="tenor_secret_here"
+)
+for SECRET_NAME in "${!SECRETS[@]}"; do
+    # Use grep to search for the secret in the .env file
+    if ! grep -q "^$SECRET_NAME\s*=" "./.env"; then
+        # If the secret is not found, append it to the .env file
+       try echo "$SECRET_NAME=${SECRETS[$SECRET_NAME]}" >> "./.env"
+    fi
+done
 try python ./database_setup.py 
 
