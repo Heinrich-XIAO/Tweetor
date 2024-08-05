@@ -59,7 +59,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 DATABASE = "tweetor.db"
 
-staff_accounts = ["ItsMe", "Dude_Pog"]
+staff_accounts = ["ItsMe", "Dude_Pog", "Hi!0"]
 
 print(time.time_ns())
 
