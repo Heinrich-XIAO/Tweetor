@@ -148,9 +148,6 @@ def get_flits() -> Response | str:
     limit = request.args.get("limit")
     db = helpers.get_db()
     cursor = db.cursor()
-    # Validate skip and limit parameters
-    if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
-        return "either skip or limit is not an integer", 400
 
     try:
         limit = int(request.args.get("limit"))
@@ -178,13 +175,6 @@ def get_flits() -> Response | str:
     flits_list = [dict(flit) for flit in flits]
 
     return jsonify(flits_list)
-@app.route("/api/engaged_dms")
-def engaged_dms() -> str | Response:
-    if "handle" not in session:
-        return "{\"logged_in\": false}"
-    else:
-        print([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
-        return jsonify([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
 
 
 @app.route("/api/get_captcha")
@@ -278,11 +268,6 @@ def submit_flit() -> str | Response:
     content = str(request.form["content"])
     meme_url = request.form["meme_link"]
 
-    # Validate meme URL format
-    if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
-        return render_template(
-            "error.html", error="Why is this meme not from tenor?"
-        )
 
     # Check if the user is muted
     if session.get("username") in muted:
