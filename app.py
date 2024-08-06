@@ -311,7 +311,7 @@ def submit_flit() -> str | Response:
     profane_words_list = ["fuck", "nigger", "bitch", "damn", "retard", "nigga", ]  # Add more profanity here
 
     sightengine_result = is_profanity(content)
-
+    profane_flit = "no"
     if sightengine_result == "failure":
         # Check against the manually defined list of profane words
         for word in profane_words_list:
@@ -510,7 +510,7 @@ def signup():
 # Added rate limiting to prevent brute force attacks
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("2/mintue")
+@limiter.limit("2/minute")
 def login() -> str | Response:
     # Handle form submission if the request method is POST
     if request.method == "POST":
