@@ -33,6 +33,7 @@ import io
 from PIL import Image, ImageDraw, ImageFont
 import re
 from flask_wtf.csrf import CSRFProtect
+import json
 load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
@@ -307,32 +308,29 @@ def submit_flit() -> str | Response:
 
 
 
-    # Use the Sightengine result to check for profanity
-    profane_words_list = ["fuck", "nigger", "bitch", "damn", "retard", "nigga", ]  # Add more profanity here
-
-    sightengine_result = is_profanity(content)
+    #profane word list    
+    with open('profane_words.json') as f:
+        profane_words_list = json.load(f)
+        sightengine_result = is_profanity(content)
+    
+    # Check if SightEngine flagged content as profane
+    if (
+            isinstance(sightengine_result, dict)
+            and sightengine_result.get("status") == "success"
+            and len(sightengine_result.get("profanity", {}).get("matches", [])) > 0
+    ):
+        return render_template("error.html", error="Do you really think that's appropriate?")
+    
+    # If SightEngine did not flag content as profane, perform manual check
     profane_flit = "no"
-    if sightengine_result == "failure":
-        # Check against the manually defined list of profane words
-        for word in profane_words_list:
-            if word.lower() in content.lower().strip(): 
-                profane_flit = "yes"
-                return render_template(
-                    "error.html", error="Do you really think that's appropriate?"
-                )
-            else:
-                # Proceed with checking the SightEngine result as before
-                if isinstance(sightengine_result, dict):
-                    if (
-                            sightengine_result["status"] == "success"
-                            and len(sightengine_result.get("profanity", {}).get("matches", [])) > 0
-                    ):
-                        profane_flit = "yes"
-                        return render_template(
-                            "error.html", error="Do you really think that's appropriate?"
-                        )
-
-    # Check if the original_flit_id field is present in the form data
+    content_words = content.lower().strip().split()
+    
+    for word in profane_words_list:
+        if word.lower() in content_words:
+            profane_flit = "yes"
+            return render_template("error.html", error="Do you really think that's appropriate?")
+    
+        # Check if the original_flit_id field is present in the form data
     if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
         # Insert the new flit into the database
 # Insert the new flit into the database including the IP address
