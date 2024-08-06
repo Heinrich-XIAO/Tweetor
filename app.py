@@ -308,16 +308,29 @@ def submit_flit() -> str | Response:
 
 
     # Use the Sightengine result to check for profanity
+    profane_words_list = ["fuck", "nigger", "bitch", "damn", "retard", "nigga", ]  # Add more profanity here
+
     sightengine_result = is_profanity(content)
-    profane_flit = "no"
-    if (
-        sightengine_result["status"] == "success"
-        and len(sightengine_result["profanity"]["matches"]) > 0
-    ):
-        profane_flit = "yes"
-        return render_template(
-            "error.html", error="Do you really think that's appropriate?"
-        )
+
+    if sightengine_result == "failure":
+        # Check against the manually defined list of profane words
+        for word in profane_words_list:
+            if word.lower() in content.lower().strip(): 
+                profane_flit = "yes"
+                return render_template(
+                    "error.html", error="Do you really think that's appropriate?"
+                )
+            else:
+                # Proceed with checking the SightEngine result as before
+                if isinstance(sightengine_result, dict):
+                    if (
+                            sightengine_result["status"] == "success"
+                            and len(sightengine_result.get("profanity", {}).get("matches", [])) > 0
+                    ):
+                        profane_flit = "yes"
+                        return render_template(
+                            "error.html", error="Do you really think that's appropriate?"
+                        )
 
     # Check if the original_flit_id field is present in the form data
     if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
@@ -497,7 +510,7 @@ def signup():
 # Added rate limiting to prevent brute force attacks
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("2/minute")
+@limiter.limit("2/mintue")
 def login() -> str | Response:
     # Handle form submission if the request method is POST
     if request.method == "POST":
@@ -696,10 +709,11 @@ def profanity() -> str | Response:
         "profanity.html", profane_flit=profane_flit, profane_dm=profane_dm
     )
 
+
 def is_profanity(text):
     api_user = "570595698"
     api_secret = SIGHT_ENGINE_SECRET
-    api_url = f"https://api.sightengine.com/1.0/text/check.json"
+    api_url = "https://api.sightengine.com/1.0/text/check.json"
 
     data = {
         "text": text,
@@ -711,9 +725,19 @@ def is_profanity(text):
     }
 
     response = requests.post(api_url, data=data)
+    
+    # Parse the JSON response
     result = response.json()
-
-    return result  # Return the result instead of an empty list
+    
+    # Check if the 'status' key exists and its value is 'failure'
+    if 'status' in result and result['status'] == 'failure':
+        app.logger.info("API call failed due to usage limit or another error.")
+        return "failure"  # Explicitly set result to "failure"
+    
+    app.logger.info(result)
+    app.logger.info(response)
+    
+    return result
 
 
 @app.route("/delete_flit", methods=["GET"])
