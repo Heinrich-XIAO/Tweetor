@@ -449,13 +449,13 @@ def signup():
             return redirect("/signup")
 
         # Disallowed characters list
-        disallowedCharacters = ["|", ".", "&", "<", ">", "\"", "'"]
+        disallowedCharacters = ["|", "&", "<", ">", "\"", "'"]
         
         # Check if the username has disallowed characters
 
         for char in username:
             if char in disallowedCharacters:
-                return "Usernames cannot contain invalid characters(|, ., &, <, >, \", '). Please choose another username."
+                return "Usernames cannot contain invalid characters(|, &, <, >, \", '). Please choose another username."
         
         if len(username) > 15 or len(handle) > 15:
             return render_template(
@@ -470,9 +470,12 @@ def signup():
         # Check if the username already exists in the database
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
 
-        # If the username is taken, modify the handle to make it unique
-        if len(cursor.fetchall()) != 0:
-            handle = f"{username}{len(cursor.fetchall())}"
+        if len(cursor.fetchall()) > 0:
+            handle = f"{username}.{len(cursor.fetchall())}" # added a dot to fix vulnerability
+        else:
+            for char in username:
+                if char == ".":
+                    return "Username cannot contain a dot."
 
         # Hash the password before storing it in the database
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
