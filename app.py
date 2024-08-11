@@ -422,10 +422,10 @@ def users():
     )
 
 # Signup route
-# Added rate limiting so that people can only sign up 3 times a day
+# Added rate limiting so that people can only sign up 10 times a day
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
-@limiter.limit("3 per day")
+@limiter.limit("10 per day")
 def signup():
     error = None
 
@@ -447,15 +447,11 @@ def signup():
         # Check if the provided passwords match
         if password != passwordConformation:
             return redirect("/signup")
-
-        # Disallowed characters list
-        disallowedCharacters = ["|", "&", "<", ">", "\"", "'"]
         
         # Check if the username has disallowed characters
 
-        for char in username:
-            if char in disallowedCharacters:
-                return "Usernames cannot contain invalid characters(|, &, <, >, \", '). Please choose another username."
+        if not re.match("^[A-Za-z0-9_-]*$", username):
+            return "Only latin alphabet characters and numbers are allowed."
         
         if len(username) > 15 or len(handle) > 15:
             return render_template(
@@ -511,7 +507,7 @@ def signup():
 # Added rate limiting to prevent brute force attacks
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("2/minute")
+@limiter.limit("3/minute")
 def login() -> str | Response:
     # Handle form submission if the request method is POST
     if request.method == "POST":
