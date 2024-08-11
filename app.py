@@ -448,6 +448,8 @@ def signup():
         if password != passwordConformation:
             return redirect("/signup")
         
+        if "admin" in username.lower():
+            return "Username cannot contain 'admin'."
         # Check if the username has disallowed characters
 
         if not re.match("^[A-Za-z0-9_-]*$", username):
