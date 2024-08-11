@@ -747,7 +747,7 @@ def delete_flit() -> str | Response:
         return redirect(url_for("login"))  # Redirect to login page if not logged in
 
     # Now check if the user is not an admin
-    if session["handle"] == "admin":
+    if session["handle"] != "admin":
         return render_template(
             "error.html", error="You are not authorized to perform this action."
         )
@@ -767,7 +767,7 @@ def delete_user() -> str | Response:
     if "username" not in session:
         return redirect(url_for("login"))  # Redirect to login page if not logged in
 
-    if session["handle"] == "admin":
+    if session["handle"] != "admin":
         return render_template(
             "error.html", error="You are not authorized to perform this action."
         )
