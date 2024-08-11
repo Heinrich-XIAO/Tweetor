@@ -685,11 +685,9 @@ def user_profile(username: str) -> str | Response:
     )
 
 @app.route("/profanity")
+@helpers.admin_required
 def profanity() -> str | Response:
-    if "username" in session and session["handle"] != "admin":
-        return render_template(
-            "error.html", error="You are not authorized to view this page."
-        )
+
 
     db = helpers.get_db()
     cursor = db.cursor()
@@ -741,16 +739,10 @@ def is_profanity(text):
 
 
 @app.route("/delete_flit", methods=["GET"])
+@helpers.admin_required
 def delete_flit() -> str | Response:
     # Check if the user is logged in first
-    if "username" not in session:
-        return redirect(url_for("login"))  # Redirect to login page if not logged in
-
-    # Now check if the user is not an admin
-    if session["handle"] != "admin":
-        return render_template(
-            "error.html", error="You are not authorized to perform this action."
-        )
+ 
 
     flit_id = request.args.get("flit_id")
     db = helpers.get_db()
@@ -762,6 +754,7 @@ def delete_flit() -> str | Response:
     return redirect(url_for("reported_flits"))
 
 @app.route("/delete_user", methods=["POST"])
+@helpers.admin_required
 def delete_user() -> str | Response:
     # Similar adjustment here
     if "username" not in session:
@@ -800,11 +793,9 @@ def report_flit() -> Response:
 
 
 @app.route("/reported_flits")
+@helpers.admin_required
 def reported_flits() -> str:
-    if "username" in session and session["handle"] != "admin":
-        return render_template(
-            "error.html", error="You don't have permission to access this page."
-        )
+
 
     db = helpers.get_db()
     cursor = db.cursor()
