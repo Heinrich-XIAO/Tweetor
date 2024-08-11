@@ -280,9 +280,7 @@ def submit_flit() -> str | Response:
 
     # Validate meme URL format
     if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
-        return render_template(
-            "error.html", error="Why is this meme not from tenor?"
-        )
+        return render_template("error.html", error="Why is this meme not from tenor?")
 
     # Check if the user is muted
     if session.get("username") in muted:
@@ -853,11 +851,26 @@ def submit_dm(receiver_handle) -> str | Response:
     sightengine_result = is_profanity(content)
     profane_dm = "no"
 
+    with open('profane_words.json') as f:
+        profane_words_list = json.load(f)
+        sightengine_result = is_profanity(content)
+    
+    # Check if SightEngine flagged content as profane
     if (
-        sightengine_result["status"] == "success"
-        and len(sightengine_result["profanity"]["matches"]) > 0
+            isinstance(sightengine_result, dict)
+            and sightengine_result.get("status") == "success"
+            and len(sightengine_result.get("profanity", {}).get("matches", [])) > 0
     ):
         profane_dm = "yes"
+        return render_template("error.html", error="Do you really think that's appropriate?")
+    
+    # If SightEngine did not flag content as profane, perform manual check
+    content_words = content.lower().strip().split()
+    
+    for word in profane_words_list:
+        if word.lower() in content_words:
+            profane_dm = "yes"
+            return render_template("error.html", error="Do you really think that's appropriate?")
 
     db = helpers.get_db()
     cursor = db.cursor()
