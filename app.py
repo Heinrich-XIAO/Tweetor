@@ -739,9 +739,15 @@ def is_profanity(text):
     return result
 
 
+
 @app.route("/delete_flit", methods=["GET"])
 def delete_flit() -> str | Response:
-    if "username" in session and session["handle"] != "admin":
+    # Check if the user is logged in first
+    if "username" not in session:
+        return redirect(url_for("login"))  # Redirect to login page if not logged in
+
+    # Now check if the user is not an admin
+    if session["handle"] == "admin":
         return render_template(
             "error.html", error="You are not authorized to perform this action."
         )
@@ -755,10 +761,13 @@ def delete_flit() -> str | Response:
 
     return redirect(url_for("reported_flits"))
 
-
 @app.route("/delete_user", methods=["POST"])
 def delete_user() -> str | Response:
-    if "username" in session and session["handle"] != "admin":
+    # Similar adjustment here
+    if "username" not in session:
+        return redirect(url_for("login"))  # Redirect to login page if not logged in
+
+    if session["handle"] == "admin":
         return render_template(
             "error.html", error="You are not authorized to perform this action."
         )
