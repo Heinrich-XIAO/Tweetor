@@ -72,6 +72,7 @@ online_users = {}
 
 
 @app.before_request
+@limiter.exempt
 def block_ips():
     # Get the client's IP address
     ip = helpers.get_client_ip()
@@ -95,6 +96,7 @@ def block_ips():
 
 @sitemapper.include()
 @app.route("/")
+@limiter.limit("1/second", override_defaults=False)
 def home() -> str:
     # Get a connection to the database
     db = helpers.get_db()
@@ -121,10 +123,12 @@ def home() -> str:
 
 ## APIs
 @app.route("/api/handle")
+@limiter.exempt
 def get_handle():
     return helpers.get_user_handle()
 
 @app.route("/api/flit")
+@limiter.limit("1/second", override_defaults=False)
 def flitAPI():
     try:
         flit_id = int(request.args.get("flit_id"))
@@ -147,6 +151,7 @@ def flitAPI():
 
 
 @app.route("/api/get_flits")
+@limiter.exempt
 def get_flits() -> Response | str:
     skip = request.args.get("skip")
     limit = request.args.get("limit")
@@ -183,6 +188,7 @@ def get_flits() -> Response | str:
 
     return jsonify(flits_list)
 @app.route("/api/engaged_dms")
+@limiter.exempt
 def engaged_dms() -> str | Response:
     if "handle" not in session:
         return "{\"logged_in\": false}"
@@ -192,6 +198,7 @@ def engaged_dms() -> str | Response:
 
 
 @app.route("/api/get_captcha")
+@limiter.limit("8/minute", override_defaults=False)
 def get_captcha():
     while True:
         correct_captcha = "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5))
@@ -217,6 +224,7 @@ def get_captcha():
 
 
 @app.route("/api/render_online")
+@limiter.exempt
 def render_online() -> Response:
     current_ns_time = time.time_ns()
     handles_to_remove = []
@@ -230,6 +238,7 @@ def render_online() -> Response:
     return jsonify(online_users)
 
 @app.route("/api/get_gif", methods=["POST"])
+@limiter.exempt
 def get_gif() -> str:
     if request.json is not None:
         return requests.get(f"https://tenor.googleapis.com/v2/search", {
@@ -399,6 +408,7 @@ def submit_flit() -> str | Response:
 used_captchas = []
 
 @app.route('/settings', methods=['GET', 'POST'])
+@limiter.exempt
 def settings():
     if "username" not in session:
         return render_template('error.html', error="Are you signed in?")
@@ -408,6 +418,7 @@ def settings():
 
 # Gets users to show if they are online
 @app.route('/users', methods=['GET', 'POST'])
+@limiter.exempt
 def users():
     print(online_users)
     current_ns_time = time.time_ns()
@@ -511,7 +522,7 @@ def signup():
 # Added rate limiting to prevent brute force attacks
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("3/minute")
+@limiter.limit("6/minute")
 def login() -> str | Response:
     # Handle form submission if the request method is POST
     if request.method == "POST":
@@ -554,6 +565,7 @@ def login() -> str | Response:
     return render_template("login.html")
 
 @app.route('/change_password', methods=['GET', 'POST'])
+@limiter.limit("1 per day")
 @helpers.login_required
 def change_password():
     if request.method == 'POST':
@@ -582,6 +594,7 @@ def change_password():
 
 
 @app.route('/leaderboard')
+@limiter.limit("4/second")
 def leaderboard():
     return render_template('leaderboard.html',
         loggedIn=("handle" in session),
@@ -590,6 +603,7 @@ def leaderboard():
 
 @sitemapper.include(url_variables={"flit_id": helpers.get_all_flit_ids()})
 @app.route("/flits/<flit_id>")
+@limiter.limit("5/second")
 def singleflit(flit_id: str) -> str | Response:
     # Get a connection to the database
     conn = helpers.get_db()
@@ -620,6 +634,7 @@ def singleflit(flit_id: str) -> str | Response:
     return redirect("/")
 
 @app.route("/logout", methods=["GET", "POST"])
+@limiter.exempt
 def logout() -> Response:
     # Check if the user is logged in
     if "username" in session:
@@ -634,6 +649,7 @@ def logout() -> Response:
 
 @sitemapper.include(url_variables={"username": helpers.get_all_user_handles()})
 @app.route("/user/<path:username>")
+@limiter.limit("60/minute")
 def user_profile(username: str) -> str | Response:
     # Get a connection to the database
     conn = helpers.get_db()
@@ -687,6 +703,7 @@ def user_profile(username: str) -> str | Response:
     )
 
 @app.route("/profanity")
+@limiter.exempt
 @helpers.admin_required
 def profanity() -> str | Response:
 
@@ -741,6 +758,7 @@ def is_profanity(text):
 
 
 @app.route("/delete_flit", methods=["GET"])
+@limiter.limit("10/minute")
 @helpers.admin_required
 def delete_flit() -> str | Response:
     # Check if the user is logged in first
@@ -756,6 +774,7 @@ def delete_flit() -> str | Response:
     return redirect(url_for("reported_flits"))
 
 @app.route("/delete_user", methods=["POST"])
+@limiter.limit("10/minute")
 @helpers.admin_required
 def delete_user() -> str | Response:
     # Similar adjustment here
@@ -795,6 +814,7 @@ def report_flit() -> Response:
 
 
 @app.route("/reported_flits")
+@limiter.exempt
 @helpers.admin_required
 def reported_flits() -> str:
 
@@ -807,6 +827,7 @@ def reported_flits() -> str:
     return render_template("reported_flits.html", reports=reports,  loggedIn="handle" in session )
 
 @app.route("/dm/<path:receiver_handle>")
+@limiter.limit("1/second")
 def direct_messages(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
@@ -841,7 +862,7 @@ def direct_messages(receiver_handle):
 
 
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
-@limiter.limit("5/minute")
+@limiter.limit("8/minute")
 def submit_dm(receiver_handle) -> str | Response:
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
@@ -897,11 +918,12 @@ def submit_dm(receiver_handle) -> str | Response:
         )
     )
 
-# Muting and unmuting
+# Muting and unmuting I dont know who put this here but it does nothing i think
 
 muted = []
 
 @app.route("/mute/<handle>")
+@limiter.exempt
 def mute(handle) -> str:
     if session.get("handle") == "admin":
         muted.append(handle)
@@ -909,6 +931,7 @@ def mute(handle) -> str:
     return "you are not admin"
 
 @app.route("/unmute/<handle>")
+@limiter.exempt
 def unmute(handle) -> str:
     if session.get("handle") == "admin":
         muted.remove(handle)
@@ -916,9 +939,12 @@ def unmute(handle) -> str:
     return "you are not admin"
 
 @app.route("/sitemap.xml")
+@limiter.exempt
 def sitemap():
   return sitemapper.generate()
+
 @app.route('/block_unblock', methods=['GET', 'POST'])
+@limiter.limit("4/minute")
 def block_unblock():
     if request.method == 'POST':
         # Extract the action and user_handle from the form
@@ -953,6 +979,7 @@ def block_unblock():
 
 
 @app.route('/view_blocks')
+@limiter.limit("1/second")
 def view_blocks():
     # Connect to the database
     conn = helpers.get_db()
