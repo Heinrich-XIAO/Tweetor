@@ -52,7 +52,11 @@ sitemapper = Sitemapper()
 sitemapper.init_app(app)
 
 # Rate limiting
-limiter = Limiter(get_remote_address, app=app)
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "30 per hour"]
+)
 
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
