@@ -128,7 +128,7 @@ def get_handle():
     return helpers.get_user_handle()
 
 @app.route("/api/flit")
-@limiter.limit("1/second", override_defaults=False)
+@limiter.exempt
 def flitAPI():
     try:
         flit_id = int(request.args.get("flit_id"))
