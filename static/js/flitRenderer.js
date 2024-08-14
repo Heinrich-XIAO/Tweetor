@@ -1,4 +1,7 @@
 console.log("flitRenderer.js loaded");
+let skip = 0;
+const limit = 10;
+
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 function makeUrlsClickable(content) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -9,8 +12,6 @@ function makeUrlsClickable(content) {
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
-let skip = 0;
-const limit = 10;
 
 function convertUSTtoEST(date) {
   const ustDate = new Date(date);
@@ -26,10 +27,13 @@ function getMonthAbbreviation(date) {
   ];
   return months[date.getMonth()];
 }
-
+let isRenderingFlits = false;
 async function renderFlits() {
+  
+    if (isRenderingFlits) return;
+      isRenderingFlits = true;
   const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
-  const json = await res.json();
+    const json = await res.json();
   for (let flitJSON of json) {
     let flit = document.createElement("div");
     flit.classList.add("flit");
@@ -40,7 +44,8 @@ async function renderFlits() {
     flits.appendChild(flit);
   }
   checkGreenDot();
-  skip += limit;
+    skip += limit;
+    isRenderingFlits = false; // Reset the flag after rendering is complete
 }
 renderFlits();
 
@@ -174,11 +179,14 @@ async function renderAll() {
 }
 
 renderAll();
-
-window.onscroll = function (ev) {
-  if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-    renderFlits();
-  }
+let scrollTimeoutId;
+window.onscroll = function(ev) {
+  clearTimeout(scrollTimeoutId);
+  scrollTimeoutId = setTimeout(function() {
+    if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+      renderFlits();
+    }
+  }, 150);
 };
 
 async function reflit(id) {
