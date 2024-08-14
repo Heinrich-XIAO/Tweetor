@@ -96,7 +96,7 @@ def block_ips():
 
 @sitemapper.include()
 @app.route("/")
-@limiter.limit("1/second", override_defaults=False)
+@limiter.limit("30/second", override_defaults=False)
 def home() -> str:
     # Get a connection to the database
     db = helpers.get_db()
