@@ -1,4 +1,11 @@
 console.log("flitRenderer.js loaded");
+const urlRegex = /(https?:\/\/[^\s]+)/g;
+function makeUrlsClickable(content) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return content.replace(urlRegex, function(url) {
+    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+  });
+}
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
@@ -98,12 +105,20 @@ async function renderFlitWithFlitJSON(json, flit) {
 
 
 
+ 
     const content = document.createElement('a');
-    content.innerText = json.flit.content;
     content.classList.add('flit-content');
     content.href = `/flits/${json.flit.id}`;
 
+    // Process the content to make URLs clickable
+    const processedContent = makeUrlsClickable(json.flit.content);
+
+    // Set the innerHTML of the content element to the processed text
+    content.innerHTML = processedContent;
+
     flit.appendChild(content);
+    
+    
     if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
       const image = document.createElement('img');
       image.src = json.flit.meme_link;
@@ -111,7 +126,6 @@ async function renderFlitWithFlitJSON(json, flit) {
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(image);
     }
-
 
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
@@ -126,6 +140,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     }
 
     flit.appendChild(flitContentDiv);
+
     // Create a button element
     let reflit_button = document.createElement("button");
     reflit_button.classList.add("retweet-button");
@@ -142,12 +157,13 @@ async function renderFlitWithFlitJSON(json, flit) {
 
     // Append the icon to the button
     reflit_button.appendChild(icon);
-    console.log(reflit_button )
+    console.log(reflit_button)
     // Append the button to the flit
     flit.appendChild(reflit_button);
   }
   return flit;
 }
+
 
 const flitsList = document.getElementsByClassName('flit');
 
