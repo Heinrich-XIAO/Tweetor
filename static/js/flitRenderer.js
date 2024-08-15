@@ -15,6 +15,11 @@ function makeUrlsClickable(content) {
       element.href = url;
       return element;
     } else {
+      const element = document.createElement('a');
+      element.href = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+      element.textContent = url;
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
     }
   });
