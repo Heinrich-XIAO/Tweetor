@@ -30,11 +30,13 @@ from mixpanel import Mixpanel
 from werkzeug.wrappers.response import Response
 import logging
 import io
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 import re
 from flask_wtf.csrf import CSRFProtect
 import json
+from io import BytesIO
 load_dotenv()
+
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
 TENOR_SECRET = os.getenv("TENOR_SECRET")
@@ -54,8 +56,8 @@ sitemapper.init_app(app)
 # Rate limiting
 limiter = Limiter(
     app=app,
-    key_func=get_remote_address,
-    default_limits=["200 per day", "30 per hour"]
+     key_func=get_remote_address,
+    default_limits=["900 per day", "1 per second"]
 )
 
 # Set up the session object
@@ -63,14 +65,8 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 DATABASE = "tweetor.db"
-
 staff_accounts = ["ItsMe", "Dude_Pog"]
-
-print(time.time_ns())
-
 online_users = {}
-
-
 @app.before_request
 @limiter.exempt
 def block_ips():
@@ -197,30 +193,37 @@ def engaged_dms() -> str | Response:
         return jsonify([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
 
 
+# Assuming you have set up your Flask app and session correctly elsewhere in your application
+
 @app.route("/api/get_captcha")
 @limiter.limit("8/minute", override_defaults=False)
 def get_captcha():
     while True:
-        correct_captcha = "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5))
+        correct_captcha = "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=7))
         if correct_captcha not in used_captchas and 'I' not in correct_captcha and 'l' not in correct_captcha:
             break
     
     session['correct_captcha'] = correct_captcha
     session.modified = True  # Mark the session as modified
     
-    captcha_img = Image.new('RGB', (200, 50), color=(73, 109, 137))
+    captcha_img = Image.new('RGB', (random.randint(120, 200), 50), color=(random.randint(50, 100), 109, random.randint(30, 255)))
     d = ImageDraw.Draw(captcha_img)
-    fnt = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 15)
+    fnt = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', random.randint(20, 34))
     d.text((10, 10), correct_captcha, fill=(255, 255, 0), font=fnt)
-    
-    buf = io.BytesIO()
+
+    captcha_img = captcha_img.filter(ImageFilter.BLUR)
+    if random.random() < .5:
+        captcha_img = captcha_img.filter(ImageFilter.CONTOUR)
+    elif random.random() < .5:
+         captcha_img = captcha_img.filter(ImageFilter.EDGE_ENHANCE_MORE)
+    buf = BytesIO()
     captcha_img.save(buf, format='PNG')
     buf.seek(0)
     
-    # Log the correct_captcha for debugging purposes
     app.logger.info(f'Setting correct_captcha in session: {correct_captcha}')
     
     return send_file(buf, mimetype='image/png')
+
 
 
 @app.route("/api/render_online")
