@@ -41,3 +41,4 @@ setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerabil
 Flask-Wtf
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 wtforms==3.1.2
+pillow==10.4.0
