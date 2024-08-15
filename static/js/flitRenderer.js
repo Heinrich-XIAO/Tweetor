@@ -3,19 +3,24 @@ let skip = 0;
 const limit = 10;
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
+const imageWorthyUsers = ["Dude_Pog", "ItsMe", "admin"];
 
-function makeUrlsClickable(content) {
+function makeUrlsClickable(content, userHandle) {
   const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   
-    // imgur, wikipedia, and imgbb
+  // imgur, wikipedia, and imgbb
   const imageRegex = /(https?:\/\/(?:i\.imgur\.com|i\.sstatic\.net|imgbb\.com|upload\.wikimedia\.org\/wikipedia\/commons)\/[^"\s]+?\.(?:png|jpe?g|gif))/gi;
   
   return escapedContent.replace(urlRegex, function(url) {
     if (imageRegex.test(url)) {
+      // Directly use json.flit.userHandle since it's passed as an argument
+      if (imageWorthyUsers.includes(userHandle)) {
       const element = document.createElement('img');
-      element.href = url;
-      element.width = "100px";
-      return element.innerHTML;
+      return `<img src="${url}" alt="" size=100>`;
+      } else {
+	  return 'I dont have have image perms'
+      }
+      
     } else {
       const element = document.createElement('a');
       element.href = url;
@@ -26,6 +31,7 @@ function makeUrlsClickable(content) {
     }
   });
 }
+
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
@@ -133,7 +139,8 @@ async function renderFlitWithFlitJSON(json, flit) {
     content.href = `/flits/${json.flit.id}`;
 
     // Process the content to make URLs clickable
-    const processedContent = makeUrlsClickable(json.flit.content);
+const processedContent = makeUrlsClickable(json.flit.content, json.flit.userHandle);
+
 
     // Set the innerHTML of the content element to the processed text
     content.innerHTML += processedContent;
