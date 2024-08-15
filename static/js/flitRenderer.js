@@ -4,34 +4,35 @@ const limit = 10;
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 function makeUrlsClickable(content) {
-  const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  
-  // imgur, wikipedia, and imgbb
+  // Define regex patterns for images and general URLs
   const imageRegex = /(https?:\/\/(?:i\.imgur\.com|i\.sstatic\.net|imgbb\.com|upload\.wikimedia\.org\/wikipedia\/commons)\/[^"\s]+?\.(?:png|jpe?g|gif))/gi;
-
-  // Sanitize URLs to prevent style injections
   const sanitizedUrlRegex = /(https?:\/\/[^\s]+)/g;
-  const sanitizer = (url) => {
-    try {
-      const urlObj = new URL(url);
-      // Implement additional checks here if needed, e.g., checking against a whitelist
-      return url; 
-    } catch (e) {
-      console.error("Invalid URL:", url);
-      return ""; 
-    }
-  };
 
-  return escapedContent.replace(sanitizedUrlRegex, function(match) {
-    const sanitizedUrl = sanitizer(match);
+  // Sanitize the content by parsing it with DOMParser
+  const parser = new DOMParser();
+  let doc = parser.parseFromString(content, 'text/html');
+  const sanitizedContent = doc.body.textContent || "";
+
+  // Replace URLs with clickable elements
+  return sanitizedContent.replace(sanitizedUrlRegex, function(match) {
+    const sanitizedUrl = match; // Assuming the URL itself is already sanitized
     if (imageRegex.test(sanitizedUrl)) {
-      return `<img src="${sanitizedUrl}" alt="">`;
+      // Create an img tag for images
+      const imgTag = document.createElement('img');
+      imgTag.src = sanitizedUrl;
+      imgTag.alt = "";
+      return imgTag.outerHTML;
     } else {
-      return `<a href="${sanitizedUrl}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+      // Create an anchor tag for general URLs
+      const linkTag = document.createElement('a');
+      linkTag.href = sanitizedUrl;
+      linkTag.target = "_blank";
+      linkTag.rel = "noopener noreferrer";
+      linkTag.textContent = match;
+      return linkTag.outerHTML;
     }
   });
 }
-
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
