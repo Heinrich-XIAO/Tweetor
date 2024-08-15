@@ -14,6 +14,8 @@ function makeUrlsClickable(content) {
     if (imageRegex.test(url)) {
       const element = document.createElement('img');
       element.href = url;
+      element.width = 100;
+      
       return element;
     } else {
       const element = document.createElement('a');
