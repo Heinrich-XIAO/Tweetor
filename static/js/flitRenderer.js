@@ -20,7 +20,7 @@ function makeUrlsClickable(content) {
       element.target = "_blank";
       element.rel = "noopener noreferrer";
       element.textContent = url;
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+      return element;
     }
   });
 }
