@@ -4,11 +4,14 @@ const limit = 10;
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 function makeUrlsClickable(content) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return content.replace(urlRegex, function(url) {
+  const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  // Now replace URLs with clickable links using the escaped content
+  return escapedContent.replace(urlRegex, function(url) {
     return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
   });
 }
+
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
