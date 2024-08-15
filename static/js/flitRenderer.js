@@ -3,12 +3,19 @@ let skip = 0;
 const limit = 10;
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
+
 function makeUrlsClickable(content) {
   const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   
-  // Now replace URLs with clickable links using the escaped content
+    // imgur, wikipedia, and imgbb
+  const imageRegex = /(https?:\/\/(?:i\.imgur\.com|i\.sstatic\.net|imgbb\.com|upload\.wikimedia\.org\/wikipedia\/commons)\/[^"\s]+?\.(?:png|jpe?g|gif))/gi;
+  
   return escapedContent.replace(urlRegex, function(url) {
-    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+    if (imageRegex.test(url)) {
+      return `<img src="${url}" alt="">`;
+    } else {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    }
   });
 }
 
