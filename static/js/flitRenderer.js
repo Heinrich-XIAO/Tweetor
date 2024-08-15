@@ -15,14 +15,14 @@ function makeUrlsClickable(content) {
       const element = document.createElement('img');
       element.href = url;
       element.width = "100px";
-      return element;
+      return element.innerHTML;
     } else {
       const element = document.createElement('a');
       element.href = url;
       element.textContent = url;
       element.target = "_blank";
       element.rel = "noopener noreferrer";
-      return element;
+      return element.innerHTML;
     }
   });
 }
@@ -136,7 +136,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     const processedContent = makeUrlsClickable(json.flit.content);
 
     // Set the innerHTML of the content element to the processed text
-    content.appendChild(processedContent);
+    content.innerHTML += processedContent;
 
     flit.appendChild(content);
     
