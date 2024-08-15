@@ -3,18 +3,31 @@ let skip = 0;
 const limit = 10;
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
-
 function makeUrlsClickable(content) {
   const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   
-    // imgur, wikipedia, and imgbb
+  // imgur, wikipedia, and imgbb
   const imageRegex = /(https?:\/\/(?:i\.imgur\.com|i\.sstatic\.net|imgbb\.com|upload\.wikimedia\.org\/wikipedia\/commons)\/[^"\s]+?\.(?:png|jpe?g|gif))/gi;
-  
-  return escapedContent.replace(urlRegex, function(url) {
-    if (imageRegex.test(url)) {
-      return `<img src="${url}" alt="">`;
+
+  // Sanitize URLs to prevent style injections
+  const sanitizedUrlRegex = /(https?:\/\/[^\s]+)/g;
+  const sanitizer = (url) => {
+    try {
+      const urlObj = new URL(url);
+      // Implement additional checks here if needed, e.g., checking against a whitelist
+      return url; 
+    } catch (e) {
+      console.error("Invalid URL:", url);
+      return ""; 
+    }
+  };
+
+  return escapedContent.replace(sanitizedUrlRegex, function(match) {
+    const sanitizedUrl = sanitizer(match);
+    if (imageRegex.test(sanitizedUrl)) {
+      return `<img src="${sanitizedUrl}" alt="">`;
     } else {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+      return `<a href="${sanitizedUrl}" target="_blank" rel="noopener noreferrer">${match}</a>`;
     }
   });
 }
