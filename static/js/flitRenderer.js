@@ -12,9 +12,16 @@ function makeUrlsClickable(content) {
   
   return escapedContent.replace(urlRegex, function(url) {
     if (imageRegex.test(url)) {
-      return `<img src="${url}" alt="">`;
+      const element = document.createElement('img');
+      element.href = url;
+      return element;
     } else {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+      const element = document.createElement('a');
+      element.href = url;
+      element.textContent = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+      return element;
     }
   });
 }
@@ -129,7 +136,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     const processedContent = makeUrlsClickable(json.flit.content);
 
     // Set the innerHTML of the content element to the processed text
-    content.innerHTML = processedContent;
+    content.appendChild(processedContent);
 
     flit.appendChild(content);
     
