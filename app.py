@@ -38,7 +38,7 @@ load_dotenv()
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
 TENOR_SECRET = os.getenv("TENOR_SECRET")
-
+SIGHT_ENGINE_USER = os.getenv("SIGHT_ENGINE_USER")
 mp = Mixpanel(MIXPANEL_SECRET)
 
 app = Flask(__name__)
@@ -316,8 +316,18 @@ def submit_flit() -> str | Response:
 
     if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
         return redirect("/")
-
-
+    
+    pattern = r'https?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    img_urls = re.findall(pattern, content)
+    app.logger.info("Img URLS: %s", img_urls)
+    any_profanity_found = False
+    for img_url in img_urls:
+        if is_image_profane(img_url): 
+            any_profanity_found = True
+            break  # Stop checking further images once profanity is detected
+        
+        if any_profanity_found:
+            return render_template("error.html", error="One or more images were not appropriate.")
 
     #profane word list    
     with open('profane_words.json') as f:
@@ -727,7 +737,7 @@ def profanity() -> str | Response:
 
 
 def is_profanity(text):
-    api_user = "570595698"
+    api_user = SIGHT_ENGINE_USER
     api_secret = SIGHT_ENGINE_SECRET
     api_url = "https://api.sightengine.com/1.0/text/check.json"
 
@@ -755,8 +765,52 @@ def is_profanity(text):
     
     return result
 
-
-
+def is_image_profane(image_url):
+    api_url = 'https://api.sightengine.com/1.0/check.json'
+    params = {
+        "url" : image_url,
+        "models": "nudity-2.1,offensive,gore-2.0",
+        "api_user": SIGHT_ENGINE_USER,
+        "api_secret": SIGHT_ENGINE_SECRET,
+        }
+    
+    response = requests.get(api_url, params=params)
+    result = response.json()
+    if 'status' in result and result['status'] == 'failure':
+        app.logger.info(result)
+        return "failure"  # Explicitly set result to "failure"
+    
+    app.logger.info(result)
+    print(response)
+    print(result)
+    app.logger.info(response)
+    threshold = 0.05
+    
+    is_nudity_profane = False
+    is_gore_profane = False
+    is_offensive_profane = False
+    
+    if 'nudity' not in result or 'sexual_activity' not in result['nudity']:
+        raise ValueError("Invalid response format")
+    
+    categories_to_check = [
+        'sexual_activity', 'sexual_display', 'erotica', 'very_suggestive', 'suggestive', 'mildly_suggestive',
+        'gore', 'offensive' 
+    ]
+    for category in categories_to_check:
+        if category in result['nudity'] and result['nudity'][category] > threshold:
+            is_nudity_profane = True
+        elif category in result['gore'] and result['gore'][category] > threshold:
+            is_gore_profane = True
+        elif category in result['offensive'] and result['offensive'][category] > threshold:
+            is_offensive_profane = True
+    
+    # Determine if the content is considered profane based on the findings
+    if is_nudity_profane or is_gore_profane or is_offensive_profane:
+        return True
+    else:
+        return False
+    
 @app.route("/delete_flit", methods=["GET"])
 @limiter.limit("10/minute")
 @helpers.admin_required
