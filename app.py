@@ -67,6 +67,9 @@ Session(app)
 DATABASE = "tweetor.db"
 staff_accounts = ["ItsMe", "Dude_Pog"]
 online_users = {}
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+used_captchas = []
 @app.before_request
 @limiter.exempt
 def block_ips():
@@ -254,8 +257,6 @@ def get_gif() -> str:
 
 #Helper function for logging ips, becuase muh telematry
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 @app.route("/submit_flit", methods=["POST"])
@@ -418,7 +419,7 @@ def submit_flit() -> str | Response:
     return redirect(url_for("home"))
 
 
-used_captchas = []
+
 
 @app.route('/settings', methods=['GET', 'POST'])
 @limiter.exempt
@@ -818,7 +819,6 @@ def is_image_profane(image_url):
 @limiter.limit("10/minute")
 @helpers.admin_required
 def delete_flit() -> str | Response:
-    # Check if the user is logged in first
  
 
     flit_id = request.args.get("flit_id")
@@ -834,14 +834,6 @@ def delete_flit() -> str | Response:
 @limiter.limit("10/minute")
 @helpers.admin_required
 def delete_user() -> str | Response:
-    # Similar adjustment here
-    if "username" not in session:
-        return redirect(url_for("login"))  # Redirect to login page if not logged in
-
-    if session["handle"] != "admin":
-        return render_template(
-            "error.html", error="You are not authorized to perform this action."
-        )
 
     user_handle = request.form["user_handle"]
     db = helpers.get_db()
@@ -885,9 +877,8 @@ def reported_flits() -> str:
 
 @app.route("/dm/<path:receiver_handle>")
 @limiter.limit("1/second")
+@helpers.login_required
 def direct_messages(receiver_handle):
-    if "username" not in session:
-        return render_template("error.html", error="You are not logged in.")
 
     sender_handle = session["handle"]
     blocked_handles = helpers.get_blocked_users(sender_handle)  # Retrieve the list of blocked users
@@ -920,10 +911,8 @@ def direct_messages(receiver_handle):
 
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
 @limiter.limit("8/minute")
+@helpers.login_required
 def submit_dm(receiver_handle) -> str | Response:
-    if "username" not in session:
-        return render_template("error.html", error="You are not logged in.")
-
     sender_handle = session["handle"]
     content = request.form["content"]
 
@@ -981,19 +970,16 @@ muted = []
 
 @app.route("/mute/<handle>")
 @limiter.exempt
+@helpers.admin_required
 def mute(handle) -> str:
-    if session.get("handle") == "admin":
-        muted.append(handle)
-        return "Completed"
-    return "you are not admin"
+    muted.append(handle)
+
 
 @app.route("/unmute/<handle>")
 @limiter.exempt
+@helpers.admin_required
 def unmute(handle) -> str:
-    if session.get("handle") == "admin":
-        muted.remove(handle)
-        return "Completed"
-    return "you are not admin"
+    muted.remove(handle)
 
 @app.route("/sitemap.xml")
 @limiter.exempt
@@ -1001,6 +987,7 @@ def sitemap():
   return sitemapper.generate()
 
 @app.route('/block_unblock', methods=['GET', 'POST'])
+@helpers.login_required
 @limiter.limit("4/minute")
 def block_unblock():
     if request.method == 'POST':
@@ -1036,6 +1023,7 @@ def block_unblock():
 
 
 @app.route('/view_blocks')
+@helpers.login_required
 @limiter.limit("1/second")
 def view_blocks():
     # Connect to the database
