@@ -314,7 +314,11 @@ def submit_flit() -> str | Response:
         return render_template("error.html", error="Don't be so technical")
     if content.lower() == "urmom" or content.lower() == "ur mom":
         return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
+    cursor.execute("SELECT ip FROM flits ORDER BY timestamp DESC LIMIT 6")
+    recent_flits_ips = [row[0] for row in cursor.fetchall()]
 
+    if len(recent_flits_ips) >= 6 and all(ip == client_ip for ip in recent_flits_ips):
+        return "Stop monologuing", 400
     cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC LIMIT 1")
     latest_flit = cursor.fetchone()
 
