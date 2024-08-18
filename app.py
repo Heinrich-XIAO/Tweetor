@@ -41,12 +41,17 @@ SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
 MIXPANEL_SECRET = os.getenv("MIXPANEL_SECRET")
 TENOR_SECRET = os.getenv("TENOR_SECRET")
 SIGHT_ENGINE_USER = os.getenv("SIGHT_ENGINE_USER")
+TWEETOR_REDIRECT = os.getenv("TWEETOR_REDIRECT")
 mp = Mixpanel(MIXPANEL_SECRET)
 
 app = Flask(__name__)
 app.secret_key = "pigeonmast3r"
 cors = CORS(app)
 csrf = CSRFProtect(app)
+if not app.config.get('TESTING'):
+    csrf = CSRFProtect(app)
+else:
+    print("Skipping CORS and CSRFProtect for testing environment")
 
 app.config["CORS_HEADERS"] = "Content-Type"
 
@@ -70,9 +75,18 @@ online_users = {}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 used_captchas = []
+def is_server_up(url):
+    try:
+        response = requests.head(url, timeout=5)
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
 @app.before_request
 @limiter.exempt
 def block_ips():
+    # Define tweetor_redirect at the beginning of the function
+    tweetor_redirect = os.getenv('TWEETOR_REDIRECT', 'no')
+    
     # Get the client's IP address
     ip = helpers.get_client_ip()
     
@@ -83,14 +97,25 @@ def block_ips():
     for entry in blocklist_entries:
         pattern = re.compile(entry.replace('*', '.*'))
         patterns.append(pattern)
+    
     for pattern in patterns:
         if pattern.match(ip):
             # Abort the request with a 403 Forbidden error
             abort(403)
+    
     # Check if the IP starts with "54"
     if ip.startswith("54"):
         # Abort the request with a 403 Forbidden error
         abort(403)
+    
+    # If TWEETOR_REDIRECT is not set or is "no", do nothing
+    if tweetor_redirect.lower() != 'no':
+        # Check if the target web server is functional
+        if is_server_up(tweetor_redirect):
+            # Redirect all internal requests to the specified domain
+            return redirect(tweetor_redirect + request.path, code=302)
+        else:
+            print(f"Warning: Target web server '{tweetor_redirect}' is not operational.")
 
 
 @sitemapper.include()
