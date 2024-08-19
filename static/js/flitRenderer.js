@@ -2,35 +2,31 @@ console.log("flitRenderer.js loaded");
 let skip = 0;
 const limit = 10;
 
-const urlRegex = /(https?:\/\/[^\s]+)/g;
-const imageWorthyUsers = ["Dude_Pog", "ItsMe", "admin"];
 
-function makeUrlsClickable(content, userHandle) {
+function makeUrlsClickable(content) {
   const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   
-  // imgur, wikipedia, and imgbb
-  const imageRegex = /(https?:\/\/(?:i\.imgur\.com|i\.sstatic\.net|imgbb\.com|upload\.wikimedia\.org\/wikipedia\/commons)\/[^"\s]+?\.(?:png|jpe?g|gif))/gi;
+  // General URL regex
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
   
-  return escapedContent.replace(urlRegex, function(url) {
-    if (imageRegex.test(url)) {
-      // Directly use json.flit.userHandle since it's passed as an argument
-      if (imageWorthyUsers.includes(userHandle)) {
-      const element = document.createElement('img');
-      return `<img src="${url}" alt="" size=100>`;
-      } else {
-	  return 'I dont have have image perms'
-      }
-      
-    } else {
-      const element = document.createElement('a');
-      element.href = url;
-      element.textContent = url;
-      element.target = "_blank";
-      element.rel = "noopener noreferrer";
-      return element.innerHTML;
-    }
+  // Adjusted username regex pattern to capture dynamic usernames
+  const usernameRegex = /\((\w+):\)/gi; // \w+ captures one or more word characters
+  
+  let modifiedContent = escapedContent.replace(urlRegex, function(url) {
+    const element = document.createElement('a');
+    element.href = url;
+    element.textContent = url;
+    element.target = "_blank";
+    element.rel = "noopener noreferrer";
+    return element.outerHTML;
   });
+
+  // Replace usernames with clickable links dynamically
+  modifiedContent = modifiedContent.replace(usernameRegex, '<a href="/user/$1">$1</a>');
+
+  return modifiedContent;
 }
+
 
 
 const flits = document.getElementById('flits');
@@ -139,7 +135,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     content.href = `/flits/${json.flit.id}`;
 
     // Process the content to make URLs clickable
-const processedContent = makeUrlsClickable(json.flit.content, json.flit.userHandle);
+const processedContent = makeUrlsClickable(json.flit.content);
 
 
     // Set the innerHTML of the content element to the processed text

@@ -19,6 +19,13 @@ renderGifs.addEventListener('change', (e) => {
 })
 
 
+renderGifs.addEventListener('change', (e) => {
+  localStorage.setItem('renderGifs', renderGifs.checked);
+  location.reload();
+})
+
+
+
 
 const notifications = document.getElementById("notifications");
 notifications.checked = localStorage.getItem('notifications') == 'true' || localStorage.getItem('notifications') == undefined;

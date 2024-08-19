@@ -1,8 +1,11 @@
 import helpers
 import sqlite3
 import hashlib
-
-DATABASE = "tweetor.db"
+import os
+if os.getenv('TESTING', 'false').lower() == 'true':
+    DATABASE = "test.db"  
+else:
+    DATABASE = "tweetor.db"
 
 
 
