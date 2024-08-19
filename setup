@@ -47,6 +47,8 @@ declare -A SECRETS=(
     ["MIXPANEL_SECRET"]="mixpanel_secret_here"
     ["SIGHT_ENGINE_SECRET"]="sightengine_secret_here"
     ["TENOR_SECRET"]="tenor_secret_here"
+    ["SIGHT_ENGINE_USER"]="sight_engine_user_here"
+    ["TWEETOR_REDIRECT"]="no" # to redirect or not to redirect
 )
 for SECRET_NAME in "${!SECRETS[@]}"; do
     # Use grep to search for the secret in the .env file

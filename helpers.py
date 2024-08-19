@@ -7,6 +7,7 @@ from flask import (
   url_for,
 )
 from functools import wraps
+import os
 DATABASE = "tweetor.db"
 def get_db():
   db = sqlite3.connect(DATABASE)
@@ -98,5 +99,17 @@ def admin_required(f):
             )
         
         # If the user is logged in and is not an admin, call the original function
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def testing_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if the application is running in a testing environment
+        if os.getenv('TESTING') is None:
+            return "Not in testing mode.", 403  # Return an error if not in testing mode
+        
+        # If in testing mode, proceed to call the original function
         return f(*args, **kwargs)
     return decorated_function
