@@ -310,7 +310,7 @@ def submit_flit() -> str | Response:
     # Check for various content validation conditions
     if content.strip() == "":
         return render_template("error.html", error="Message was blank.")
-    if len(content) > 280:
+    if len(content) > 100:
         return render_template("error.html", error="Message was too long.")
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
@@ -868,7 +868,7 @@ def submit_dm(receiver_handle) -> str | Response:
     sender_handle = session["handle"]
     content = request.form["content"]
 
-    if len(content) > 1000:
+    if len(content) > 100:
         return render_template("error.html", error="Too many characters in DM")
 
     sightengine_result = is_profanity(content)
