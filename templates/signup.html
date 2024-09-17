@@ -8,6 +8,7 @@
       <div class="centered-form">
         <h2>Signup for Tweetor</h2>
         <form method="POST" action="{{ url_for('signup') }}">
+	  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <label for="username">Username:</label>
           <input type="text" id="username" name="username" required>
           <label for="password">Password:</label>
@@ -15,12 +16,13 @@
           <label for="passwordConformation">Password Confirmation:</label>
           <input type="password" id="passwordConformation" name="passwordConformation" required>
           
-          <!-- Add the custom CAPTCHA code -->
-          <label for="user_input">CAPTCHA:</label>
-          <input type="text" id="image" readonly value="{{ correct_captcha }}" class="captcha-image">
+          <!-- Display the CAPTCHA image -->
+          <label for="captchaImage">CAPTCHA:</label>
+          <img src="/api/get_captcha" alt="CAPTCHA" id="captchaImage">
+          
+          <!-- User input for CAPTCHA -->
           <input type="text" id="user_input" name="input" placeholder="Enter CAPTCHA" required>
-          <button type="button" onclick="generate()" class="captcha-refresh">Refresh</button>
-          <input type="hidden" name="correct_captcha" id="correct_captcha" value="...">
+          <button type="button" onclick="refreshCaptcha();" class="captcha-refresh">Refresh</button>
           
           <input type="submit" value="Signup">
         </form>
@@ -28,41 +30,23 @@
     </div>
   </div>
 
-  <style>
-    .captcha-image {
-      border: 1px solid #ccc;
-      padding: 5px;
-      font-size: 20px;
-      font-weight: bold;
-      width: 100px;
-      text-align: center;
-      margin-bottom: 10px;
-    }
 
-    .captcha-refresh {
-      margin-left: 10px;
-    }
-  </style>
 
   <script>
-    async function generate() {
-      // Clear old input
-      document.getElementById("user_input").value = "";
+    function generate() {
+  // Clear old input
+    document.getElementById("user_input").value = "";
 
-      // Access the element to store
-      // the generated captcha
-      captcha = document.getElementById("image");
-      captcha_correct_element = document.getElementById("correct_captcha");
-      
-      const res = await fetch("/api/get_captcha");
-      const correct_captcha = await res.text();
-      
-      // Store generated input
-      captcha.value = correct_captcha;
-      captcha_correct_element.value = correct_captcha;
-    }
-
-    // Call generate function on page load
-    generate();
+  // Fetch a new CAPTCHA image and update the image source
+	fetch("/api/get_captcha")
+	    .then(response => response.blob()) // Read the response as a blob
+	n.then(blob => {
+      // Create a URL for the blob
+	    const imageUrl = URL.createObjectURL(blob);
+	    document.getElementById("captchaImage").src = imageUrl;
+    })
+    .catch(error => console.error('Error fetching CAPTCHA:', error));
+      }
+//    generate();
   </script>
 {% endblock %}
