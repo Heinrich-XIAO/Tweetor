@@ -1,9 +1,36 @@
 console.log("flitRenderer.js loaded");
+let skip = 0;
+const limit = 10;
+
+
+function makeUrlsClickable(content) {
+  const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  // General URL regex
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  
+  // Adjusted username regex pattern to capture dynamic usernames
+  const usernameRegex = /\((\w+):\)/gi; // \w+ captures one or more word characters
+  
+  let modifiedContent = escapedContent.replace(urlRegex, function(url) {
+    const element = document.createElement('a');
+    element.href = url;
+    element.textContent = url;
+    element.target = "_blank";
+    element.rel = "noopener noreferrer";
+    return element.outerHTML;
+  });
+
+  // Replace usernames with clickable links dynamically
+  modifiedContent = modifiedContent.replace(usernameRegex, '<a href="/user/$1">$1</a>');
+
+  return modifiedContent;
+}
+
+
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
-let skip = 0;
-const limit = 10;
 
 function convertUSTtoEST(date) {
   const ustDate = new Date(date);
@@ -19,10 +46,13 @@ function getMonthAbbreviation(date) {
   ];
   return months[date.getMonth()];
 }
-
+let isRenderingFlits = false;
 async function renderFlits() {
+  
+    if (isRenderingFlits) return;
+      isRenderingFlits = true;
   const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
-  const json = await res.json();
+    const json = await res.json();
   for (let flitJSON of json) {
     let flit = document.createElement("div");
     flit.classList.add("flit");
@@ -33,7 +63,8 @@ async function renderFlits() {
     flits.appendChild(flit);
   }
   checkGreenDot();
-  skip += limit;
+    skip += limit;
+    isRenderingFlits = false; // Reset the flag after rendering is complete
 }
 renderFlits();
 
@@ -98,12 +129,21 @@ async function renderFlitWithFlitJSON(json, flit) {
 
 
 
+ 
     const content = document.createElement('a');
-    content.innerText = json.flit.content;
     content.classList.add('flit-content');
     content.href = `/flits/${json.flit.id}`;
 
+    // Process the content to make URLs clickable
+const processedContent = makeUrlsClickable(json.flit.content);
+
+
+    // Set the innerHTML of the content element to the processed text
+    content.innerHTML += processedContent;
+
     flit.appendChild(content);
+    
+    
     if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
       const image = document.createElement('img');
       image.src = json.flit.meme_link;
@@ -111,7 +151,6 @@ async function renderFlitWithFlitJSON(json, flit) {
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(image);
     }
-
 
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
@@ -126,6 +165,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     }
 
     flit.appendChild(flitContentDiv);
+
     // Create a button element
     let reflit_button = document.createElement("button");
     reflit_button.classList.add("retweet-button");
@@ -142,12 +182,13 @@ async function renderFlitWithFlitJSON(json, flit) {
 
     // Append the icon to the button
     reflit_button.appendChild(icon);
-    console.log(reflit_button )
+    console.log(reflit_button)
     // Append the button to the flit
     flit.appendChild(reflit_button);
   }
   return flit;
 }
+
 
 const flitsList = document.getElementsByClassName('flit');
 
@@ -158,11 +199,14 @@ async function renderAll() {
 }
 
 renderAll();
-
-window.onscroll = function (ev) {
-  if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-    renderFlits();
-  }
+let scrollTimeoutId;
+window.onscroll = function(ev) {
+  clearTimeout(scrollTimeoutId);
+  scrollTimeoutId = setTimeout(function() {
+    if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+      renderFlits();
+    }
+  }, 150);
 };
 
 async function reflit(id) {
