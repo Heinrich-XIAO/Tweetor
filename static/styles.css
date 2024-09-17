@@ -98,7 +98,7 @@ button, input[type="submit"] {
   text-decoration: none;
   white-space: nowrap;
   background-color: transparent;
-  border-radius: 4px;
+  border-radius: 10px;
   border: 1px solid #bbb;
   cursor: pointer;
   box-sizing: border-box;
@@ -349,10 +349,9 @@ button:hover, button:focus {
 }
 
 .flit-content {
-  font-size: 16px;
   color: #555;
   text-decoration: none;
-  word-wrap: break-word;
+  word-break: break-all;
 }
 
 .flit-timestamp {
@@ -404,7 +403,8 @@ button:hover, button:focus {
 /* Add styles to the form container */
 .form-container {
   max-width: 300px;
-  padding: 10px;
+  padding: 10px; 
+  background-color: #222;
 }
 
 /* Full-width input fields */
@@ -532,7 +532,7 @@ hr {
 
 .dm_with_person {
   padding-left: 5px !important;
-  color: white;
+  color: grey;
   margin-bottom: 0rem !important;
   margin-top:0rem !important;
 }
@@ -636,4 +636,21 @@ main {
 /* ReFlit Styles */
 .originalFlit {
   border-radius: 10px;
+}
+
+/* Meme Button styles */
+.memeButton {
+	border: none; 
+	padding: 0px; 
+	margin-top: 0px; 
+	margin-bottom: 0px;
+	transform: translateY(-55px);
+	float: right;
+}
+
+/* Flit submit styles */
+.flitSubmit {
+	padding-left: 10px;
+	padding-right: 10px;
+	font-weight: 900 !important;
 }

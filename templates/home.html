@@ -10,6 +10,8 @@
     <div class="flit_form">
       <form action="/submit_flit" method="post" id="post_flit">
         <!-- Hidden Inputs -->
+	
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="text0" id="text0">
         <input type="hidden" name="text1" id="text1">
         <input type="hidden" name="meme_link" id="meme_link">
@@ -19,18 +21,15 @@
           <div class="twelve columns flit-input-box">
             <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="flit-content-input u-full-width" placeholder="Type your flit here..."></textarea>
             <div id="character-counter">0/100</div>
-            <input type="text" name="hashtag" autocomplete="off" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
-        </div>
-        <div class="row">
-          <button style="border: none;" onclick="makeMeme()" form="" aria-label="meme"><span class="iconify" data-icon="arcticons:meme-generator" data-width="50"></span></button>
+				<button style="" onclick="makeMeme()" form="" class="memeButton" aria-label="meme"><span class="iconify" data-icon="arcticons:meme-generator" data-width="50"></span></button>
         </div>
         <div id="addedElements">
 
         </div>
         <div class="row">
           <div class="twelve columns">
-            <button type="submit" style="color: black;" class="button-primary">Flit</button>
+            <button type="submit" style="color: black;" class="button-primary flitSubmit">Submit Flit</button>
           </div>
         </div>
       </form>
@@ -47,7 +46,7 @@
 
 <div class="form-popup" id="memePopup">
   <h1>Make-A-Meme</h1>
-
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="text" name="search-tenor" autocomplete="off" id="search-tenor" placeholder="Search Tenor">
   <div id="memeBackgrounds"></div>
   <button type="button" class="btn cancel" onclick="closeMeme()">Cancel</button>
@@ -82,18 +81,30 @@
     meme.style.display = 'none';
   }
 
-  function makeMeme() {
+  function makeMeme()  {
+
     meme.style.display = 'block';
   }
 
   async function searchTenor(q) {
-    const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${q}&key=AIzaSyCnBiZhrL7yJSl4GUc3K9VO1pVWNUnNaTI&client_key=my_test_app&limit=8`);
+    if (q == '')  
+      return;
+    const response = await fetch(`/api/get_gif`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+	   'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+      },
+      body: JSON.stringify({q}),
+    });
     const data = await response.json();
 
     if (data['error']) {
       console.error(data['error']);
       return;
     }
+    data['results'] = data['results'].slice(0, 8);
+    const images = document.createElement('div');
 
     for (const result of data['results']) {
       // Create an img element
@@ -116,11 +127,13 @@
       }
 
       // Append the img element to the div
-      memeImages.appendChild(img);
+      images.appendChild(img);
     }
+    memeImages.innerHTML = '';
+    memeImages.appendChild(images);
   }
 
-  document.getElementById("search-tenor").addEventListener("input", function (e) {
+  document.getElementById("search-tenor").addEventListener("input", async function (e) {
     memeImages.innerHTML = '';
     searchTenor(this.value);
   });

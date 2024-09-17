@@ -1,9 +1,36 @@
 console.log("flitRenderer.js loaded");
+let skip = 0;
+const limit = 10;
+
+
+function makeUrlsClickable(content) {
+  const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  // General URL regex
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  
+  // Adjusted username regex pattern to capture dynamic usernames
+  const usernameRegex = /\((\w+):\)/gi; // \w+ captures one or more word characters
+  
+  let modifiedContent = escapedContent.replace(urlRegex, function(url) {
+    const element = document.createElement('a');
+    element.href = url;
+    element.textContent = url;
+    element.target = "_blank";
+    element.rel = "noopener noreferrer";
+    return element.outerHTML;
+  });
+
+  // Replace usernames with clickable links dynamically
+  modifiedContent = modifiedContent.replace(usernameRegex, '<a href="/user/$1">$1</a>');
+
+  return modifiedContent;
+}
+
+
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
-let skip = 0;
-let limit = 10;
 
 function convertUSTtoEST(date) {
   const ustDate = new Date(date);
@@ -19,10 +46,13 @@ function getMonthAbbreviation(date) {
   ];
   return months[date.getMonth()];
 }
-
+let isRenderingFlits = false;
 async function renderFlits() {
+  
+    if (isRenderingFlits) return;
+      isRenderingFlits = true;
   const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
-  const json = await res.json();
+    const json = await res.json();
   for (let flitJSON of json) {
     let flit = document.createElement("div");
     flit.classList.add("flit");
@@ -33,7 +63,8 @@ async function renderFlits() {
     flits.appendChild(flit);
   }
   checkGreenDot();
-  skip += limit;
+    skip += limit;
+    isRenderingFlits = false; // Reset the flag after rendering is complete
 }
 renderFlits();
 
@@ -66,7 +97,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     handle.innerText = '@' + json.flit.userHandle;
     handle.href = `user/${json.flit.userHandle}`;
     handle.classList.add("user-handle");
-    
+
     let timestamp = new Date(json.flit.timestamp.replace(/\s/g, 'T') + "Z");
     timestamp = convertUSTtoEST(timestamp);
     console.log(timestamp, json.flit.timestamp);
@@ -81,32 +112,14 @@ async function renderFlitWithFlitJSON(json, flit) {
     timestampElement.innerText = formatted_timestamp;
     timestampElement.classList.add("user-handle");
 
-    // Create a button element
-    let report = document.createElement("button");
-    report.style.float = "right";
-    report.style.border = "none";
-
-    // Add an event listener to the button
-    report.addEventListener("click", function() {
-        openReportModal(json.flit.id);
-    });
-
-    // Create an icon element for the button
-    let icon = document.createElement("span");
-    icon.classList.add("iconify");
-    icon.setAttribute("data-icon", "mdi:report");
-    icon.setAttribute("data-width", "25");
-
-    // Append the icon to the button
-    report.appendChild(icon);
 
     // Append the button to the flit_data_div
-    flit_data_div.appendChild(report);
     flit_data_div.appendChild(username);
     flit_data_div.innerHTML += '&#160;&#160;';
     flit_data_div.appendChild(handle);
     flit_data_div.innerHTML += '&#160;·&#160;';
     flit_data_div.appendChild(timestampElement);
+    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openReportModal(${json.flit.id})'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
 
 
     flit.appendChild(flit_data_div);
@@ -116,11 +129,21 @@ async function renderFlitWithFlitJSON(json, flit) {
 
 
 
+ 
     const content = document.createElement('a');
-    content.innerText = json.flit.content + ' ' + json.flit.hashtag;
+    content.classList.add('flit-content');
     content.href = `/flits/${json.flit.id}`;
 
-    flitContentDiv.appendChild(content);
+    // Process the content to make URLs clickable
+const processedContent = makeUrlsClickable(json.flit.content);
+
+
+    // Set the innerHTML of the content element to the processed text
+    content.innerHTML += processedContent;
+
+    flit.appendChild(content);
+    
+    
     if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
       const image = document.createElement('img');
       image.src = json.flit.meme_link;
@@ -129,8 +152,6 @@ async function renderFlitWithFlitJSON(json, flit) {
       flitContentDiv.appendChild(image);
     }
 
-    flit.appendChild(flitContentDiv);
-    
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
       originalFlit.classList.add('flit');
@@ -139,11 +160,11 @@ async function renderFlitWithFlitJSON(json, flit) {
       if (await renderSingleFlit(originalFlit) == 'profane') {
         return 'profane';
       };
-      flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(originalFlit);
-      flit.appendChild(flitContentDiv);
+      console.log(flitContentDiv);
     }
 
+    flit.appendChild(flitContentDiv);
 
     // Create a button element
     let reflit_button = document.createElement("button");
@@ -161,33 +182,37 @@ async function renderFlitWithFlitJSON(json, flit) {
 
     // Append the icon to the button
     reflit_button.appendChild(icon);
-
+    console.log(reflit_button)
     // Append the button to the flit
     flit.appendChild(reflit_button);
   }
   return flit;
 }
 
+
 const flitsList = document.getElementsByClassName('flit');
 
 async function renderAll() {
   for (let i = 0; i < flitsList.length; i++) {
-    await renderSingleFlit(flitsList[i]);
+    renderSingleFlit(flitsList[i]);
   }
 }
 
 renderAll();
-
-window.onscroll = function (ev) {
-  if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-    renderFlits();
-  }
+let scrollTimeoutId;
+window.onscroll = function(ev) {
+  clearTimeout(scrollTimeoutId);
+  scrollTimeoutId = setTimeout(function() {
+    if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+      renderFlits();
+    }
+  }, 150);
 };
 
 async function reflit(id) {
   const res = await fetch(`/api/flit?flit_id=${id}`);
   const json = await res.json();
-  
+
   let flit = document.createElement('div');
   flit.classList.add('flit');
   flit = await renderFlitWithFlitJSON(json, flit);
@@ -215,7 +240,7 @@ async function checkGreenDot() {
     if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && (nextSibling.style.backgroundColor === "green" || nextSibling.style.backgroundColor === "grey")) {
       nextSibling.parentNode.removeChild(nextSibling);
     }
-  
+
     // Check if the user is online
     if (onlineUsers.includes(handle.innerText)) {
       // Add a green circle next to the user's handle
