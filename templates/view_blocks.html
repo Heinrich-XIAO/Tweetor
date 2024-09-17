@@ -1,0 +1,11 @@
+{% extends 'layout.html' %}
+{% block title %}View Blocks{% endblock %}
+{% block body %}
+<h2>Your Blocks</h2>
+<ul>
+{% for block in blocks %}
+    <li>{{ block }}</li>
+{% endfor %}
+</ul>
+<a href="{{ url_for('block_unblock') }}">Back to Block/Unblock</a>
+{% endblock %}
