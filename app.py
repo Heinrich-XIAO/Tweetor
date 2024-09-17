@@ -71,9 +71,11 @@ Session(app)
 DATABASE = "tweetor.db"
 staff_accounts = ["ItsMe", "Dude_Pog"]
 online_users = {}
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 used_captchas = []
+
 @app.before_request
 @limiter.exempt
 def block_ips():
