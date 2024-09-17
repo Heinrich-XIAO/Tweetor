@@ -1,3 +1,61 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
-python3 -m pip install -r requirements.txt
+function try() {
+	local response
+	local cmd_status
+	local prompt_parens="([1mS[mhell/[1mr[metry/[1ma[mbort/[1mc[montinue/[1mp[mrint)"
+
+	# Outer loop, allows us to retry the command
+	while true; do
+		# Try command
+		"$@"
+		cmd_status="$?"
+
+		if [[ $cmd_status != 0 ]]; then
+			echo "[1;31m * Command failed: [1;33m\$[m $*"
+			echo "Last command failed with exit code $cmd_status"
+
+			# Prompt until input is valid
+			while true; do
+				echo -n "Specify next action $prompt_parens "
+				flush_stdin
+				read -r response \
+					|| die "Error in read"
+				case "${response,,}" in
+					''|s|shell)
+						echo "You will be prompted for action again after exiting this shell."
+						/bin/bash --init-file <(echo "init_bash")
+						;;
+					r|retry) continue 2 ;;
+					a|abort) die "Installation aborted" ;;
+					c|continue) return 0 ;;
+					p|print) echo "[1;33m\$[m $*" ;;
+					*) ;;
+				esac
+			done
+		fi
+
+		return
+	done
+}
+try python3 -m venv venv
+try source ./venv/bin/activate 
+try python3 -m pip install -r requirements.txt
+try touch ./blocklist.txt
+try touch .env
+declare -A SECRETS=(
+    ["MIXPANEL_SECRET"]="mixpanel_secret_here"
+    ["SIGHT_ENGINE_SECRET"]="sightengine_secret_here"
+    ["TENOR_SECRET"]="tenor_secret_here"
+    ["SIGHT_ENGINE_USER"]="sight_engine_user_here"
+    ["TWEETOR_REDIRECT"]="no" # to redirect or not to redirect
+)
+for SECRET_NAME in "${!SECRETS[@]}"; do
+    # Use grep to search for the secret in the .env file
+    if ! grep -q "^$SECRET_NAME\s*=" "./.env"; then
+        # If the secret is not found, append it to the .env file
+       try echo "$SECRET_NAME=${SECRETS[$SECRET_NAME]}" >> "./.env"
+    fi
+done
+try python ./database_setup.py 
+
