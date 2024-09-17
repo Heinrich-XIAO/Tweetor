@@ -647,3 +647,10 @@ main {
 	transform: translateY(-55px);
 	float: right;
 }
+
+/* Flit submit styles */
+.flitSubmit {
+	padding-left: 10px;
+	padding-right: 10px;
+	font-weight: 900 !important;
+}
