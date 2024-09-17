@@ -637,3 +637,13 @@ main {
 .originalFlit {
   border-radius: 10px;
 }
+
+/* Meme Button styles */
+.memeButton {
+	border: none; 
+	padding: 0px; 
+	margin-top: 0px; 
+	margin-bottom: 0px;
+	transform: translateY(-55px);
+	float: right;
+}
