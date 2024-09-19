@@ -3,9 +3,10 @@ let skip = 0;
 const limit = 10;
 
 function makeUrlsClickable(content) {
-  // More thorough sanitization of input content
-  const sanitizedContent = sanitizeHtml(content);
-
+   
+  const escapedContent = content.replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;');
   // General URL regex
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
   
@@ -19,26 +20,9 @@ function makeUrlsClickable(content) {
   function isImageUrl(url) {
     return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
   }
-// Helper function for sanitizing HTML
-function sanitizeHtml(html) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const textNodes = doc.body.getElementsByTagName('*');
-  
-  for (let node of textNodes) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      continue;
-    }
-    if (/^(script|style)$/.test(node.tagName.toLowerCase())) {
-      node.remove();
-    } else {
-      node.innerHTML = '';
-    }
-  }
-  
-  return doc.body.innerHTML;
-}
-  let modifiedContent = sanitizedContent.replace(urlRegex, function(url) {
+
+
+  let modifiedContent = escapedContent.replace(urlRegex, function(url) {
     const element = document.createElement('a');
     
     if (imageHostRegex.test(url) && isImageUrl(url)) {
