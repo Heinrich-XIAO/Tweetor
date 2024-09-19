@@ -665,3 +665,7 @@ main {
 li > p.image-container {
   margin-top: 15px;
 }
+.image-container img {
+  max-width: 400px;
+  height: auto;
+}

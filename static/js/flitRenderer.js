@@ -3,33 +3,48 @@ let skip = 0;
 const limit = 10;
 
 function makeUrlsClickable(content) {
-   
   const escapedContent = content.replace(/&/g, '&amp;')
                                 .replace(/</g, '&lt;')
                                 .replace(/>/g, '&gt;');
-  // General URL regex
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
-  
-  // Image host regex
-  const imageHostRegex = /^(https?:\/\/(?:i\.)?imgur\.com\/|https?:\/\/(?:i\.)?imgbb\.com\/|https?:\/\/upload\.wikimedia\.org\/|https?:\/\/commons\.wikimedia\.org\/)/;
-  
-  // Adjusted username regex pattern to capture dynamic usernames
   const usernameRegex = /\((\w+):\)/gi;
-  
-  // Function to check if URL ends with an image file extension
-  function isImageUrl(url) {
-    return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
-  }
 
+const allowedImageSites = [
+  'https://.*\\.imgur\\.com/',
+  'https://.*\\.imgbb\\.com/',
+  'https://upload\\.wikimedia\\.org/',
+  'https://commons\\.wikimedia\\.org/',
+  'https://*terryfox*'
+];
+
+
+  function isImageUrl(url) {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
+  }
 
   let modifiedContent = escapedContent.replace(urlRegex, function(url) {
     const element = document.createElement('a');
-    
-    if (imageHostRegex.test(url) && isImageUrl(url)) {
+
+    if (allowedImageSites.some(site => new RegExp(site).test(url)) && isImageUrl(url)) {
       const imgElement = document.createElement('img');
       imgElement.src = encodeURI(url); // Encode the URL
-      imgElement.width = 120;
-      imgElement.height = 120;
+      
+      // Calculate aspect ratio
+      const aspectRatio = imgElement.width / imgElement.height;
+      
+      // Determine maximum dimensions
+      let maxWidth = 400;
+      let maxHeight = 400;
+      if (aspectRatio > 1) {
+        maxHeight = Math.floor(maxWidth / aspectRatio);
+      } else {
+        maxWidth = Math.floor(maxHeight * aspectRatio);
+      }
+      
+      // Set width and height attributes
+      imgElement.width = maxWidth;
+      imgElement.height = maxHeight;
       
       // Wrap the <img> tag in an <a> tag
       element.href = url;
@@ -37,8 +52,7 @@ function makeUrlsClickable(content) {
       element.rel = "noopener noreferrer";
       element.appendChild(imgElement);
     } else {
-      // Handle non-image URLs as before
-      element.href = encodeURI(url); // Encode the URL
+      element.href = encodeURI(url);
       element.textContent = url;
       element.target = "_blank";
       element.rel = "noopener noreferrer";
@@ -47,12 +61,10 @@ function makeUrlsClickable(content) {
     return element.outerHTML;
   });
 
-  // Replace usernames with clickable links dynamically
   modifiedContent = modifiedContent.replace(usernameRegex, (match, username) => {
     return `<a href="/user/${encodeURIComponent(username)}">${username}</a>`;
   });
 
-  // Wrap images in a separate paragraph
   modifiedContent = modifiedContent.replace(/<img[^>]*>/g, '<p class="image-container">$&</p>');
 
   return modifiedContent;
