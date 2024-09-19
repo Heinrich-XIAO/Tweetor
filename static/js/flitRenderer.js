@@ -2,27 +2,74 @@ console.log("flitRenderer.js loaded");
 let skip = 0;
 const limit = 10;
 
-
 function makeUrlsClickable(content) {
-  const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  
+  // More thorough sanitization of input content
+  const sanitizedContent = sanitizeHtml(content);
+
   // General URL regex
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
   
-  // Adjusted username regex pattern to capture dynamic usernames
-  const usernameRegex = /\((\w+):\)/gi; // \w+ captures one or more word characters
+  // Image host regex
+  const imageHostRegex = /^(https?:\/\/(?:i\.)?imgur\.com\/|https?:\/\/(?:i\.)?imgbb\.com\/|https?:\/\/upload\.wikimedia\.org\/|https?:\/\/commons\.wikimedia\.org\/)/;
   
-  let modifiedContent = escapedContent.replace(urlRegex, function(url) {
+  // Adjusted username regex pattern to capture dynamic usernames
+  const usernameRegex = /\((\w+):\)/gi;
+  
+  // Function to check if URL ends with an image file extension
+  function isImageUrl(url) {
+    return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+  }
+// Helper function for sanitizing HTML
+function sanitizeHtml(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const textNodes = doc.body.getElementsByTagName('*');
+  
+  for (let node of textNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      continue;
+    }
+    if (/^(script|style)$/.test(node.tagName.toLowerCase())) {
+      node.remove();
+    } else {
+      node.innerHTML = '';
+    }
+  }
+  
+  return doc.body.innerHTML;
+}
+  let modifiedContent = sanitizedContent.replace(urlRegex, function(url) {
     const element = document.createElement('a');
-    element.href = url;
-    element.textContent = url;
-    element.target = "_blank";
-    element.rel = "noopener noreferrer";
+    
+    if (imageHostRegex.test(url) && isImageUrl(url)) {
+      const imgElement = document.createElement('img');
+      imgElement.src = encodeURI(url); // Encode the URL
+      imgElement.width = 120;
+      imgElement.height = 120;
+      
+      // Wrap the <img> tag in an <a> tag
+      element.href = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+      element.appendChild(imgElement);
+    } else {
+      // Handle non-image URLs as before
+      element.href = encodeURI(url); // Encode the URL
+      element.textContent = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+    }
+    
     return element.outerHTML;
   });
 
   // Replace usernames with clickable links dynamically
-  modifiedContent = modifiedContent.replace(usernameRegex, '<a href="/user/$1">$1</a>');
+  modifiedContent = modifiedContent.replace(usernameRegex, (match, username) => {
+    return `<a href="/user/${encodeURIComponent(username)}">${username}</a>`;
+  });
+
+  // Wrap images in a separate paragraph
+  modifiedContent = modifiedContent.replace(/<img[^>]*>/g, '<p class="image-container">$&</p>');
 
   return modifiedContent;
 }
