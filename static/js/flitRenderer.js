@@ -14,7 +14,8 @@ const allowedImageSites = [
   'https://.*\\.imgbb\\.com/',
   'https://upload\\.wikimedia\\.org/',
   'https://commons\\.wikimedia\\.org/',
-  'https://*terryfox*'
+    'https://*terryfox*',
+    'https://*imgur*'
 ];
 
 
@@ -29,23 +30,33 @@ const allowedImageSites = [
     if (allowedImageSites.some(site => new RegExp(site).test(url)) && isImageUrl(url)) {
       const imgElement = document.createElement('img');
       imgElement.src = encodeURI(url); // Encode the URL
+
+      imgElement.setAttribute('loading', 'lazy');
       
-      // Calculate aspect ratio
-      const aspectRatio = imgElement.width / imgElement.height;
+      // Set up event listeners for when the image loads
+      imgElement.onload = function() {
+        // Calculate aspect ratio
+        const aspectRatio = imgElement.width / imgElement.height;
+        
+        // Determine maximum dimensions
+        let maxWidth = 400;
+        let maxHeight = 400;
+        if (aspectRatio > 1) {
+          maxHeight = Math.floor(maxWidth / aspectRatio);
+        } else {
+          maxWidth = Math.floor(maxHeight * aspectRatio);
+        }
+        
+        imgElement.width = maxWidth;
+        imgElement.height = maxHeight;
+        
+        updateImageContainer(imgElement);
+      };
       
-      // Determine maximum dimensions
-      let maxWidth = 400;
-      let maxHeight = 400;
-      if (aspectRatio > 1) {
-        maxHeight = Math.floor(maxWidth / aspectRatio);
-      } else {
-        maxWidth = Math.floor(maxHeight * aspectRatio);
-      }
-      
-      // Set width and height attributes
-      imgElement.width = maxWidth;
-      imgElement.height = maxHeight;
-      
+      // Initial placeholder
+      imgElement.alt = "Loading...";
+      imgElement.className = "placeholder";
+   
       // Wrap the <img> tag in an <a> tag
       element.href = url;
       element.target = "_blank";
@@ -58,7 +69,7 @@ const allowedImageSites = [
       element.rel = "noopener noreferrer";
     }
     
-    return element.outerHTML;
+    return element.innerHTML;
   });
 
   modifiedContent = modifiedContent.replace(usernameRegex, (match, username) => {
@@ -70,6 +81,12 @@ const allowedImageSites = [
   return modifiedContent;
 }
 
+function updateImageContainer(imgElement) {
+  const container = imgElement.closest('.image-container');
+  if (container) {
+    container.innerHTML = `<img src="${imgElement.src}" alt="${imgElement.alt || ''}" width="${imgElement.width}" height="${imgElement.height}">`;
+  }
+}
 
 
 const flits = document.getElementById('flits');
