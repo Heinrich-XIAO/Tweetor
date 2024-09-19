@@ -69,7 +69,7 @@ const allowedImageSites = [
       element.rel = "noopener noreferrer";
     }
     
-    return element.innerHTML;
+    return element.outerHTML;
   });
 
   modifiedContent = modifiedContent.replace(usernameRegex, (match, username) => {
