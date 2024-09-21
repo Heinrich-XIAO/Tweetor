@@ -155,7 +155,7 @@ def flitAPI():
     })
 
 
-@app.route("/api/get_flits/")
+@app.route("/api/get_flits")
 @limiter.exempt
 def get_flits(user_handle=None) -> Response | str:
     skip = request.args.get("skip")
