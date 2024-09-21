@@ -156,3 +156,4 @@ __pycache__/
 flask_session/
 tweetor.db
 .env
+.envvars
