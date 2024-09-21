@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ user.username|striptags }}'s profile {% endblock %}
+{% block title %}{{ user.username|striptags }}{% endblock %}
 
 {% block body %}
 <div id="error">
@@ -12,9 +12,9 @@
 <br>
 <div class="row">
   <div class="twelve columns">
-    <div>
-      <h1>{{ user.username|striptags }}'s Profile</h1>
-      <div style="background-color: #333; width: max-content; border-radius: 10%;">
+    <div id="userProfileDetails">
+      <h1 id="usernameUserProfile">{{ user.username|striptags }}</h1>
+      <div class="profileBadges">
         {% for badge in badges %}
           <img src="{{ url_for('static', filename=badge[0]) }}" alt="{{ badge[1] }}" width="40px" style="padding: 5px;top: 50%;bottom: 50%;">
         {% endfor %}
