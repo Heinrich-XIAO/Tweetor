@@ -107,25 +107,44 @@ function getMonthAbbreviation(date) {
   return months[date.getMonth()];
 }
 let isRenderingFlits = false;
+
 async function renderFlits() {
-  
-    if (isRenderingFlits) return;
-      isRenderingFlits = true;
-  const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
-    const json = await res.json();
-  for (let flitJSON of json) {
-    let flit = document.createElement("div");
-    flit.classList.add("flit");
-    flit = await renderFlitWithFlitJSON({"flit": flitJSON}, flit);
-    if (flit === 'profane') {
-      continue;
-    }
-    flits.appendChild(flit);
+  if (isRenderingFlits) return;
+  isRenderingFlits = true;
+
+  const url = new URL(window.location.href);
+  const path = url.pathname;
+
+  let params = `skip=${skip}&limit=${limit}`;
+
+  if (path.startsWith('/user/')) {
+    const userId = path.split('/').pop(); // Get the last part of the path
+    params += `&user=${encodeURIComponent(userId)}`;
   }
-  checkGreenDot();
+
+  try {
+    const res = await fetch(`/api/get_flits?${params}`);
+    const json = await res.json();
+
+    for (let flitJSON of json) {
+      let flit = document.createElement("div");
+      flit.classList.add("flit");
+      flit = await renderFlitWithFlitJSON({"flit": flitJSON}, flit);
+      if (flit === 'profane') {
+        continue;
+      }
+      flits.appendChild(flit);
+    }
+    
+    checkGreenDot();
     skip += limit;
-    isRenderingFlits = false; // Reset the flag after rendering is complete
+  } catch (error) {
+    console.error('Error fetching flits:', error);
+  } finally {
+    isRenderingFlits = false; // Reset the flag even if an error occurs
+  }
 }
+
 renderFlits();
 
 async function renderSingleFlit(flit) {
