@@ -155,13 +155,14 @@ def flitAPI():
     })
 
 
-@app.route("/api/get_flits")
+@app.route("/api/get_flits/")
 @limiter.exempt
-def get_flits() -> Response | str:
+def get_flits(user_handle=None) -> Response | str:
     skip = request.args.get("skip")
     limit = request.args.get("limit")
     db = helpers.get_db()
     cursor = db.cursor()
+    user_handle = request.args.get("user")
     # Validate skip and limit parameters
     if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
         return "either skip or limit is not an integer", 400
@@ -178,20 +179,39 @@ def get_flits() -> Response | str:
         blocked_handles = helpers.get_blocked_users(current_user_handle)
         app.logger.info(f'Blocked handles: {blocked_handles}')
 
-    cursor.execute("""
-        SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
-        FROM flits AS f
-        LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
-        WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
-        ORDER BY f.id DESC 
-        LIMIT ? OFFSET ?
-    """, (current_user_handle, limit, skip))
+    query_params = (current_user_handle, limit, skip)
+
+    if user_handle:
+        # Sanitize the user handle to prevent SQL injection
+        sanitized_user_handle = sqlite3.connect(':memory:').execute('SELECT ?', (user_handle,)).fetchone()[0]
+        
+        query = """
+            SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
+            FROM flits AS f
+            LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
+            WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
+            AND f.userHandle = ?
+            ORDER BY f.id DESC 
+            LIMIT ? OFFSET ?
+        """
+        query_params = (current_user_handle, sanitized_user_handle, limit, skip)
+    else:
+        query = """
+            SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
+            FROM flits AS f
+            LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
+            WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
+            ORDER BY f.id DESC 
+            LIMIT ? OFFSET ?
+        """
+
+    cursor.execute(query, query_params)
 
     # Fetch the results and convert them to dictionaries
     flits = cursor.fetchall()
     flits_list = [dict(flit) for flit in flits]
 
-    return jsonify(flits_list)
+    return Response(json.dumps(flits_list), mimetype='application/json')
 @app.route("/api/engaged_dms")
 @limiter.exempt
 def engaged_dms() -> str | Response:
