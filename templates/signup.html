@@ -22,9 +22,11 @@
           
           <!-- User input for CAPTCHA -->
           <input type="text" id="user_input" name="input" placeholder="Enter CAPTCHA" required>
-          <button type="button" onclick="refreshCaptcha();" class="captcha-refresh">Refresh</button>
-          
-          <input type="submit" value="Signup">
+  	 <br>
+     <input type="checkbox" id="tosAgreement" name="tos_agreement" required>
+      <label for="tosAgreement"><a href="{{ url_for('terms') }}" style="color: blue; text-decoration: underline;">By continuing to this service, I agree to the TOS and Privacy Policy.</a></label><br>
+      <button type="button" onclick="refreshCaptcha();" class="captcha-refresh">Refresh</button>
+      <input type="submit" value="Signup">
         </form>
       </div>
     </div>

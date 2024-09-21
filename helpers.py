@@ -8,6 +8,7 @@ from flask import (
 )
 from functools import wraps
 import os
+
 DATABASE = "tweetor.db"
 def get_db():
   db = sqlite3.connect(DATABASE)

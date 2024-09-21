@@ -659,3 +659,18 @@ main {
 	padding-right: 10px;
 	font-weight: 900 !important;
 }
+.image-container {
+  margin-top: 10px; 
+}
+
+.image-container img {
+  display: block; 
+}
+
+li > p.image-container {
+  margin-top: 15px;
+}
+.image-container img {
+  max-width: 400px;
+  height: auto;
+}
