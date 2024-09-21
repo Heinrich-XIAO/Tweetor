@@ -347,13 +347,13 @@ def submit_flit() -> str | Response:
     if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
         return redirect("/")
     
-
     #profane word list    
     with open('profane_words.json') as f:
         profane_words_list = json.load(f)
         sightengine_result = is_profanity(content)
     
     # Check if SightEngine flagged content as profane
+
     if (
             isinstance(sightengine_result, dict)
             and sightengine_result.get("status") == "success"
@@ -444,7 +444,6 @@ def settings():
     return render_template('settings.html',
         loggedIn=("handle" in session)
     )
-
 # Gets users to show if they are online
 @app.route('/users', methods=['GET', 'POST'])
 @limiter.exempt
@@ -462,7 +461,10 @@ def users():
         online=online_users,
         loggedIn=("handle" in session)
     )
-
+@sitemapper.include()
+@app.route('/terms')
+def terms():
+    return render_template('TERMS.html')
 # Signup route
 # Added rate limiting so that people can only sign up 10 times a day
 @sitemapper.include()
@@ -489,6 +491,7 @@ def signup():
         # Check if the provided passwords match
         if password != passwordConformation:
             return redirect("/signup")
+
         
         if "admin" in username.lower():
             return "Username cannot contain 'admin'."
@@ -501,6 +504,7 @@ def signup():
             return render_template(
             "error.html", error="Your username is too long"
             )
+
         # Get a connection to the database
         db = helpers.get_db()
 
