@@ -9,6 +9,7 @@
     <label for="current_password">Current Password: </label>
     <br/>
     <input type="password" id="current_password" name="current_password" required>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <br/>
     <label for="new_password">New Password: </label>
     <br/>
@@ -16,7 +17,10 @@
     <br/>
     <button type="submit">Change Password</button>
 </form>
+<h2> Blocking</h2>
 
+<p><a href="{{ url_for('view_blocks') }}">View Blocked Users</a></p>
+<p><a href="{{ url_for('block_unblock') }}">Manage Blocks</a></p>
 <h2>Appearance</h2>
 <label for="theme_input">Theme</label>
 <select name="theme_input" id="theme_input">
@@ -27,6 +31,7 @@
 <br/>
 <label for="render_gifs">Render Memes</label>
 <input type="checkbox" name="render_gifs" id="render_gifs">
+
 <br/>
 <label for="notifications">Notifications from Main</label>
 <input type="checkbox" name="notifications" id="notifications">

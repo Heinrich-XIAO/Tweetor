@@ -1,8 +1,11 @@
 import helpers
 import sqlite3
 import hashlib
-
-DATABASE = "tweetor.db"
+import os
+if os.getenv('TESTING', 'false').lower() == 'true':
+    DATABASE = "test.db"  
+else:
+    DATABASE = "tweetor.db"
 
 
 
@@ -44,7 +47,8 @@ with sqlite3.connect(DATABASE) as conn:
             profane_flit TEXT,
             userHandle TEXT NOT NULL,
             username TEXT NOT NULL,
-            hashtag TEXT NOT NULL
+            hashtag TEXT NOT NULL,
+            ip TEXT NOT NULL
         )
     """
     )
@@ -87,7 +91,18 @@ with sqlite3.connect(DATABASE) as conn:
         )
     """
     )
-
+with sqlite3.connect(DATABASE) as conn:    
+    conn.execute(
+"""
+        CREATE TABLE IF NOT EXISTS blocks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    blocker_handle TEXT NOT NULL,
+    blocked_handle TEXT NOT NULL,
+    block_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(blocker_handle, blocked_handle)
+);
+"""
+)
 def add_is_reflit_column_if_not_exists():
   db = helpers.get_db()
   cursor = db.cursor()
