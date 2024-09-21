@@ -1,9 +1,96 @@
 console.log("flitRenderer.js loaded");
+let skip = 0;
+const limit = 10;
+
+function makeUrlsClickable(content) {
+  const escapedContent = content.replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;');
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  const usernameRegex = /\((\w+):\)/gi;
+
+const allowedImageSites = [
+  'https://.*\\.imgur\\.com/',
+  'https://.*\\.imgbb\\.com/',
+  'https://upload\\.wikimedia\\.org/',
+  'https://commons\\.wikimedia\\.org/',
+    'https://*terryfox*',
+    'https://*imgur*'
+];
+
+
+  function isImageUrl(url) {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
+  }
+
+  let modifiedContent = escapedContent.replace(urlRegex, function(url) {
+    const element = document.createElement('a');
+
+    if (allowedImageSites.some(site => new RegExp(site).test(url)) && isImageUrl(url)) {
+      const imgElement = document.createElement('img');
+      imgElement.src = encodeURI(url); // Encode the URL
+
+      imgElement.setAttribute('loading', 'lazy');
+      
+      // Set up event listeners for when the image loads
+      imgElement.onload = function() {
+        // Calculate aspect ratio
+        const aspectRatio = imgElement.width / imgElement.height;
+        
+        // Determine maximum dimensions
+        let maxWidth = 400;
+        let maxHeight = 400;
+        if (aspectRatio > 1) {
+          maxHeight = Math.floor(maxWidth / aspectRatio);
+        } else {
+          maxWidth = Math.floor(maxHeight * aspectRatio);
+        }
+        
+        imgElement.width = maxWidth;
+        imgElement.height = maxHeight;
+        
+        updateImageContainer(imgElement);
+      };
+      
+      // Initial placeholder
+      imgElement.alt = "Loading...";
+      imgElement.className = "placeholder";
+   
+      // Wrap the <img> tag in an <a> tag
+      element.href = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+      element.appendChild(imgElement);
+    } else {
+      element.href = encodeURI(url);
+      element.textContent = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+    }
+    
+    return element.outerHTML;
+  });
+
+  modifiedContent = modifiedContent.replace(usernameRegex, (match, username) => {
+    return `<a href="/user/${encodeURIComponent(username)}">${username}</a>`;
+  });
+
+  modifiedContent = modifiedContent.replace(/<img[^>]*>/g, '<p class="image-container">$&</p>');
+
+  return modifiedContent;
+}
+
+function updateImageContainer(imgElement) {
+  const container = imgElement.closest('.image-container');
+  if (container) {
+    container.innerHTML = `<img src="${imgElement.src}" alt="${imgElement.alt || ''}" width="${imgElement.width}" height="${imgElement.height}">`;
+  }
+}
+
 
 const flits = document.getElementById('flits');
 const addedElements = document.getElementById('addedElements');
-let skip = 0;
-const limit = 10;
 
 function convertUSTtoEST(date) {
   const ustDate = new Date(date);
@@ -19,10 +106,13 @@ function getMonthAbbreviation(date) {
   ];
   return months[date.getMonth()];
 }
-
+let isRenderingFlits = false;
 async function renderFlits() {
+  
+    if (isRenderingFlits) return;
+      isRenderingFlits = true;
   const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
-  const json = await res.json();
+    const json = await res.json();
   for (let flitJSON of json) {
     let flit = document.createElement("div");
     flit.classList.add("flit");
@@ -33,7 +123,8 @@ async function renderFlits() {
     flits.appendChild(flit);
   }
   checkGreenDot();
-  skip += limit;
+    skip += limit;
+    isRenderingFlits = false; // Reset the flag after rendering is complete
 }
 renderFlits();
 
@@ -98,12 +189,21 @@ async function renderFlitWithFlitJSON(json, flit) {
 
 
 
+ 
     const content = document.createElement('a');
-    content.innerText = json.flit.content;
     content.classList.add('flit-content');
     content.href = `/flits/${json.flit.id}`;
 
+    // Process the content to make URLs clickable
+const processedContent = makeUrlsClickable(json.flit.content);
+
+
+    // Set the innerHTML of the content element to the processed text
+    content.innerHTML += processedContent;
+
     flit.appendChild(content);
+    
+    
     if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
       const image = document.createElement('img');
       image.src = json.flit.meme_link;
@@ -111,7 +211,6 @@ async function renderFlitWithFlitJSON(json, flit) {
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(image);
     }
-
 
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
@@ -126,6 +225,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     }
 
     flit.appendChild(flitContentDiv);
+
     // Create a button element
     let reflit_button = document.createElement("button");
     reflit_button.classList.add("retweet-button");
@@ -142,12 +242,13 @@ async function renderFlitWithFlitJSON(json, flit) {
 
     // Append the icon to the button
     reflit_button.appendChild(icon);
-    console.log(reflit_button )
+    console.log(reflit_button)
     // Append the button to the flit
     flit.appendChild(reflit_button);
   }
   return flit;
 }
+
 
 const flitsList = document.getElementsByClassName('flit');
 
@@ -158,11 +259,14 @@ async function renderAll() {
 }
 
 renderAll();
-
-window.onscroll = function (ev) {
-  if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-    renderFlits();
-  }
+let scrollTimeoutId;
+window.onscroll = function(ev) {
+  clearTimeout(scrollTimeoutId);
+  scrollTimeoutId = setTimeout(function() {
+    if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+      renderFlits();
+    }
+  }, 150);
 };
 
 async function reflit(id) {
