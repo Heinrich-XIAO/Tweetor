@@ -40,6 +40,7 @@
         </div>
         
       {% else %}
+
         <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="home"><span class="iconify" data-icon="ic:round-home"> </span> Home</a>
         <a href="{{ url_for('leaderboard') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="material-symbols:trophy"></span> Leaderboard</a>
         <a href="{{ url_for('users') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="leaderboard"><span class="iconify" data-icon="clarity:users-solid"></span>Online Users</a>
@@ -48,6 +49,7 @@
 	   {% if session['handle'] == 'admin' %}
 	<a href="{{ url_for('profanity') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="profanity"><span class="iconify" data-icon="ic:baseline-alarm"></span> Profanity</a>
 	<a href="{{ url_for('reported_flits') }}" class="w3-bar-item w3-button" style="color: white;" aria-label="profanity"><span class="iconify" data-icon="material-symbols:report"></span> Reports</a>
+
     {% endif %}
         {% block admin_buttons %}{% endblock %}
         <hr>

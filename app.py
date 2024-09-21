@@ -71,9 +71,11 @@ Session(app)
 DATABASE = "tweetor.db"
 staff_accounts = ["ItsMe", "Dude_Pog"]
 online_users = {}
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 used_captchas = []
+
 @app.before_request
 @limiter.exempt
 def block_ips():
@@ -155,11 +157,12 @@ def flitAPI():
 
 @app.route("/api/get_flits")
 @limiter.exempt
-def get_flits() -> Response | str:
+def get_flits(user_handle=None) -> Response | str:
     skip = request.args.get("skip")
     limit = request.args.get("limit")
     db = helpers.get_db()
     cursor = db.cursor()
+    user_handle = request.args.get("user")
     # Validate skip and limit parameters
     if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
         return "either skip or limit is not an integer", 400
@@ -176,20 +179,39 @@ def get_flits() -> Response | str:
         blocked_handles = helpers.get_blocked_users(current_user_handle)
         app.logger.info(f'Blocked handles: {blocked_handles}')
 
-    cursor.execute("""
-        SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
-        FROM flits AS f
-        LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
-        WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
-        ORDER BY f.id DESC 
-        LIMIT ? OFFSET ?
-    """, (current_user_handle, limit, skip))
+    query_params = (current_user_handle, limit, skip)
+
+    if user_handle:
+        # Sanitize the user handle to prevent SQL injection
+        sanitized_user_handle = sqlite3.connect(':memory:').execute('SELECT ?', (user_handle,)).fetchone()[0]
+        
+        query = """
+            SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
+            FROM flits AS f
+            LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
+            WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
+            AND f.userHandle = ?
+            ORDER BY f.id DESC 
+            LIMIT ? OFFSET ?
+        """
+        query_params = (current_user_handle, sanitized_user_handle, limit, skip)
+    else:
+        query = """
+            SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
+            FROM flits AS f
+            LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
+            WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
+            ORDER BY f.id DESC 
+            LIMIT ? OFFSET ?
+        """
+
+    cursor.execute(query, query_params)
 
     # Fetch the results and convert them to dictionaries
     flits = cursor.fetchall()
     flits_list = [dict(flit) for flit in flits]
 
-    return jsonify(flits_list)
+    return Response(json.dumps(flits_list), mimetype='application/json')
 @app.route("/api/engaged_dms")
 @limiter.exempt
 def engaged_dms() -> str | Response:
@@ -310,7 +332,7 @@ def submit_flit() -> str | Response:
     # Check for various content validation conditions
     if content.strip() == "":
         return render_template("error.html", error="Message was blank.")
-    if len(content) > 280:
+    if len(content) > 100:
         return render_template("error.html", error="Message was too long.")
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
@@ -318,24 +340,20 @@ def submit_flit() -> str | Response:
         return render_template("error.html", error="Don't be so technical")
     if content.lower() == "urmom" or content.lower() == "ur mom":
         return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
-    cursor.execute("SELECT ip FROM flits ORDER BY timestamp DESC LIMIT 6")
-    recent_flits_ips = [row[0] for row in cursor.fetchall()]
-
-    if len(recent_flits_ips) >= 6 and all(ip == client_ip for ip in recent_flits_ips):
-        return "Stop monologuing", 400
+    
     cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC LIMIT 1")
     latest_flit = cursor.fetchone()
 
     if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
         return redirect("/")
     
-
     #profane word list    
     with open('profane_words.json') as f:
         profane_words_list = json.load(f)
         sightengine_result = is_profanity(content)
     
     # Check if SightEngine flagged content as profane
+
     if (
             isinstance(sightengine_result, dict)
             and sightengine_result.get("status") == "success"
@@ -426,7 +444,6 @@ def settings():
     return render_template('settings.html',
         loggedIn=("handle" in session)
     )
-
 # Gets users to show if they are online
 @app.route('/users', methods=['GET', 'POST'])
 @limiter.exempt
@@ -444,7 +461,10 @@ def users():
         online=online_users,
         loggedIn=("handle" in session)
     )
-
+@sitemapper.include()
+@app.route('/terms')
+def terms():
+    return render_template('TERMS.html')
 # Signup route
 # Added rate limiting so that people can only sign up 10 times a day
 @sitemapper.include()
@@ -471,6 +491,7 @@ def signup():
         # Check if the provided passwords match
         if password != passwordConformation:
             return redirect("/signup")
+
         
         if "admin" in username.lower():
             return "Username cannot contain 'admin'."
@@ -483,6 +504,7 @@ def signup():
             return render_template(
             "error.html", error="Your username is too long"
             )
+
         # Get a connection to the database
         db = helpers.get_db()
 
@@ -868,7 +890,7 @@ def submit_dm(receiver_handle) -> str | Response:
     sender_handle = session["handle"]
     content = request.form["content"]
 
-    if len(content) > 1000:
+    if len(content) > 100:
         return render_template("error.html", error="Too many characters in DM")
 
     sightengine_result = is_profanity(content)

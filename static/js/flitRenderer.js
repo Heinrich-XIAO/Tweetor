@@ -2,31 +2,91 @@ console.log("flitRenderer.js loaded");
 let skip = 0;
 const limit = 10;
 
-
 function makeUrlsClickable(content) {
-  const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  
-  // General URL regex
+  const escapedContent = content.replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;');
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
-  
-  // Adjusted username regex pattern to capture dynamic usernames
-  const usernameRegex = /\((\w+):\)/gi; // \w+ captures one or more word characters
-  
+  const usernameRegex = /\((\w+):\)/gi;
+
+const allowedImageSites = [
+  'https://.*\\.imgur\\.com/',
+  'https://.*\\.imgbb\\.com/',
+  'https://upload\\.wikimedia\\.org/',
+  'https://commons\\.wikimedia\\.org/',
+    'https://*terryfox*',
+    'https://*imgur*'
+];
+
+
+  function isImageUrl(url) {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
+  }
+
   let modifiedContent = escapedContent.replace(urlRegex, function(url) {
     const element = document.createElement('a');
-    element.href = url;
-    element.textContent = url;
-    element.target = "_blank";
-    element.rel = "noopener noreferrer";
+
+    if (allowedImageSites.some(site => new RegExp(site).test(url)) && isImageUrl(url)) {
+      const imgElement = document.createElement('img');
+      imgElement.src = encodeURI(url); // Encode the URL
+
+      imgElement.setAttribute('loading', 'lazy');
+      
+      // Set up event listeners for when the image loads
+      imgElement.onload = function() {
+        // Calculate aspect ratio
+        const aspectRatio = imgElement.width / imgElement.height;
+        
+        // Determine maximum dimensions
+        let maxWidth = 400;
+        let maxHeight = 400;
+        if (aspectRatio > 1) {
+          maxHeight = Math.floor(maxWidth / aspectRatio);
+        } else {
+          maxWidth = Math.floor(maxHeight * aspectRatio);
+        }
+        
+        imgElement.width = maxWidth;
+        imgElement.height = maxHeight;
+        
+        updateImageContainer(imgElement);
+      };
+      
+      // Initial placeholder
+      imgElement.alt = "Loading...";
+      imgElement.className = "placeholder";
+   
+      // Wrap the <img> tag in an <a> tag
+      element.href = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+      element.appendChild(imgElement);
+    } else {
+      element.href = encodeURI(url);
+      element.textContent = url;
+      element.target = "_blank";
+      element.rel = "noopener noreferrer";
+    }
+    
     return element.outerHTML;
   });
 
-  // Replace usernames with clickable links dynamically
-  modifiedContent = modifiedContent.replace(usernameRegex, '<a href="/user/$1">$1</a>');
+  modifiedContent = modifiedContent.replace(usernameRegex, (match, username) => {
+    return `<a href="/user/${encodeURIComponent(username)}">${username}</a>`;
+  });
+
+  modifiedContent = modifiedContent.replace(/<img[^>]*>/g, '<p class="image-container">$&</p>');
 
   return modifiedContent;
 }
 
+function updateImageContainer(imgElement) {
+  const container = imgElement.closest('.image-container');
+  if (container) {
+    container.innerHTML = `<img src="${imgElement.src}" alt="${imgElement.alt || ''}" width="${imgElement.width}" height="${imgElement.height}">`;
+  }
+}
 
 
 const flits = document.getElementById('flits');
@@ -47,25 +107,44 @@ function getMonthAbbreviation(date) {
   return months[date.getMonth()];
 }
 let isRenderingFlits = false;
+
 async function renderFlits() {
-  
-    if (isRenderingFlits) return;
-      isRenderingFlits = true;
-  const res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`); //////////////////////////////// possible http param inject
-    const json = await res.json();
-  for (let flitJSON of json) {
-    let flit = document.createElement("div");
-    flit.classList.add("flit");
-    flit = await renderFlitWithFlitJSON({"flit": flitJSON}, flit);
-    if (flit === 'profane') {
-      continue;
-    }
-    flits.appendChild(flit);
+  if (isRenderingFlits) return;
+  isRenderingFlits = true;
+
+  const url = new URL(window.location.href);
+  const path = url.pathname;
+
+  let params = `skip=${skip}&limit=${limit}`;
+
+  if (path.startsWith('/user/')) {
+    const userId = path.split('/').pop(); // Get the last part of the path
+    params += `&user=${encodeURIComponent(userId)}`;
   }
-  checkGreenDot();
+
+  try {
+    const res = await fetch(`/api/get_flits?${params}`);
+    const json = await res.json();
+
+    for (let flitJSON of json) {
+      let flit = document.createElement("div");
+      flit.classList.add("flit");
+      flit = await renderFlitWithFlitJSON({"flit": flitJSON}, flit);
+      if (flit === 'profane') {
+        continue;
+      }
+      flits.appendChild(flit);
+    }
+    
+    checkGreenDot();
     skip += limit;
-    isRenderingFlits = false; // Reset the flag after rendering is complete
+  } catch (error) {
+    console.error('Error fetching flits:', error);
+  } finally {
+    isRenderingFlits = false; // Reset the flag even if an error occurs
+  }
 }
+
 renderFlits();
 
 async function renderSingleFlit(flit) {
