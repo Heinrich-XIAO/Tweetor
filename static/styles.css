@@ -626,11 +626,16 @@ main {
 
 .leaderboardScore {
   float: right;
-  margin-right: 20px;
 }
 
-.leaderboard {
-  width: 100%;
+#leaderboard {
+	font-size: 2em;
+	margin: auto;
+}
+
+#leaderboardTitle {
+	text-align: center;
+	font-size: 2.5em;
 }
 
 /* ReFlit Styles */
