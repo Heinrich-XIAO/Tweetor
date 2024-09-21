@@ -12,8 +12,8 @@
 <br>
 <div class="row">
   <div class="twelve columns">
-    <div>
-      <h1>{{ user.username|striptags }}</h1>
+    <div id="userProfileDetails">
+      <h1 id="usernameUserProfile">{{ user.username|striptags }}</h1>
       <div class="profileBadges">
         {% for badge in badges %}
           <img src="{{ url_for('static', filename=badge[0]) }}" alt="{{ badge[1] }}" width="40px" style="padding: 5px;top: 50%;bottom: 50%;">
