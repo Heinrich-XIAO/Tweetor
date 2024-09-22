@@ -30,7 +30,7 @@ async function loadMessages() {
 		});
 
 		// Update pagination info
-		updatePaginationInfo(data);
+		updatePaginationInfo();
 
 		// Handle pagination
 		if (data.pagination.has_more) {
@@ -53,7 +53,7 @@ async function loadMessages() {
 	}
 }
 
-function updatePaginationInfo(data) {
+function updatePaginationInfo() {
 	const infoSpan = document.getElementById('pagination-info');
 	infoSpan.textContent = `Current Page: ${Math.ceil(dm_skip / dm_limit)}`;
 }
