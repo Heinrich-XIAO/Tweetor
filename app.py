@@ -1024,5 +1024,53 @@ def view_blocks():
 
 
 
+@app.route('/api/leaderboard')
+def get_leaderboard():
+    conn = helpers.get_db()
+    cursor = conn.cursor()
+    
+    # Select the latest 1000 rows from the flits table, ordered by timestamp
+    cursor.execute("""
+        SELECT userHandle, timestamp, is_reflit
+        FROM flits
+        ORDER BY timestamp DESC
+        LIMIT 1000
+    """)
+    
+    flits = cursor.fetchall()
+    
+    user_scores = {}
+    
+    for flit in flits:
+        handle = flit[0]
+        if handle == 'admin' or flit[2] == 1:
+            continue
+        
+        days = 7  # Assuming 7-day window
+        current_time = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        time_difference = current_time - datetime.datetime.fromisoformat(flit[1])
+        days_diff = time_difference.days
+        
+        if days_diff >= days:
+            continue
+        
+        if handle in user_scores:
+            user_scores[handle] += (days - days_diff)/days*2
+        else:
+            user_scores[handle] = (days - days_diff)/days*2
+    
+    # Round all scores to 2 decimal places
+    rounded_scores = {k: round(v, 2) for k, v in user_scores.items()}
+    
+    # Sort the user scores
+    sorted_scores = sorted(rounded_scores.items(), key=lambda x: x[1], reverse=True)
+    
+    # Limit the top 10 results
+    top_results = sorted_scores[:10]
+    
+    # Convert to JSON
+    result = jsonify([{'userHandle': handle, 'score': score} for handle, score in top_results])
+    
+    return result
 if __name__ == "__main__":
     app.run(debug=False)
