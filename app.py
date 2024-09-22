@@ -851,41 +851,80 @@ def reported_flits() -> str:
     reports = cursor.fetchall()
 
     return render_template("reported_flits.html", reports=reports,  loggedIn="handle" in session )
-
 @app.route("/dm/<path:receiver_handle>")
 @limiter.limit("1/second")
 @helpers.login_required
 def direct_messages(receiver_handle):
+    return render_template(
+        "direct_messages.html",
+        receiver_handle=receiver_handle,
+        loggedIn="handle" in session,
+    )
 
+
+@app.route("/api/dm/<path:receiver_handle>", methods=["GET"])
+@limiter.limit("5/second")
+@helpers.login_required
+def api_direct_messages(receiver_handle):
     sender_handle = session["handle"]
-    blocked_handles = helpers.get_blocked_users(sender_handle)  # Retrieve the list of blocked users
+    blocked_handles = helpers.get_blocked_users(sender_handle)
+
+    # Get skip and limit parameters
+    skip = request.args.get("skip")
+    limit = request.args.get("limit")
+    if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
+        return "either skip or limit is not an integer", 400
+    skip = int(skip)
+    limit = int(limit)
+
+    # Validate skip and limit
+    if abs(skip - limit) > 250:
+        return jsonify({"error": "The difference between skip and limit cannot exceed 250"}), 400
 
     db = helpers.get_db()
     cursor = db.cursor()
 
+
     cursor.execute(
         """
-        SELECT * FROM direct_messages
-        WHERE (sender_handle = ? AND receiver_handle = ?)
-        OR (sender_handle = ? AND receiver_handle = ?) AND profane_dm = 'no'
-        ORDER BY timestamp DESC
-    """,
-        (sender_handle, receiver_handle, receiver_handle, sender_handle),
+        SELECT * FROM (
+            SELECT * FROM direct_messages
+            WHERE (sender_handle = ? AND receiver_handle = ?)
+            OR (sender_handle = ? AND receiver_handle = ?) AND profane_dm = 'no'
+        )
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+        """,
+        (sender_handle, receiver_handle, receiver_handle, sender_handle, limit, skip),
     )
+
+    
 
     messages = cursor.fetchall()
 
-    return render_template(
-        "direct_messages.html",
-        messages=messages,
-        receiver_handle=receiver_handle,
-        loggedIn="handle" in session,
-        blocked_users=blocked_handles,  # Pass blocked users to the template
-    )
+    # Convert messages to JSON-friendly format
+    json_messages = [
+        {
+            "id": message[0],
+            "sender_handle": message[1],
+            "receiver_handle": message[2],
+            "content": message[3],
+            "timestamp": message[4],
+            "profane_dm": message[5]
+        } for message in messages
+    ]
 
-
-
-
+    return jsonify({
+        "messages": json_messages,
+        "receiver_handle": receiver_handle,
+        "loggedIn": "handle" in session,
+        "blocked_users": blocked_handles,
+        "pagination": {
+            "skip": skip,
+            "limit": limit,
+            "has_more": len(messages) == limit  # Assume there are more messages if we got exactly 'limit' results
+        }
+    })
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
 @limiter.limit("8/minute")
 @helpers.login_required
