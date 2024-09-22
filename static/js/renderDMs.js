@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadMessages();
 });
 
-document.getElementById('prev-btn').addEventListener('click', async function() {
-	await loadMessages();
+document.getElementById('prev-btn').addEventListener('click', function() {
+	loadMessages();
 });
 
 // Modify the next button click event listener
-document.getElementById('next-btn').addEventListener('click', async function() {
-  await loadMessages();
+document.getElementById('next-btn').addEventListener('click', function() {
+  loadMessages();
 });
