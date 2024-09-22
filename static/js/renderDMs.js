@@ -55,7 +55,7 @@ async function loadMessages() {
 
 function updatePaginationInfo(data) {
 	const infoSpan = document.getElementById('pagination-info');
-	infoSpan.textContent = `Current Page: ${Math.ceil(dm_skip / dm_limit)}`;
+	infoSpan.textContent = `Current Page: ${Math.ceil(dm_skip / dm_limit)} | Skip: ${dm_skip} | Limit: ${dm_limit}`;
 }
 
 function hideNextButton() {
