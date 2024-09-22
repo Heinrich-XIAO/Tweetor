@@ -4,7 +4,7 @@ console.log("renderDMs.js loaded");
 const url = window.location.href;
 const mainUrl = url.split('?')[0];
 const receiverHandle = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
-let dm_skip = 0;
+const dm_skip = 0;
 const dm_limit = 10;
 const dm_inc = 10;
 
@@ -74,12 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.getElementById('prev-btn').addEventListener('click', function() {
-	dm_skip -= limit;
 	loadMessages();
 });
 
 // Modify the next button click event listener
 document.getElementById('next-btn').addEventListener('click', function() {
-	dm_skip += limit;
   loadMessages();
 });
