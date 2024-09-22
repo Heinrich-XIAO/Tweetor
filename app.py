@@ -889,8 +889,8 @@ def api_direct_messages(receiver_handle):
         """
         SELECT * FROM (
             SELECT * FROM direct_messages
-            WHERE ((sender_handle = ? AND receiver_handle = ?)
-            OR (sender_handle = ? AND receiver_handle = ?)) AND profane_dm = 'no'
+            WHERE (sender_handle = ? AND receiver_handle = ?)
+            OR (sender_handle = ? AND receiver_handle = ?) AND profane_dm = 'no'
         )
         ORDER BY id DESC
         LIMIT ? OFFSET ?
