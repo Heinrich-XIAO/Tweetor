@@ -878,8 +878,8 @@ def api_direct_messages(receiver_handle):
     limit = int(limit)
 
     # Validate skip and limit
-    if abs(skip - limit) > 250:
-        return jsonify({"error": "The difference between skip and limit cannot exceed 250"}), 400
+    if limit > 250:
+        return jsonify({"error": "Limit cannot exceed 250"}), 400
 
     db = helpers.get_db()
     cursor = db.cursor()
