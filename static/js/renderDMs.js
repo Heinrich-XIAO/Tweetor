@@ -74,8 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.getElementById('prev-btn').addEventListener('click', function() {
-	dm_skip -= limit;
-	loadMessages();
+  if (dm_skip > 0) {
+    dm_skip -= limit;
+    loadMessages();
+  } else {
+    console.log("Cannot decrease further");
+  }
 });
 
 // Modify the next button click event listener
