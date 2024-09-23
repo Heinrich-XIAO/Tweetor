@@ -41,7 +41,7 @@ async function loadMessages() {
 		}
 
 		// Handle going back
-		if (dm_skip > -1) {
+		if (dm_skip > 0) {
 			const prevBtn = document.getElementById('prev-btn');
 			prevBtn.style.display = 'inline-block';
 		} else {
@@ -61,6 +61,11 @@ function updatePaginationInfo() {
 function hideNextButton() {
   const nextBtn = document.getElementById('next-btn');
   nextBtn.style.display = 'none';
+}
+
+function hidePrevButton() {
+  const prevBtn = document.getElementById('prev-btn');
+  prevBtn.style.display = 'none';
 }
 
 function showErrorMessage(container) {
