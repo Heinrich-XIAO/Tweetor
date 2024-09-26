@@ -701,32 +701,38 @@ def user_profile(username: str) -> str | Response:
     if not user:
         return redirect("/")
 
-    # Query the database for the user's non-reflit flits, ordered by timestamp
+    # Query the database for the user's non-reflit flits, checking if they have made at least one flit
     cursor.execute(
-        "SELECT * FROM flits WHERE userHandle = ? ORDER BY timestamp DESC",
+        "SELECT COUNT(*) > 0 FROM flits WHERE userHandle = ?",
         (username,),
     )
-    flits = cursor.fetchall()
+    has_flits = cursor.fetchone()[0]
 
-
-
-    # Calculate the user's activeness based on their tweet frequency
-    latest_tweet_time = datetime.datetime.now()
-    first_tweet_time = flits[-1]["timestamp"]
-    first_tweet_time = datetime.datetime.strptime(first_tweet_time, "%Y-%m-%d %H:%M:%S")
-    diff = latest_tweet_time - first_tweet_time
-    weeks = diff.total_seconds() / 3600 / 24 / 7
-    activeness = round(0 if weeks == 0 else len(flits) / weeks * 1000)
-
-    # Initialize a list for user badges
+    # Initialize variables
+    activeness = None
     badges = []
 
-    # Add badges based on activeness and staff status
-    if activeness > 5000:
-        badges.append(("badges/creator.png", "Activeness of over 5000"))
+    # If the user has flits, calculate activeness and add badges
+    if has_flits:
+        cursor.execute(
+            "SELECT * FROM flits WHERE userHandle = ? ORDER BY timestamp DESC",
+            (username,),
+        )
+        flits = cursor.fetchall()
 
-    if user["handle"] in staff_accounts:
-        badges.append(("badges/staff.png", "Staff at Tweetor!"))
+        latest_tweet_time = datetime.datetime.now()
+        first_tweet_time = flits[-1]["timestamp"]
+        first_tweet_time = datetime.datetime.strptime(first_tweet_time, "%Y-%m-%d %H:%M:%S")
+        diff = latest_tweet_time - first_tweet_time
+        weeks = diff.total_seconds() / 3600 / 24 / 7
+        activeness = round(0 if weeks == 0 else len(flits) / weeks * 1000)
+
+        # Add badges based on activeness and staff status
+        if activeness > 5000:
+            badges.append(("badges/creator.png", "Activeness of over 5000"))
+        
+        if user["handle"] in staff_accounts:
+            badges.append(("badges/staff.png", "Staff at Tweetor!"))
 
     # Render the user profile template with relevant data
     return render_template(
@@ -734,10 +740,9 @@ def user_profile(username: str) -> str | Response:
         badges=badges,
         user=user,
         loggedIn=("handle" in session),
-        flits=flits,
+        has_flits=has_flits,
         activeness=activeness,
     )
-
 @app.route("/profanity")
 @limiter.exempt
 @helpers.admin_required
