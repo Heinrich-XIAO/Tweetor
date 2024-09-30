@@ -240,7 +240,6 @@ const processedContent = makeUrlsClickable(json.flit.content);
         return 'profane';
       };
       flitContentDiv.appendChild(originalFlit);
-      console.log(flitContentDiv);
     }
 
     flit.appendChild(flitContentDiv);
@@ -261,7 +260,6 @@ const processedContent = makeUrlsClickable(json.flit.content);
 
     // Append the icon to the button
     reflit_button.appendChild(icon);
-    console.log(reflit_button)
     // Append the button to the flit
     flit.appendChild(reflit_button);
   }
