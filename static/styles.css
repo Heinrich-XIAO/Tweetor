@@ -1,7 +1,7 @@
 * {box-sizing: border-box;}
 body {
   display: grid;
-  grid-template-columns: auto 0px; 
+  grid-template-columns: auto; 
 }
 
 :root[data-applied-mode="light"] {
