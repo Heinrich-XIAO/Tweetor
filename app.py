@@ -60,7 +60,7 @@ sitemapper.init_app(app)
 # Rate limiting
 limiter = Limiter(
     app=app,
-     key_func=get_remote_address,
+     key_func=helpers.get_client_ip,
     default_limits=["900 per day", "1 per second"]
 )
 
@@ -395,9 +395,11 @@ def submit_flit() -> str | Response:
         db.close()
 
         # Note: you must supply the user_id who performed the event as the first parameter.
-        mp.track(session['handle'], 'Posted',  {
-            'Flit Id': cursor.lastrowid
-        })
+        try:
+            mp.track(session['handle'], 'Posted', {'Flit Id': cursor.lastrowid})
+        except Exception as e:
+            app.logger.error(f"Mixpanel error: {str(e)}")
+
 
         return redirect(url_for("home"))
 
@@ -428,9 +430,11 @@ def submit_flit() -> str | Response:
         ),
     )
 
-    mp.track(session['handle'], 'ReFlit',  {
-        'Original Flit Id': original_flit_id
-    })
+    try:
+        mp.track(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
+    except Exception as e:
+        app.logger.info(f"Mixpanel error: ReFlit tracking failed - {str(e)}")
+
 
     db.commit()
     db.close()
@@ -536,9 +540,11 @@ def signup():
         db.close()
 
         # Note: you must supply the user_id who performed the event as the first parameter.
-        mp.track(handle, 'Signed Up',  {
-        'Signup Type': 'Referral'
-        })
+        try:
+            mp.track(handle, 'Signed Up', {'Signup Type': 'Referral'})
+        except Exception as e:
+            app.logger.info(f"Mixpanel error: Signed Up tracking failed - {str(e)}")
+
 
         # Set session data for the newly registered user
         session["handle"] = handle
