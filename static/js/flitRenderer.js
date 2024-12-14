@@ -169,12 +169,12 @@ async function renderFlitWithFlitJSON(json, flit) {
 
     const username = document.createElement('a');
     username.innerText = json.flit.username;
-    username.href = `user/${json.flit.userHandle}`;
+    username.href = `/user/${json.flit.userHandle}`;
     username.classList.add("user-handle");
 
     const handle = document.createElement('a');
     handle.innerText = '@' + json.flit.userHandle;
-    handle.href = `user/${json.flit.userHandle}`;
+    handle.href = `/user/${json.flit.userHandle}`;
     handle.classList.add("user-handle");
 
     let timestamp = new Date(json.flit.timestamp.replace(/\s/g, 'T') + "Z");
