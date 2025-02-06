@@ -854,8 +854,6 @@ def report_flit() -> Response:
 @limiter.exempt
 @helpers.admin_required
 def reported_flits() -> str:
-
-
     db = helpers.get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM reported_flits")
@@ -863,7 +861,7 @@ def reported_flits() -> str:
 
     return render_template("reported_flits.html", reports=reports,  loggedIn="handle" in session )
 @app.route("/dm/<path:receiver_handle>")
-@limiter.limit("1/second")
+@limiter.limit("5/second")
 @helpers.login_required
 def direct_messages(receiver_handle):
     return render_template(
