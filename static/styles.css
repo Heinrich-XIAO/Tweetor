@@ -85,6 +85,11 @@ input[type="text"]:focus, textarea:focus {
   outline: 0; 
 }
 
+button:has(svg) {
+  height: 25px;
+  width: 25px;
+}
+
 button, input[type="submit"] {
   display: inline-block;
   height: 38px;
@@ -313,7 +318,7 @@ button:hover, button:focus {
 
 .flit {
   padding: 20px;
-  padding-bottom: 5px;
+  /* padding-bottom: 5px; */
   margin-bottom: -1px;
   border-style: solid;
   border-color: #555;
@@ -500,17 +505,17 @@ hr {
   background-color: transparent;
   border: none;
   cursor: pointer;
-  padding: 0px;
-  margin: 0px;
+  width: 25px;
+  height: 25px;
 }
 
 .retweet-button:hover {
   color: #1DA1F2;
 }
 
-.retweet-button span {
-  width: 20px;
-  height: 20px;
+.retweet-button svg {
+  width: 25px;
+  height: 25px;
   margin-right: 5px;
 }
 
