@@ -288,7 +288,7 @@ def get_gif() -> str:
 
 
 @app.route("/submit_flit", methods=["POST"])
-@limiter.limit("4/minute")
+@limiter.limit("10/minute")
 def submit_flit() -> str | Response:
     # Get a connection to the database
 
@@ -473,7 +473,7 @@ def terms():
 # Added rate limiting so that people can only sign up 10 times a day
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
-@limiter.limit("10 per day")
+@limiter.limit("3 per day")
 def signup():
     error = None
 
