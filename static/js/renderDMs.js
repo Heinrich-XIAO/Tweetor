@@ -5,7 +5,7 @@ const url = window.location.href;
 const mainUrl = url.split('?')[0];
 const receiverHandle = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
 let dm_skip = 0;
-const dm_limit = 10;
+const dm_limit = 100;
 const dm_inc = 10;
 
 async function loadMessages() {
@@ -21,7 +21,7 @@ async function loadMessages() {
 		messageContainer.innerHTML = '';
 
 		// Insert messages in chronological order
-		data.messages.forEach(message => {
+		data.messages.slice().reverse().forEach(message => {
 			if (!data.blocked_users.includes(message.sender_handle)) {
 				const p = document.createElement('p');
 				p.textContent = `${message.sender_handle}: ${message.content}`;
@@ -29,6 +29,8 @@ async function loadMessages() {
 			}
 		});
 
+		document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+		
 		// Update pagination info
 		updatePaginationInfo();
 
