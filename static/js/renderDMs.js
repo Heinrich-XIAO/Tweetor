@@ -6,7 +6,7 @@ const mainUrl = url.split('?')[0];
 const receiverHandle = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
 let dm_skip = 0;
 const dm_limit = 100;
-const dm_inc = 10;
+const dm_inc = 100;
 
 async function loadMessages() {
 	try {
@@ -30,7 +30,7 @@ async function loadMessages() {
 		});
 
 		document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-		
+
 		// Update pagination info
 		updatePaginationInfo();
 
