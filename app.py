@@ -239,7 +239,7 @@ def get_captcha():
     
     captcha_img = Image.new('RGB', (random.randint(120, 200), 50), color=(random.randint(50, 100), 109, random.randint(30, 255)))
     d = ImageDraw.Draw(captcha_img)
-    fnt = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', random.randint(20, 34))
+    fnt = ImageFont.truetype('~/dejavu-sans-bold.ttf', random.randint(20, 34))
     d.text((10, 10), correct_captcha, fill=(255, 255, 0), font=fnt)
 
     captcha_img = captcha_img.filter(ImageFilter.BLUR)
