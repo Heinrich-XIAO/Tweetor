@@ -457,7 +457,7 @@ def users():
     current_ns_time = time.time_ns()
     handles_to_remove = []
     for handle in online_users.keys():
-        if online_users[handle] < current_ns_time - 1000000000 * 10:
+        if online_users[handle] < current_ns_time - 1000000000 * 13:
             handles_to_remove.append(handle)
     for handle in handles_to_remove:
         online_users.pop(handle)
