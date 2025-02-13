@@ -177,7 +177,7 @@ def get_flits(user_handle=None) -> Response | str:
     current_user_handle = helpers.get_user_handle()
     if "username" in session:
         blocked_handles = helpers.get_blocked_users(current_user_handle)
-        app.logger.info(f'Blocked handles: {blocked_handles}')
+        # app.logger.info(f'Blocked handles: {blocked_handles}')
 
     if abs(skip - limit) > 750:
         return jsonify({"error": "Difference between skip and limit cannot exceed 750."}), 400
