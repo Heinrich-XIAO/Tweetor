@@ -47,8 +47,11 @@ def login_required(f):
 def get_client_ip():
     if request.headers.getlist("X-Forwarded-For"):
         ip = request.headers.getlist("X-Forwarded-For")[0]
-    else:
+    elif request.remote_addr != "127.0.0.1":
         ip = request.remote_addr
+    else:
+        ip = request.headers.get('cf-connecting-ip')
+
     return ip
 
 def get_all_user_handles():
