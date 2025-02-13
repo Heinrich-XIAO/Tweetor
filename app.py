@@ -221,7 +221,6 @@ def engaged_dms() -> str | Response:
     if "handle" not in session:
         return "{\"logged_in\": false}"
     else:
-        print([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
         return jsonify([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
 
 
@@ -455,7 +454,6 @@ def settings():
 @app.route('/users', methods=['GET', 'POST'])
 @limiter.exempt
 def users():
-    print(online_users)
     current_ns_time = time.time_ns()
     handles_to_remove = []
     for handle in online_users.keys():
@@ -463,7 +461,6 @@ def users():
             handles_to_remove.append(handle)
     for handle in handles_to_remove:
         online_users.pop(handle)
-    print(online_users)
     return render_template('users.html',
         online=online_users,
         loggedIn=("handle" in session)
