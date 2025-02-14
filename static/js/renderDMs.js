@@ -21,15 +21,13 @@ async function loadMessages() {
 		messageContainer.innerHTML = '';
 
 		// Insert messages in chronological order
-		data.messages.slice().reverse().forEach(message => {
+		data.messages.forEach(message => {
 			if (!data.blocked_users.includes(message.sender_handle)) {
 				const p = document.createElement('p');
 				p.textContent = `${message.sender_handle}: ${message.content}`;
 				messageContainer.appendChild(p);
 			}
 		});
-
-		document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
 
 		// Update pagination info
 		updatePaginationInfo();
