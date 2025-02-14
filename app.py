@@ -869,7 +869,7 @@ def direct_messages(receiver_handle):
 
 
 @app.route("/api/dm/<path:receiver_handle>", methods=["GET"])
-@limiter.limit("5/second")
+@limiter.limit("10/second")
 @helpers.login_required
 def api_direct_messages(receiver_handle):
     sender_handle = session["handle"]
