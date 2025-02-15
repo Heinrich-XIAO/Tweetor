@@ -6,7 +6,6 @@ const mainUrl = url.split('?')[0];
 const receiverHandle = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
 let dm_skip = 0;
 const dm_limit = 100;
-const dm_inc = 100;
 
 async function loadMessages() {
 	try {
@@ -80,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.getElementById('prev-btn').addEventListener('click', function() {
   if (dm_skip > 0) {
-    dm_skip -= limit;
+    dm_skip -= dm_limit;
     loadMessages();
   } else {
     console.log("Cannot decrease further");
@@ -89,6 +88,6 @@ document.getElementById('prev-btn').addEventListener('click', function() {
 
 // Modify the next button click event listener
 document.getElementById('next-btn').addEventListener('click', function() {
-	dm_skip += limit;
+	dm_skip += dm_limit;
   loadMessages();
 });

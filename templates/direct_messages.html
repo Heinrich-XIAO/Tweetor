@@ -3,9 +3,6 @@
 {% block title %}Direct Messages with @{{ receiver_handle }}{% endblock %}
 
 {% block body %}
-<div id="message-container">
-  <!-- Messages will be loaded here -->
-</div>
 
 <form id="send-message-form" action="{{ url_for('submit_dm', receiver_handle=receiver_handle) }}" method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -13,6 +10,9 @@
   <button type="submit">Send</button>
 </form>
 
+<div id="message-container">
+  <!-- Messages will be loaded here -->
+</div>
 <button id="prev-btn">Previous</button>
 <button id="next-btn">Next</button>
 <span id="pagination-info">Skip: 1 | Limit: 10</span>
