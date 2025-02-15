@@ -2,7 +2,7 @@
 const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let prevRecentMessages;
 const notificationAudio = document.getElementById("notification");
-console.log(notificationAudio);
+const hasNotificationSupport = 'Notification' in window;
 
 
 function findAddedElements(oldArray, newArray) {
@@ -27,7 +27,7 @@ async function checkNotifications() {
       }
     }
     prevRecentMessages = await res.json();
-    if (Notification.permission == 'granted') {
+    if (hasNotificationSupport && Notification.permission == 'granted') {
       console.log("Notification");
       const notification = new Notification(`@${newElements[0].userHandle}`, {
         icon: '/static/logo.png',
@@ -37,9 +37,11 @@ async function checkNotifications() {
   }
 }
 
-Notification.requestPermission();
-if (Notification.permission !== 'denied') {
-  Notification.requestPermission();
+if (hasNotificationSupport) {
+	Notification.requestPermission();
+	if (Notification.permission !== 'denied') {
+		Notification.requestPermission();
+	}
 }
 
 (async () => {
