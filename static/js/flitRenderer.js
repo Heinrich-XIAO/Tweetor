@@ -149,7 +149,8 @@ renderFlits();
 
 async function renderSingleFlit(flit) {
   const flitId = flit.dataset.flitId;
-  const res = await fetch(`/api/flit?flit_id=${flitId}`);
+	const res = await fetch(`/api/flit?flit_id=${flitId}`, { cache: "force-cache" });
+
   if (await res.clone().text() == 'profane') {
     return 'profane';
   }
@@ -288,7 +289,7 @@ window.onscroll = function(ev) {
 };
 
 async function reflit(id) {
-  const res = await fetch(`/api/flit?flit_id=${id}`);
+  const res = await fetch(`/api/flit?flit_id=${id}`, { cache: "force-cache" });
   const json = await res.json();
 
   let flit = document.createElement('div');
