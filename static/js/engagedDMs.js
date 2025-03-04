@@ -15,7 +15,7 @@ async function renderDMs() {
     dmElement.classList.add("w3-bar-item");
     dmElement.classList.add("w3-button");
     dmElement.classList.add("dm_with_person");
-    dmElement.textContent = json[i].length > 7 ? json[i].slice(0, 5).concat('...') : json[i];
+    dmElement.textContent = json[i];
     dmList.appendChild(dmElement);
   }
 }

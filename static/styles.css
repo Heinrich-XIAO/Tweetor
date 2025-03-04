@@ -535,27 +535,37 @@ hr {
   background-color: var(--background, black);
 }
 
+#dm_list {
+  overflow-y: scroll;
+}
+
 .dm_with_person {
   padding-left: 5px !important;
   color: grey;
   margin-bottom: 0rem !important;
   margin-top:0rem !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* This is the media query for smaller screens */
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 1350px) {
   /* This will override the default style when the screen width is less than or equal to 600px */
-  menu {
-    width: calc(100% - 67px) !important; /* This will make the div element take up the full width of the screen */
+  .menu {
+    width: calc(60px) !important; /* This will make the div element take up the full width of the screen */
     min-width: auto !important; /* This will remove the minimum width constraint */
     float: none !important; /* This will make the div element stop floating */
-    margin-left: 60px !important;
+    /* margin-left: 60px !important; */
   }
 
   main {
-    width: calc(100% - 67px) !important; /* This will make the main element take up the full width of the screen */
+    width: calc(100% - 60px) !important; /* This will make the main element take up the full width of the screen */
     float: none !important; /* This will make the main element stop floating */
     margin-left: 60px !important;
+  }
+
+  .pages a {
+    text-align: center !important;
   }
 
   .centered-form {
@@ -695,4 +705,14 @@ li > p.image-container {
 #userProfileDetails {
 	display: flex;
 	align-items: center;
+}
+
+.lg-view {
+  display: inline-block;
+}
+
+@media screen and (max-width: 1350px) {
+  .lg-view {
+    display: none;
+  }
 }
