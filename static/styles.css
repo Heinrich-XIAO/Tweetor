@@ -654,7 +654,8 @@ main {
 	padding: 0px; 
 	margin-top: 0px; 
 	margin-bottom: 0px;
-	transform: translateY(-55px);
+  margin-right: 25px;
+	transform: translateY(-55px) !important;
 	float: right;
 }
 
