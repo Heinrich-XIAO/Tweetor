@@ -18,7 +18,7 @@ from flask import (
     jsonify,
     abort,
     send_file,
-    
+    make_response,
 )
 from flask_cors import CORS
 from flask_session import Session
@@ -269,7 +269,13 @@ def render_online() -> Response:
         online_users.pop(handle)
     if "handle" in session:
         online_users[session["handle"]] = time.time_ns()
-    return jsonify(online_users)
+
+    response = make_response(jsonify(online_users))
+
+    response.headers['Cache-Control'] = 'public, max-age=5, must-revalidate'  # Cache for 5 seconds
+    response.headers['Expires'] = time.gmtime(time.time() + 5)  # Set the expiration time to 5 seconds in the future
+
+    return response
 
 @app.route("/api/get_gif", methods=["POST"])
 @limiter.exempt
