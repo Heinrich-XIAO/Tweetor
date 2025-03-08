@@ -43,3 +43,4 @@ wtforms==3.1.2
 pillow==10.4.0
 cssmin==0.2.0
 jsmin==3.0.1
+flask_assets==2.1.0
