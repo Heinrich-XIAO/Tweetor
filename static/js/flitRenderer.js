@@ -194,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let timestamp = new Date(json.flit.timestamp.replace(/\s/g, 'T') + "Z");
       timestamp = convertUSTtoEST(timestamp);
-      console.log(timestamp, json.flit.timestamp);
       // Format the Date object
       let now = new Date();
       let formatted_timestamp;
