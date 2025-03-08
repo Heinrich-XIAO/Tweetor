@@ -564,8 +564,9 @@ hr {
     margin-left: 60px !important;
   }
 
-  .pages a {
+  .pages>a {
     text-align: center !important;
+    padding: 8px 0px !important;
   }
 
   .centered-form {
