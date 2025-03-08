@@ -110,25 +110,8 @@ def home() -> str:
     # Get a connection to the database
     db = helpers.get_db()
 
-
-    # Create a cursor to interact with the database
-    cursor = db.cursor()
-    # Check if the user is logged in and is an admin
-    if "username" in session and session["handle"] == "admin":
-        # If admin, retrieve all flits regardless of content
-        cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC")
-    else:
-        # If not admin, retrieve only non-profane flits
-        cursor.execute(
-            "SELECT * FROM flits WHERE profane_flit = 'no' ORDER BY timestamp DESC"
-        )
-
-    # Fetch the results of the SQL query
-    flits = cursor.fetchall()
-
-
     # Render the home template
-    return render_template("home.html", flits=flits, loggedIn="handle" in session)
+    return render_template("home.html", loggedIn="handle" in session)
 
 ## APIs
 @app.route("/api/handle")
@@ -182,43 +165,65 @@ def get_flits(user_handle=None) -> Response | str:
     if "username" in session:
         blocked_handles = helpers.get_blocked_users(current_user_handle)
         # app.logger.info(f'Blocked handles: {blocked_handles}')
+    
+    result = {}
 
-    if abs(skip - limit) > 750:
-        return jsonify({"error": "Difference between skip and limit cannot exceed 750."}), 400
+    if limit > 50:
+        return jsonify({"error": "No"}), 400
 
     query_params = (current_user_handle, limit, skip)
 
-    if user_handle:
-        # Sanitize the user handle to prevent SQL injection
-        sanitized_user_handle = sqlite3.connect(':memory:').execute('SELECT ?', (user_handle,)).fetchone()[0]
+    cursor.execute("SELECT MAX(id) FROM flits")
+    last_id = cursor.fetchone()[0]
+    if last_id is None:
+        last_id = 0
+    skip = last_id - skip
+
+    # if user_handle:
+    #     # Sanitize the user handle to prevent SQL injection
+    #     sanitized_user_handle = sqlite3.connect(':memory:').execute('SELECT ?', (user_handle,)).fetchone()[0]
         
-        query = """
-            SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
-            FROM flits AS f
-            LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
-            WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
-            AND f.userHandle = ?
-            ORDER BY f.id DESC 
-            LIMIT ? OFFSET ?
-        """
-        query_params = (current_user_handle, sanitized_user_handle, limit, skip)
-    else:
-        query = """
-            SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
-            FROM flits AS f
-            LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
-            WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
-            ORDER BY f.id DESC 
-            LIMIT ? OFFSET ?
-        """
+    #     query = """
+    #         SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
+    #         FROM flits AS f
+    #         LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
+    #         WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
+    #         AND f.userHandle = ?
+    #         ORDER BY f.id DESC 
+    #         LIMIT ? OFFSET ?
+    #     """
+    #     query_params = (current_user_handle, sanitized_user_handle, limit, skip)
+    # else:
+    #     query = """
+    #         SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
+    #         FROM flits AS f
+    #         LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
+    #         WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
+    #         ORDER BY f.id DESC 
+    #         LIMIT ? OFFSET ?
+    #     """
 
-    cursor.execute(query, query_params)
+    def get_flit_recursive(flit_id):
+        if flit_id in result:
+            return
+        
+        cursor.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
+        flit = cursor.fetchone()
+        if flit is None:
+            return
+        if flit["profane_flit"] == "yes":
+            return
+        flit_data = dict(flit)
+        if flit_data.get("is_reflit") == 1:
+            get_flit_recursive(flit_data.get("original_flit_id"))
+        result[flit_id] = flit_data
 
-    # Fetch the results and convert them to dictionaries
-    flits = cursor.fetchall()
-    flits_list = [dict(flit) for flit in flits]
+    for flit_id in range(skip -limit , skip):
+        get_flit_recursive(flit_id)
+    
+    flit_list = list(result.values())
+    return jsonify(flit_list)
 
-    return Response(json.dumps(flits_list), mimetype='application/json')
 @app.route("/api/engaged_dms")
 @limiter.exempt
 def engaged_dms() -> str | Response:
@@ -1150,6 +1155,44 @@ assets.register('css_all', css)
 
 js = Bundle('js/appearance.js', 'js/engagedDMs.js', 'js/flitRenderer.js', 'js/leaderboard.js', 'js/notifications.js', 'js/renderDMs.js', 'js/renderOnline.js', 'js/settings.js', filters='jsmin', output=f'dist/{get_random_hash()}.js')
 assets.register('js_all', js)
+
+@app.route("/api/flits_bulk", methods=["GET"])
+@limiter.exempt
+def flits_bulk():
+    # Get comma separated ids from the query parameter
+    ids_str = request.args.get("ids")
+    if not ids_str:
+        return jsonify({"error": "Query parameter 'ids' is required"}), 400
+    try:
+        id_list = [int(x) for x in ids_str.split(",") if x.strip()]
+    except ValueError:
+        return jsonify({"error": "Invalid id in 'ids' parameter"}), 400
+    if len(id_list) > 20:
+        return jsonify({"error": "Cannot request more than 20 flits at once"}), 400
+
+    db = helpers.get_db()
+    cursor = db.cursor()
+
+    result = {}
+
+    def get_flit_recursive(flit_id):
+        if flit_id in result:
+            return
+        
+        cursor.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
+        flit = cursor.fetchone()
+        if flit is None:
+            return
+        if flit["profane_flit"] == "yes":
+            return
+        flit_data = dict(flit)
+        if flit_data.get("is_reflit") == 1:
+            get_flit_recursive(flit_data.get("original_flit_id"))
+        result[flit_id] = flit_data
+
+    for fid in id_list:
+        get_flit_recursive(fid)
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(debug=False)

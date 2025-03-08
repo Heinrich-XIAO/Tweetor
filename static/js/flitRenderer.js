@@ -1,6 +1,8 @@
 console.log("flitRenderer.js loaded");
 let skip = 0;
-const limit = 10;
+const limit = 20;
+
+let bulkFlitCache = {};
 
 // Start the initial flits request immediately
 let initialFlitsPromise;
@@ -12,7 +14,14 @@ let initialFlitsPromise;
     const userId = path.split('/').pop();
     params += `&user=${encodeURIComponent(userId)}`;
   }
-  initialFlitsPromise = fetch(`/api/get_flits?${params}`).then(res => res.json());
+  initialFlitsPromise = fetch(`/api/get_flits?${params}`)
+    .then(res => res.json())
+    .then(json => {
+      json.forEach(flit => {
+        bulkFlitCache[flit.id] = flit;
+      });
+      return json;
+    });
 }
 
 function makeUrlsClickable(content) {
@@ -22,15 +31,14 @@ function makeUrlsClickable(content) {
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
   const usernameRegex = /\((\w+):\)/gi;
 
-const allowedImageSites = [
-  'https://.*\\.imgur\\.com/',
-  'https://.*\\.imgbb\\.com/',
-  'https://upload\\.wikimedia\\.org/',
-  'https://commons\\.wikimedia\\.org/',
-  'https://*terryfox*',
-  'https://*imgur*'
-];
-
+  const allowedImageSites = [
+    'https://.*\\.imgur\\.com/',
+    'https://.*\\.imgbb\\.com/',
+    'https://upload\\.wikimedia\\.org/',
+    'https://commons\\.wikimedia\\.org/',
+    'https://*terryfox*',
+    'https://*imgur*'
+  ];
 
   function isImageUrl(url) {
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
@@ -39,19 +47,12 @@ const allowedImageSites = [
 
   let modifiedContent = escapedContent.replace(urlRegex, function(url) {
     const element = document.createElement('a');
-
     if (allowedImageSites.some(site => new RegExp(site).test(url)) && isImageUrl(url)) {
       const imgElement = document.createElement('img');
-      imgElement.src = encodeURI(url); // Encode the URL
-
+      imgElement.src = encodeURI(url);
       imgElement.setAttribute('loading', 'lazy');
-      
-      // Set up event listeners for when the image loads
       imgElement.onload = function() {
-        // Calculate aspect ratio
         const aspectRatio = imgElement.width / imgElement.height;
-        
-        // Determine maximum dimensions
         let maxWidth = 400;
         let maxHeight = 400;
         if (aspectRatio > 1) {
@@ -59,18 +60,12 @@ const allowedImageSites = [
         } else {
           maxWidth = Math.floor(maxHeight * aspectRatio);
         }
-        
         imgElement.width = maxWidth;
         imgElement.height = maxHeight;
-        
         updateImageContainer(imgElement);
       };
-      
-      // Initial placeholder
       imgElement.alt = "Loading...";
       imgElement.className = "placeholder";
-   
-      // Wrap the <img> tag in an <a> tag
       element.href = url;
       element.target = "_blank";
       element.rel = "noopener noreferrer";
@@ -81,16 +76,13 @@ const allowedImageSites = [
       element.target = "_blank";
       element.rel = "noopener noreferrer";
     }
-    
     return element.outerHTML;
   });
 
   modifiedContent = modifiedContent.replace(usernameRegex, (match, username) => {
     return `<a href="/user/${encodeURIComponent(username)}">${username}</a>`;
   });
-
   modifiedContent = modifiedContent.replace(/<img[^>]*>/g, '<p class="image-container">$&</p>');
-
   return modifiedContent;
 }
 
@@ -99,6 +91,30 @@ function updateImageContainer(imgElement) {
   if (container) {
     container.innerHTML = `<img src="${imgElement.src}" alt="${imgElement.alt || ''}" width="${imgElement.width}" height="${imgElement.height}">`;
   }
+}
+
+// Fetch multiple flits and memoize them using GET
+async function fetchBulkFlits(ids) {
+	// only request ids not already in cache
+	let idsToFetch = ids.filter(id => !(id in bulkFlitCache));
+	if (idsToFetch.length === 0) return bulkFlitCache;
+	const query = `?ids=${idsToFetch.join(",")}`;
+	const res = await fetch('/api/flits_bulk' + query);
+	const data = await res.json();
+	// Merge new data into the cache by iterating over the object's key/value pairs
+	for (const key in data) {
+		if (Object.prototype.hasOwnProperty.call(data, key)) {
+			const flit = data[key];
+			bulkFlitCache[flit.id] = flit;
+		}
+	}
+	return bulkFlitCache;
+}
+
+// Helper to retrieve a single flit using the bulk API
+async function getBulkFlit(flitId) {
+  const bulk = await fetchBulkFlits([flitId]);
+  return bulk[flitId];
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -110,12 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return estDate;
   }
 
-  // Function to get the abbreviated month name
   function getMonthAbbreviation(date) {
-    const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ];
+    const months = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
     return months[date.getMonth()];
   }
   let isRenderingFlits = false;
@@ -140,18 +152,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch(`/api/get_flits?${params}`);
         json = await res.json();
       }
-      
+      // Add each flit to the bulk cache
+      json.forEach(flit => {
+        bulkFlitCache[flit.id] = flit;
+      });
       const flits = document.getElementById('flits');
-      for (let flitJSON of json) {
+      const flitPromises = json.map(async (flitJSON) => {
         let flit = document.createElement("div");
         flit.classList.add("flit");
-        flit = await renderFlitWithFlitJSON({"flit": flitJSON}, flit);
-        if (flit === 'profane') {
-          continue;
+        return await renderFlitWithFlitJSON({ flit: flitJSON }, flit);
+      });
+      const flitElements = await Promise.all(flitPromises);
+      flitElements.forEach(flit => {
+        if (flit !== 'profane') {
+          flits.appendChild(flit);
         }
-        flits.appendChild(flit);
-      }
-      
+      });
       checkGreenDot();
       skip += limit;
     } catch (error) {
@@ -161,21 +177,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Replace renderSingleFlit to use getBulkFlit
   async function renderSingleFlit(flit) {
     const flitId = flit.dataset.flitId;
-    const res = await fetch(`/api/flit?flit_id=${flitId}`, { cache: "force-cache" });
-
-    if (await res.clone().text() == 'profane') {
+    const data = await getBulkFlit(flitId);
+    if(data === 'profane'){
       return 'profane';
     }
-    const json = await res.json();
-    flit = renderFlitWithFlitJSON(json, flit);
-
+    const json = { flit: data };
+    await renderFlitWithFlitJSON(json, flit);
     flit.href = `/flits/${flitId}`;
     checkGreenDot();
     return flit;
   }
 
+  // In renderFlitWithFlitJSON, update the reflit branch to use getBulkFlit recursively
   async function renderFlitWithFlitJSON(json, flit) {
     if (json['flit']) {
       const flit_data_div = document.createElement('div');
@@ -194,26 +210,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let timestamp = new Date(json.flit.timestamp.replace(/\s/g, 'T') + "Z");
       timestamp = convertUSTtoEST(timestamp);
-      // Format the Date object
-      let now = new Date();
-      let formatted_timestamp;
-
       let options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'};
-      formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
+      let formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
 
       const timestampElement = document.createElement("span");
       timestampElement.innerText = formatted_timestamp;
       timestampElement.classList.add("user-handle");
 
-
-      // Append the button to the flit_data_div
       flit_data_div.appendChild(username);
       flit_data_div.innerHTML += '&#160;&#160;';
       flit_data_div.appendChild(handle);
       flit_data_div.innerHTML += '&#160;·&#160;';
       flit_data_div.appendChild(timestampElement);
       flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openModal(${json.flit.id})'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
-
 
       flit.appendChild(flit_data_div);
 
@@ -223,13 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const content = document.createElement('a');
       content.classList.add('flit-content');
       content.href = `/flits/${json.flit.id}`;
-
-      // Process the content to make URLs clickable
       const processedContent = makeUrlsClickable(json.flit.content);
-
-      // Set the innerHTML of the content element to the processed text
       content.innerHTML += processedContent;
-
       flit.appendChild(content);
       
       if (json.flit.meme_link && (localStorage.getItem('renderGifs') == 'true' || localStorage.getItem('renderGifs') == undefined)) {
@@ -245,91 +249,71 @@ document.addEventListener('DOMContentLoaded', () => {
         originalFlit.classList.add('flit');
         originalFlit.classList.add('originalFlit');
         originalFlit.dataset.flitId = json.flit.original_flit_id;
-        if (await renderSingleFlit(originalFlit) == 'profane') {
-          return 'profane';
-        };
+        const originalData = await getBulkFlit(json.flit.original_flit_id);
+        if(originalData === 'profane') return 'profane';
+        await renderFlitWithFlitJSON({ flit: originalData }, originalFlit);
         flitContentDiv.appendChild(originalFlit);
       }
 
       flit.appendChild(flitContentDiv);
 
-      // Create a button element
       let reflit_button = document.createElement("button");
       reflit_button.classList.add("retweet-button");
-
-      // Add an event listener to the button
       reflit_button.addEventListener("click", function() {
-          reflit(json.flit.id);
+        reflit(json.flit.id);
       });
-
-      // Create an icon element for the reflit button
-      icon = document.createElement("span");
+      const icon = document.createElement("span");
       icon.classList.add("iconify");
       icon.setAttribute("data-icon", "ps:retweet-1");
-
-      // Append the icon to the button
       reflit_button.appendChild(icon);
       reflit_button.style.float = 'right';
-      // Append the button to the flit
       flit_data_div.appendChild(reflit_button);
     }
+    console.log(flit);
     return flit;
   }
 
   async function renderAll() {
-    const flitsList = document.getElementsByClassName('flit');
-    for (let i = 0; i < flitsList.length; i++) {
-      renderSingleFlit(flitsList[i]);
-    }
+    const flitsList = Array.from(document.getElementsByClassName('flit'));
+    await Promise.all(flitsList.map(async (flit) => renderSingleFlit(flit)));
   }
   renderAll();
   renderFlits(); // Initial render
 
   let scrollTimeoutId;
   window.onscroll = function(ev) {
-    clearTimeout(scrollTimeoutId);
-    scrollTimeoutId = setTimeout(function() {
-      if (Math.round(window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-        renderFlits();
-      }
-    }, 150);
+    if (Math.round(window.innerHeight + window.scrollY) > document.body.offsetHeight-window.innerHeight) {
+      renderFlits();
+    }
+    console.log('scrolling');
   };
 
+  // Update the reflit() function to use getBulkFlit
   async function reflit(id) {
-    const res = await fetch(`/api/flit?flit_id=${id}`, { cache: "force-cache" });
-    const json = await res.json();
-
+    const data = await getBulkFlit(id);
+    const json = { flit: data };
     let flit = document.createElement('div');
     flit.classList.add('flit');
     flit = await renderFlitWithFlitJSON(json, flit);
     addedElements.appendChild(flit);
     const original_flit_id_input = document.getElementById('original_flit_id');
-
     original_flit_id_input.value = json.flit.id;
   }
 
   async function checkGreenDot() {
     const res = await fetch("/api/render_online");
     const data = await res.json();
-    // Get the list of online users
     const onlineUsers = Object.keys(data);
-
-    // Update the user page
     const handles = document.querySelectorAll(".user-handle");
-
     handles.forEach((handle, index) => {
       if (index % 3 != 0) {
         return;
       }
-      // Remove the green circle from the user
       const nextSibling = handle.nextSibling;
       if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && (nextSibling.style.backgroundColor === "green" || nextSibling.style.backgroundColor === "grey")) {
         nextSibling.parentNode.removeChild(nextSibling);
       }
-
-      // Check if the user is online
       if (onlineUsers.includes(handle.innerText)) {
-        // Add a green circle next to the user's handle
         const greenCircle = document.createElement("span");
         greenCircle.style.backgroundColor = "green";
         greenCircle.style.borderRadius = "50%";
@@ -339,7 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
         greenCircle.style.marginLeft = "5px";
         handle.parentNode.insertBefore(greenCircle, handle.nextSibling);
       } else {
-        // Add a green circle next to the user's handle
         const greyCircle = document.createElement("span");
         greyCircle.style.backgroundColor = "grey";
         greyCircle.style.borderRadius = "50%";
@@ -349,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         greyCircle.style.marginLeft = "5px";
         handle.parentNode.insertBefore(greyCircle, handle.nextSibling);
       }
-    })
+    });
   }
 
   window.setInterval(checkGreenDot, 5000);
