@@ -25,6 +25,7 @@ from flask_session import Session
 from flask_sitemapper import Sitemapper
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_assets import Environment, Bundle
 import helpers
 from mixpanel import Mixpanel
 from werkzeug.wrappers.response import Response
@@ -71,6 +72,9 @@ Session(app)
 DATABASE = "tweetor.db"
 staff_accounts = ["ItsMe", "Dude_Pog"]
 online_users = {}
+
+assets = Environment(app)
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1123,5 +1127,29 @@ def get_leaderboard():
     result = jsonify([{'userHandle': handle, 'score': score} for handle, score in top_results])
     
     return result
+
+
+def get_file_hash(filename):
+    hasher = hashlib.md5()
+    file_path = os.path.join(app.static_folder, filename)
+    with open(file_path, 'rb') as f:
+        while chunk := f.read(8192):
+            hasher.update(chunk)
+    return hasher.hexdigest()[:6] 
+
+
+
+def get_random_hash():
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+    hash_object = hashlib.md5(random_string.encode())
+    return hash_object.hexdigest()[:6] 
+
+css = Bundle('styles.css', filters='cssmin', output=f'dist/{get_file_hash('styles.css')}.css')
+assets.register('css_all', css)
+
+
+js = Bundle('js/appearance.js', 'js/engagedDMs.js', 'js/flitRenderer.js', 'js/leaderboard.js', 'js/notifications.js', 'js/renderDMs.js', 'js/renderOnline.js', 'js/settings.js', filters='jsmin', output=f'dist/{get_random_hash()}.js')
+assets.register('js_all', js)
+
 if __name__ == "__main__":
     app.run(debug=False)

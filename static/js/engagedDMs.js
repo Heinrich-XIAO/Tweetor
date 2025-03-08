@@ -1,23 +1,30 @@
 console.log("engagedDMs.js loaded");
 
-const dmList = document.getElementById('dm_list');
+let dmData = [];
 
-async function renderDMs() {
+async function fetchDMs() {
   const res = await fetch("/api/engaged_dms");
   const json = await res.json();
-  console.log(json);
   if (json.logged_in == false) {
     return;
   }
-  for (let i = 0; i < json.length; i++) {
+  dmData = json;
+}
+
+function renderDMs() {
+  const dmList = document.getElementById('dm_list');  // get element after DOM is loaded
+  for (let i = 0; i < dmData.length; i++) {
     const dmElement = document.createElement('a');
-    dmElement.href = `/dm/${json[i]}`;
+    dmElement.href = `/dm/${dmData[i]}`;
     dmElement.classList.add("w3-bar-item");
     dmElement.classList.add("w3-button");
     dmElement.classList.add("dm_with_person");
-    dmElement.textContent = json[i];
+    dmElement.textContent = dmData[i];
     dmList.appendChild(dmElement);
   }
 }
 
-renderDMs();
+document.addEventListener('DOMContentLoaded', async () => {
+  await fetchDMs();
+  renderDMs();
+});

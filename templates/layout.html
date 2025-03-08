@@ -4,10 +4,14 @@
   <meta charset="utf-8">
   <title>{% block title %}{% endblock %} | Tweetor</title>
   <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-  <script src="{{ url_for('static', filename='js/appearance.js') }}"></script>
+  {% assets "js_all" %}
+  <script src="{{ ASSET_URL }}"></script>
+  {% endassets %}
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <!--<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">-->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  {% assets "css_all" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}">
+  {% endassets %}
   <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png')}}">
   <meta name="keywords" content="Social Media, Tweetor">
@@ -101,10 +105,10 @@
     <source src="{{ url_for('static', filename='notification.mp3') }}" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
-  <script defer src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
+  <!-- <script defer src="{{ url_for('static', filename='js/flitRenderer.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/notifications.js') }}"></script>
   <script defer  src="{{ url_for('static', filename='js/renderOnline.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/engagedDMs.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/engagedDMs.js') }}"></script> -->
 
 </body>
 </html>

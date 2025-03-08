@@ -8,6 +8,7 @@ from flask import (
 )
 from functools import wraps
 import os
+import hashlib
 
 DATABASE = "tweetor.db"
 def get_db():

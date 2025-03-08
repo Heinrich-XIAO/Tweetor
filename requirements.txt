@@ -41,3 +41,5 @@ Flask-Wtf==1.2.1
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 wtforms==3.1.2
 pillow==10.4.0
+cssmin==0.2.0
+jsmin==3.0.1

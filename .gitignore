@@ -157,3 +157,5 @@ flask_session/
 tweetor.db
 .env
 .envvars
+
+dist-*
