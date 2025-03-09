@@ -328,19 +328,15 @@ button:hover, button:focus {
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* a.flit-username, a.flit-content {
+a.flit-username, a.flit-content {
   text-decoration: none;
   overflow: ellipsis;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-} */
+}
 
-/* a:hover.flit-username, a:hover.flit-content {
+a:hover.flit-username, a:hover.flit-content {
   text-decoration: underline;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-} */
+}
 
 .user-handle, .user-handle:hover {
   color: #555;
