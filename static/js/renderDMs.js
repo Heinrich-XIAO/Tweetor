@@ -5,66 +5,43 @@ if (window.location.pathname.startsWith('/dm/')) {
   const mainUrl = url.split('?')[0];
   const receiverHandle = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
   let dm_skip = 0;
-  const dm_limit = 100;
+  const dm_limit = 30;
+  let hasSentRequest = false;
 
   async function loadMessages() {
     try {
       const response = await fetch(`/api/dm/${receiverHandle}?skip=${dm_skip}&limit=${dm_limit}`);
-      
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
       console.log('Received data:', data);
 
       const messageContainer = document.getElementById('message-container');
-      messageContainer.innerHTML = '';
 
       // Insert messages in chronological order
       data.messages.forEach(message => {
         if (!data.blocked_users.includes(message.sender_handle)) {
-          const p = document.createElement('p');
-          p.textContent = `${message.sender_handle}: ${message.content}`;
-          messageContainer.appendChild(p);
+          // Check if the message already exists to avoid duplication
+          if (!document.getElementById(`message-${message.id}`)) {
+            const p = document.createElement('p');
+            p.id = `message-${message.id}`;
+            p.textContent = `${message.sender_handle}: ${message.content}`;
+            messageContainer.appendChild(p);
+          }
         }
       });
 
-      // Update pagination info
-      updatePaginationInfo();
-
-      // Handle pagination
+      // Handle loading more messages
       if (data.pagination.has_more) {
-        const nextBtn = document.getElementById('next-btn');
-        nextBtn.style.display = 'inline-block';
+        dm_skip += dm_limit;
       } else {
-        hideNextButton();
-      }
-
-      // Handle going back
-      if (dm_skip > 0) {
-        const prevBtn = document.getElementById('prev-btn');
-        prevBtn.style.display = 'inline-block';
-      } else {
-        hidePrevButton();
+        window.removeEventListener('scroll', handleScroll);
       }
     } catch (error) {
       console.error('Error loading messages:', error);
       showErrorMessage(messageContainer);
     }
-  }
-
-  function updatePaginationInfo() {
-    const infoSpan = document.getElementById('pagination-info');
-    infoSpan.textContent = `Current Page: ${1+Math.ceil(dm_skip / dm_limit)}`;
-  }
-
-  function hideNextButton() {
-    const nextBtn = document.getElementById('next-btn');
-    nextBtn.style.display = 'none';
-  }
-
-  function hidePrevButton() {
-    const prevBtn = document.getElementById('prev-btn');
-    prevBtn.style.display = 'none';
+    hasSentRequest = false;
   }
 
   function showErrorMessage(container) {
@@ -73,26 +50,16 @@ if (window.location.pathname.startsWith('/dm/')) {
     container.appendChild(errorMessage);
   }
 
+  function handleScroll() {
+    if (!hasSentRequest && window.innerHeight + window.scrollY >= document.body.offsetHeight-window.innerHeight/2) { 
+      hasSentRequest = true;
+      loadMessages();
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    hasSentRequest = true;
     loadMessages();
-    // Wrap the event listener assignments for prev/next buttons here
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    if(prevBtn){
-      prevBtn.addEventListener('click', function() {
-        if (dm_skip > 0) {
-          dm_skip -= dm_limit;
-          loadMessages();
-        } else {
-          console.log("Cannot decrease further");
-        }
-      });
-    }
-    if(nextBtn){
-      nextBtn.addEventListener('click', function() {
-        dm_skip += dm_limit;
-        loadMessages();
-      });
-    }
+    window.addEventListener('scroll', handleScroll);
   });
 }

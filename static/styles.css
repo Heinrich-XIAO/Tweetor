@@ -11,12 +11,14 @@ body {
   --text: black;
   --color: black;
   --background: white;
+  --background2: white;
 }
 :root[data-applied-mode="dark"] {
   color-scheme: dark;
   --text: white;
   --color: white;
   --background: black;
+  --background2: #1C1B22;
 }
 
 .iconify {
@@ -716,4 +718,10 @@ li > p.image-container {
   .lg-view {
     display: none;
   }
+}
+
+#send-message-form {
+  position: sticky;
+  top: 0;
+  background-color: var(--background2);
 }
