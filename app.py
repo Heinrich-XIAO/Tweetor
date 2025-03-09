@@ -115,7 +115,7 @@ def block_ips():
 
 @sitemapper.include()
 @app.route("/")
-@limiter.limit("30/second", override_defaults=False)
+@limiter.limit("5/second", override_defaults=True)
 def home() -> str:
     # Get a connection to the database
     db = helpers.get_db()
@@ -258,7 +258,7 @@ def get_captcha():
     
     captcha_img = Image.new('RGB', (random.randint(120, 200), 50), color=(random.randint(50, 100), 109, random.randint(30, 255)))
     d = ImageDraw.Draw(captcha_img)
-    fnt = ImageFont.truetype('~/dejavu-sans-bold.ttf', random.randint(20, 34))
+    fnt = ImageFont.truetype('dejavu-sans-bold.ttf', random.randint(20, 34))
     d.text((10, 10), correct_captcha, fill=(255, 255, 0), font=fnt)
 
     captcha_img = captcha_img.filter(ImageFilter.BLUR)
@@ -501,7 +501,7 @@ def terms():
 # Added rate limiting so that people can only sign up 10 times a day
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
-@limiter.limit("3 per day")
+@limiter.limit("20/day")
 def signup():
     error = None
 
