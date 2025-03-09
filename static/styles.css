@@ -2,6 +2,8 @@
 body {
   display: grid;
   grid-template-columns: auto; 
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 :root[data-applied-mode="light"] {
@@ -326,19 +328,19 @@ button:hover, button:focus {
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
 }
 
-.flit-username a, .flit-content a {
+/* a.flit-username, a.flit-content {
   text-decoration: none;
   overflow: ellipsis;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
+} */
 
-.flit-username a:hover, .flit-content a:hover {
+/* a:hover.flit-username, a:hover.flit-content {
   text-decoration: underline;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
+} */
 
 .user-handle, .user-handle:hover {
   color: #555;
@@ -351,12 +353,14 @@ button:hover, button:focus {
   color: #333;
   margin-bottom: 5px;
   text-decoration: none;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .flit-content {
   color: #555;
   text-decoration: none;
-  word-break: break-all;
+  word-break: break-word;
 }
 
 .flit-timestamp {
@@ -550,16 +554,15 @@ hr {
 
 /* This is the media query for smaller screens */
 @media screen and (max-width: 1350px) {
-  /* This will override the default style when the screen width is less than or equal to 600px */
+  /* This will override the default style when the screen width is less than or equal to 1350px */
   .menu {
-    width: calc(60px) !important; /* This will make the div element take up the full width of the screen */
+    width: 60px !important; /* This will make the div element take up the full width of the screen */
     min-width: auto !important; /* This will remove the minimum width constraint */
     float: none !important; /* This will make the div element stop floating */
-    /* margin-left: 60px !important; */
   }
 
   main {
-    width: calc(100% - 60px) !important; /* This will make the main element take up the full width of the screen */
+    width: calc(100vw - 60px) !important; /* This will make the main element take up the full width of the screen */
     float: none !important; /* This will make the main element stop floating */
     margin-left: 60px !important;
   }
@@ -575,7 +578,8 @@ hr {
 }
 
 main {
-  margin-left: 10%;
+  margin-left: 10vw;
+  width: 90vw;
 }
 
 /* Define a keyframes animation named fade-out */
