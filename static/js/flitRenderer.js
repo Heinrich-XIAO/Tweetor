@@ -342,7 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (Math.round(window.innerHeight + window.scrollY) > document.body.offsetHeight - window.innerHeight) {
       renderFlits();
     }
-    console.log('scrolling');
   };
   
   window.setInterval(checkGreenDot, 5000);
