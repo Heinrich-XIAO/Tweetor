@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       json.forEach(flit => {
         bulkFlitCache[flit.id] = flit;
       });
+
       const flits = document.getElementById('flits');
       const flitPromises = json.map(async (flitJSON) => {
         let flit = document.createElement("div");
@@ -163,37 +164,43 @@ document.addEventListener('DOMContentLoaded', () => {
         return await renderFlitWithFlitJSON({ flit: flitJSON }, flit);
       });
       const flitElements = await Promise.all(flitPromises);
-      flitElements.forEach(flit => {
-        if (flit !== 'profane') {
-          flits.appendChild(flit);
+
+      const maxKey = Math.max(...Object.keys(bulkFlitCache).map(Number));
+      for (let i = maxKey - skip; i > maxKey -skip - limit; i--) {
+        if (bulkFlitCache[i]) {
+          const flit = flitElements.find(flit => flit.dataset.flitId == i);
+          console.log(flit)
+          if (flit !== 'profane') {
+            flits.appendChild(flit);
+          }
         }
-      });
+      }
       checkGreenDot();
       skip += limit;
-    } catch (error) {
+        } catch (error) {
       console.error('Error fetching flits:', error);
-    } finally {
+        } finally {
       isRenderingFlits = false;
-    }
-  }
+        }
+      }
 
-  // Replace renderSingleFlit to use getBulkFlit
-  async function renderSingleFlit(flit) {
-    const flitId = flit.dataset.flitId;
-    const data = await getBulkFlit(flitId);
-    if(data === 'profane'){
+      // Replace renderSingleFlit to use getBulkFlit
+      async function renderSingleFlit(flit) {
+        const flitId = flit.dataset.flitId;
+        const data = await getBulkFlit(flitId);
+        if(data === 'profane'){
       return 'profane';
-    }
-    const json = { flit: data };
-    await renderFlitWithFlitJSON(json, flit);
-    flit.href = `/flits/${flitId}`;
-    checkGreenDot();
-    return flit;
-  }
+        }
+        const json = { flit: data };
+        await renderFlitWithFlitJSON(json, flit);
+        flit.href = `/flits/${flitId}`;
+        checkGreenDot();
+        return flit;
+      }
 
-  // In renderFlitWithFlitJSON, update the reflit branch to use getBulkFlit recursively
-  async function renderFlitWithFlitJSON(json, flit) {
-    if (json['flit']) {
+      // In renderFlitWithFlitJSON, update the reflit branch to use getBulkFlit recursively
+      async function renderFlitWithFlitJSON(json, flit) {
+        if (json['flit']) {
       const flit_data_div = document.createElement('div');
       flit_data_div.classList.add("flit-username");
       flit_data_div.classList.add("flit-timestamp");
@@ -268,8 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
       reflit_button.appendChild(icon);
       reflit_button.style.float = 'right';
       flit_data_div.appendChild(reflit_button);
+      flit.dataset.flitId = json.flit.id;
     }
-    console.log(flit);
     return flit;
   }
 

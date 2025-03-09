@@ -44,6 +44,16 @@ TENOR_SECRET = os.getenv("TENOR_SECRET")
 SIGHT_ENGINE_USER = os.getenv("SIGHT_ENGINE_USER")
 mp = Mixpanel(MIXPANEL_SECRET)
 
+# NEW: add a helper function to track events asynchronously
+import threading
+def track_event(user, event, properties):
+    def do_track():
+        try:
+            mp.track(user, event, properties)
+        except Exception as e:
+            app.logger.error(f"Mixpanel error: {e}")
+    threading.Thread(target=do_track, daemon=True).start()
+
 app = Flask(__name__)
 app.secret_key = "pigeonmast3r"
 cors = CORS(app)
@@ -218,7 +228,7 @@ def get_flits(user_handle=None) -> Response | str:
             get_flit_recursive(flit_data.get("original_flit_id"))
         result[flit_id] = flit_data
 
-    for flit_id in range(skip -limit , skip):
+    for flit_id in range(skip -limit, skip+1):
         get_flit_recursive(flit_id)
     
     flit_list = list(result.values())
@@ -357,11 +367,12 @@ def submit_flit() -> str | Response:
         return render_template("error.html", error="Don't be so technical")
     if content.lower() == "urmom" or content.lower() == "ur mom":
         return render_template("error.html", error='"ur mom" was too large for the servers to handle.')
-    
+
     cursor.execute("SELECT * FROM flits ORDER BY timestamp DESC LIMIT 1")
     latest_flit = cursor.fetchone()
 
     if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
+        print(latest_flit["content"], latest_flit["userHandle"], request.form["content"], session["handle"])
         return redirect("/")
     
     #profane word list    
@@ -408,13 +419,14 @@ def submit_flit() -> str | Response:
         db.commit()
         db.close()
 
-        # Note: you must supply the user_id who performed the event as the first parameter.
-        try:
-            mp.track(session['handle'], 'Posted', {'Flit Id': cursor.lastrowid})
-        except Exception as e:
-            app.logger.error(f"Mixpanel error: {str(e)}")
-
-
+        # Replaced inline tracking with a fire-and-forget call
+        # Original:
+        # try:
+        #     mp.track(session['handle'], 'Posted', {'Flit Id': cursor.lastrowid})
+        # except Exception as e:
+        #     app.logger.error(f"Mixpanel error: {str(e)}")
+        track_event(session['handle'], 'Posted', {'Flit Id': cursor.lastrowid})
+        
         return redirect(url_for("home"))
 
     # Check for reflit
@@ -444,11 +456,12 @@ def submit_flit() -> str | Response:
         ),
     )
 
-    try:
-        mp.track(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
-    except Exception as e:
-        app.logger.info(f"Mixpanel error: ReFlit tracking failed - {str(e)}")
-
+    # Original:
+    # try:
+    #     mp.track(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
+    # except Exception as e:
+    #     app.logger.info(f"Mixpanel error: ReFlit tracking failed - {str(e)}")
+    track_event(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
 
     db.commit()
     db.close()
