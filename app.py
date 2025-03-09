@@ -1140,7 +1140,19 @@ css = Bundle('styles.css', filters='cssmin', output=f'dist/{get_file_hash('style
 assets.register('css_all', css)
 
 
-js = Bundle('js/appearance.js', 'js/engagedDMs.js', 'js/flitRenderer.js', 'js/leaderboard.js', 'js/notifications.js', 'js/renderDMs.js', 'js/renderOnline.js', 'js/settings.js', filters='jsmin', output=f'dist/{get_random_hash()}.js')
+js = Bundle(
+    'js/appearance.js', 
+    'js/engagedDMs.js', 
+    'js/flitRenderer.js', 
+    'js/leaderboard.js', 
+    'js/notifications.js', 
+    'js/renderDMs.js', 
+    'js/renderOnline.js', 
+    'js/settings.js', 
+    'js/meme.js',  # Added meme.js to the bundle
+    filters='jsmin', 
+    output=f'dist/{get_random_hash()}.js'
+)
 assets.register('js_all', js)
 
 @app.route("/api/flits_bulk", methods=["GET"])
