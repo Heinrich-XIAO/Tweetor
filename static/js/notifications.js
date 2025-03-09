@@ -18,7 +18,7 @@ async function checkNotifications() {
       for (let i = 0; i < newElements.length; i++) {
         let flit = document.createElement("div");
         flit.classList.add("flit");
-        flit.dataset.flitId = (await res.clone().json())[i]['id'];
+        flit.dataset.flitId = newElements[i].id;
         flit = await renderSingleFlit(flit);
         flits.insertBefore(flit, flits.firstChild);
       }
