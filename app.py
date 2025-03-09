@@ -138,13 +138,10 @@ def flitAPI():
         return jsonify("Flit ID is invalid")
     db = helpers.get_db()
     c = db.cursor()
-    c.execute('SELECT * FROM flits WHERE id=?', (flit_id,))
+    c.execute('SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?', (flit_id,))
     flit = c.fetchone()
 
-    if flit is None:
-        return "profane"
-
-    if flit['profane_flit'] == 'yes':
+    if flit is None or (flit['profane_flit'] == 'yes' and not helpers.is_admin()):
         return "profane"
 
     return jsonify({
@@ -189,46 +186,20 @@ def get_flits(user_handle=None) -> Response | str:
         last_id = 0
     skip = last_id - skip
 
-    # if user_handle:
-    #     # Sanitize the user handle to prevent SQL injection
-    #     sanitized_user_handle = sqlite3.connect(':memory:').execute('SELECT ?', (user_handle,)).fetchone()[0]
-        
-    #     query = """
-    #         SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
-    #         FROM flits AS f
-    #         LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
-    #         WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
-    #         AND f.userHandle = ?
-    #         ORDER BY f.id DESC 
-    #         LIMIT ? OFFSET ?
-    #     """
-    #     query_params = (current_user_handle, sanitized_user_handle, limit, skip)
-    # else:
-    #     query = """
-    #         SELECT f.id, f.content, f.timestamp, f.userHandle, f.username, f.hashtag, f.is_reflit, f.original_flit_id, f.meme_link
-    #         FROM flits AS f
-    #         LEFT JOIN blocks AS b ON f.userHandle = b.blocked_handle AND b.blocker_handle = ?
-    #         WHERE f.profane_flit = 'no' AND (b.blocked_handle IS NULL)
-    #         ORDER BY f.id DESC 
-    #         LIMIT ? OFFSET ?
-    #     """
-
     def get_flit_recursive(flit_id):
         if flit_id in result:
             return
         
-        cursor.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
+        cursor.execute("SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?", (flit_id,))
         flit = cursor.fetchone()
-        if flit is None:
-            return
-        if flit["profane_flit"] == "yes":
+        if flit is None or (flit["profane_flit"] == "yes" and not helpers.is_admin()):
             return
         flit_data = dict(flit)
         if flit_data.get("is_reflit") == 1:
             get_flit_recursive(flit_data.get("original_flit_id"))
         result[flit_id] = flit_data
 
-    for flit_id in range(skip -limit, skip+1):
+    for flit_id in range(skip - limit, skip + 1):
         get_flit_recursive(flit_id)
     
     flit_list = list(result.values())
@@ -679,14 +650,17 @@ def singleflit(flit_id: str) -> str | Response:
     c = conn.cursor()
 
     # Retrieve the specified flit's information from the database
-    c.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
+    c.execute("SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?", (flit_id,))
     flit = c.fetchone()
+
+    if flit and (flit["profane_flit"] == "yes" and not helpers.is_admin()):
+        return redirect("/")
 
     if flit:
         original_flit = None
         if flit["is_reflit"] == 1:
             # Retrieve the original flit's information if this flit is a reflit
-            c.execute("SELECT * FROM flits WHERE id = ?", (flit["original_flit_id"],))
+            c.execute("SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id = ?", (flit["original_flit_id"],))
             original_flit = c.fetchone()
 
         # Render the template with the flit's information
@@ -1026,8 +1000,8 @@ def mute(handle) -> str:
 
 
 @app.route("/unmute/<handle>")
-@limiter.exempt
-@helpers.admin_required
+def unmute(handle) -> str:
+    muted.remove(handle)
 def unmute(handle) -> str:
     muted.remove(handle)
 
@@ -1192,11 +1166,9 @@ def flits_bulk():
         if flit_id in result:
             return
         
-        cursor.execute("SELECT * FROM flits WHERE id=?", (flit_id,))
+        cursor.execute("SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?", (flit_id,))
         flit = cursor.fetchone()
-        if flit is None:
-            return
-        if flit["profane_flit"] == "yes":
+        if flit is None or (flit["profane_flit"] == "yes" and not helpers.is_admin()):
             return
         flit_data = dict(flit)
         if flit_data.get("is_reflit") == 1:
