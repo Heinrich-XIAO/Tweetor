@@ -1,0 +1,53 @@
+[project]
+name = "tweetor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "blinker==1.6.2",
+    "cachelib==0.10.2",
+    "certifi==2024.7.4",
+    "charset-normalizer==3.3.0",
+    "click==8.1.7",
+    "Deprecated==1.2.14",
+    "Flask==2.3.3",
+    "Flask-Cors==5.0.0",
+    "Flask-Limiter==3.5.0",
+    "Flask-Session==0.5.0",
+    "flask-sitemapper==1.6.2",
+    "gevent==24.10.1",
+    "gevent-websocket==0.10.1",
+    "greenlet==3.1.1",
+    "idna==3.7",
+    "importlib-resources==6.1.0",
+    "itsdangerous==2.1.2",
+    "Jinja2==3.1.6",
+    "limits==3.6.0",
+    "markdown-it-py==3.0.0",
+    "MarkupSafe==2.1.3",
+    "mdurl==0.1.2",
+    "mixpanel==4.10.0",
+    "ordered-set==4.1.0",
+    "packaging==23.2",
+    "Pygments==2.16.1",
+    "python-dotenv==1.0.0",
+    "requests==2.32.0",
+    "rich==13.6.0",
+    "sightengine==1.4.0",
+    "six==1.16.0",
+    "typing_extensions==4.8.0",
+    "urllib3==2.2.2",
+    "Werkzeug==3.0.6", # pinned by Snyk
+    "wrapt==1.15.0",
+    "zope.event==5.0",
+    "zope.interface==6.0",
+    "psycopg2-binary",
+    "Flask-Wtf==1.2.1",
+    "wtforms==3.1.2",
+    "pillow==10.4.0",
+    "cssmin==0.2.0",
+    "jsmin==3.0.1",
+    "flask_assets==2.1.0",
+    "Flask-SocketIO==5.5.1", 
+]

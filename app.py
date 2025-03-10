@@ -1143,7 +1143,7 @@ def get_random_hash():
     hash_object = hashlib.md5(random_string.encode())
     return hash_object.hexdigest()[:6] 
 
-css = Bundle('styles.css', filters='cssmin', output=f'dist/{get_file_hash('styles.css')}.css')
+css = Bundle('styles.css', filters='cssmin', output=f'dist/{get_file_hash("styles.css")}.css')
 assets.register('css_all', css)
 
 
