@@ -725,3 +725,12 @@ li > p.image-container {
   top: 0;
   background-color: var(--background2);
 }
+
+.dm-timestamp {
+  right: 10px;
+  position: absolute;
+}
+
+#message-container>p {
+  margin-right: 100px;
+}
