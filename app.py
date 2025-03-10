@@ -23,6 +23,7 @@ from flask import (
 from flask_cors import CORS
 from flask_session import Session
 from flask_sitemapper import Sitemapper
+from flask_minify import minify, decorators
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_assets import Environment, Bundle
@@ -76,6 +77,8 @@ limiter = Limiter(
      key_func=helpers.get_client_ip,
     default_limits=["900 per day", "1 per second"]
 )
+
+minify(app=app, html=True, js=True, cssless=True) 
 
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False

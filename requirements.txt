@@ -25,7 +25,7 @@ ordered-set==4.1.0
 packaging==23.2
 Pygments==2.16.1
 python-dotenv==1.0.0
-requests==2.32.0
+requests==2.32.3
 rich==13.6.0
 sightengine==1.4.0
 six==1.16.0
@@ -45,3 +45,4 @@ cssmin==0.2.0
 jsmin==3.0.1
 flask_assets==2.1.0
 Flask-SocketIO==5.5.1
+flask-minify==0.49
