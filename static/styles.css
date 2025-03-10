@@ -734,3 +734,7 @@ li > p.image-container {
 #message-container>p {
   margin-right: 100px;
 }
+
+#users {
+  margin-left: 10px;
+}
