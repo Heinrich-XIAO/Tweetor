@@ -4,12 +4,11 @@
   <meta charset="utf-8">
   <title>{% block title %}{% endblock %} | Tweetor</title>
   <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   {% assets "js_all" %}
   <script src="{{ ASSET_URL }}"></script>
   {% endassets %}
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-  <!--<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
   {% assets "css_all" %}
   <link rel="stylesheet" href="{{ ASSET_URL }}">
   {% endassets %}
