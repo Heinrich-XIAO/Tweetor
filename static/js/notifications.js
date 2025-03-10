@@ -40,13 +40,10 @@ if (hasNotificationSupport) {
 	}
 }
 
+socket.on('new_flit', checkNotifications);
+
 (async () => {
   let res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`);
   prevRecentMessages = await res.json();
-
-  res = await fetch(`/api/handle`);
-  if (localStorage.getItem('notifications') == 'true' || localStorage.getItem('notifications') == undefined && (await res.text()) != 'Not Logged In') {
-    window.setInterval(checkNotifications, 5000);
-  }
 })();
 

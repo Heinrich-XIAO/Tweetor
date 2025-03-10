@@ -36,6 +36,7 @@ import re
 from flask_wtf.csrf import CSRFProtect
 import json
 from io import BytesIO
+from flask_socketio import SocketIO, emit
 load_dotenv()
 
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
@@ -56,6 +57,7 @@ def track_event(user, event, properties):
 
 app = Flask(__name__)
 app.secret_key = "pigeonmast3r"
+socketio = SocketIO(app)
 cors = CORS(app)
 csrf = CSRFProtect(app)
 if not app.config.get('TESTING'):
@@ -343,7 +345,6 @@ def submit_flit() -> str | Response:
     latest_flit = cursor.fetchone()
 
     if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
-        print(latest_flit["content"], latest_flit["userHandle"], request.form["content"], session["handle"])
         return redirect("/")
     
     #profane word list    
@@ -397,6 +398,7 @@ def submit_flit() -> str | Response:
         # except Exception as e:
         #     app.logger.error(f"Mixpanel error: {str(e)}")
         track_event(session['handle'], 'Posted', {'Flit Id': cursor.lastrowid})
+        socketio.emit('new_flit')
         
         return redirect(url_for("home"))
 
@@ -433,6 +435,7 @@ def submit_flit() -> str | Response:
     # except Exception as e:
     #     app.logger.info(f"Mixpanel error: ReFlit tracking failed - {str(e)}")
     track_event(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
+    socketio.emit('new_flit')
 
     db.commit()
     db.close()
@@ -1141,6 +1144,7 @@ assets.register('css_all', css)
 
 
 js = Bundle(
+    'js/socket.js',
     'js/appearance.js', 
     'js/engagedDMs.js', 
     'js/flitRenderer.js', 
@@ -1149,7 +1153,7 @@ js = Bundle(
     'js/renderDMs.js', 
     'js/renderOnline.js', 
     'js/settings.js', 
-    'js/meme.js',  # Added meme.js to the bundle
+    'js/meme.js',
     filters='jsmin', 
     output=f'dist/{get_random_hash()}.js'
 )
@@ -1191,5 +1195,20 @@ def flits_bulk():
         get_flit_recursive(fid)
     return jsonify(result)
 
+@app.route("/api/send", methods=["GET", "POST"])
+def send_message():
+    if request.method == "POST":
+        data = request.json
+        if not data or 'message' not in data:
+            return jsonify({"error": "Message is required"}), 400
+        message = data['message']
+    else:
+        message = request.args.get('message')
+        if not message:
+            return jsonify({"error": "Message is required"}), 400
+
+    socketio.emit('log_message', {'message': message})
+    return jsonify({"status": "Message sent"}), 200
+
 if __name__ == "__main__":
-    app.run(debug=False)
+    socketio.run(app, debug=False)
