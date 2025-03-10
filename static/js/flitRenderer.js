@@ -299,11 +299,12 @@ async function reflit(id) {
   original_flit_id_input.value = json.flit.id;
 }
 
-// Global: checkGreenDot function
 async function checkGreenDot() {
-  const res = await fetch("/api/render_online");
-  const data = await res.json();
-  const onlineUsers = Object.keys(data);
+  const onlineUsers = await fetch('/api/render_online').then(res => res.json());
+  updateGreenDots(Object.keys(onlineUsers));
+}
+
+async function updateGreenDots(onlineUsers) {
   const handles = document.querySelectorAll(".user-handle");
   handles.forEach((handle, index) => {
     if (index % 3 !== 0) return;
@@ -334,6 +335,10 @@ async function checkGreenDot() {
   });
 }
 
+socket.on('online_update', function(online) {
+  updateGreenDots(Object.keys(online));
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   renderFlits(); // Initial render
@@ -343,6 +348,4 @@ document.addEventListener('DOMContentLoaded', () => {
       renderFlits();
     }
   };
-  
-  window.setInterval(checkGreenDot, 5000);
 });

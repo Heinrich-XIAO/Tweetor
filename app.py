@@ -252,21 +252,7 @@ def get_captcha():
 @app.route("/api/render_online")
 @limiter.exempt
 def render_online() -> Response:
-    current_ns_time = time.time_ns()
-    handles_to_remove = []
-    for handle in online_users.keys():
-        if online_users[handle] < current_ns_time - 1000000000 * 13:
-            handles_to_remove.append(handle)
-    for handle in handles_to_remove:
-        online_users.pop(handle)
-    if "handle" in session:
-        online_users[session["handle"]] = time.time_ns()
-
     response = make_response(jsonify(online_users))
-
-    response.headers['Cache-Control'] = 'public, max-age=5, must-revalidate'  # Cache for 5 seconds
-    response.headers['Expires'] = time.gmtime(time.time() + 5)  # Set the expiration time to 5 seconds in the future
-
     return response
 
 @app.route("/api/get_gif", methods=["POST"])
@@ -456,12 +442,6 @@ def settings():
 @limiter.exempt
 def users():
     current_ns_time = time.time_ns()
-    handles_to_remove = []
-    for handle in online_users.keys():
-        if online_users[handle] < current_ns_time - 1000000000 * 13:
-            handles_to_remove.append(handle)
-    for handle in handles_to_remove:
-        online_users.pop(handle)
     return render_template('users.html',
         online=online_users,
         loggedIn=("handle" in session)
@@ -1155,9 +1135,9 @@ js = Bundle(
     'js/leaderboard.js', 
     'js/notifications.js', 
     'js/renderDMs.js', 
-    'js/renderOnline.js', 
     'js/settings.js', 
     'js/meme.js',
+    'js/users.js',
     filters='jsmin', 
     output=f'dist/{get_random_hash()}.js'
 )
@@ -1213,6 +1193,18 @@ def send_message():
 
     socketio.emit('log_message', {'message': message})
     return jsonify({"status": "Message sent"}), 200
+
+@socketio.on('connect')
+def handle_connect():
+    if "handle" in session:
+        online_users[session["handle"]] = time.time_ns()
+    emit('online_update', online_users, broadcast=True)
+    
+@socketio.on('disconnect')
+def handle_disconnect():
+    if "handle" in session:
+        online_users.pop(session["handle"], None)
+    emit('online_update', online_users, broadcast=True)
 
 if __name__ == "__main__":
     socketio.run(app, debug=False)
