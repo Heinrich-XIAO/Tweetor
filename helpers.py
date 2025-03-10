@@ -19,22 +19,20 @@ def get_db():
 def get_engaged_direct_messages(user_handle):
     db = get_db()
     cursor = db.cursor()
-
     cursor.execute(
         """
-        SELECT DISTINCT receiver_handle FROM direct_messages
-        WHERE sender_handle = ?
-        UNION
-        SELECT DISTINCT sender_handle FROM direct_messages
-        WHERE receiver_handle = ?
-    """,
-        (user_handle, user_handle),
+        SELECT engaged_handle, MAX(timestamp) AS last_ts FROM (
+            SELECT receiver_handle AS engaged_handle, timestamp FROM direct_messages WHERE sender_handle = ?
+            UNION ALL
+            SELECT sender_handle AS engaged_handle, timestamp FROM direct_messages WHERE receiver_handle = ?
+        )
+        GROUP BY engaged_handle
+        ORDER BY last_ts DESC;
+        """,
+        (user_handle, user_handle)
     )
-
     engaged_dms = cursor.fetchall()
-
     db.commit()
-
     return engaged_dms
 
 def login_required(f):
