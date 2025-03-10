@@ -113,5 +113,50 @@ if (window.location.pathname.startsWith('/dm/')) {
     hasSentRequest = true;
     loadMessages();
     window.addEventListener('scroll', handleScroll);
+
+    const sendMessageForm = document.getElementById('send-message-form');
+    if (sendMessageForm) {
+      sendMessageForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(sendMessageForm);
+        try {
+          const response = await fetch(sendMessageForm.action, {
+            method: 'POST',
+            body: formData
+          });
+          sendMessageForm.reset();
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          const messageContainer = document.getElementById('message-container');
+          const p = document.createElement('p');
+          p.id = `message-${data.id}`;
+          
+          const timestampData = formatTimestamp(data.timestamp);
+          const timestampSpan = document.createElement('span');
+          timestampSpan.style.fontWeight = 'lighter';
+          timestampSpan.style.marginLeft = '10px';
+          timestampSpan.classList.add('dm-timestamp');
+          timestampSpan.textContent = timestampData.display;
+          timestampSpan.title = timestampData.full;
+          p.appendChild(timestampSpan);
+          
+          const b = document.createElement('b');
+          b.textContent = data.sender_handle;
+          p.appendChild(b);
+          
+          const spaceSpan = document.createElement('span');
+          spaceSpan.textContent = ' ';
+          p.appendChild(spaceSpan);
+          
+          const contentSpan = document.createElement('span');
+          contentSpan.textContent = data.content;
+          p.appendChild(contentSpan);
+          
+          messageContainer.prepend(p);
+        } catch (error) {
+          console.error('Error sending message:', error);
+        }
+      });
+    }
   });
 }

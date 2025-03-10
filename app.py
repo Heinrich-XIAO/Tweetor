@@ -292,7 +292,6 @@ def submit_flit() -> str | Response:
 
     db = helpers.get_db()
     user_agent = request.headers.get('User-Agent')
-    app.logger.info(f'User Agent: {user_agent}')
     common_browsers = [
         'Mozilla', 
         'Chrome',
@@ -799,9 +798,6 @@ def is_profanity(text):
         app.logger.info("API call failed due to usage limit or another error.")
         return "failure"  # Explicitly set result to "failure"
     
-    app.logger.info(result)
-    app.logger.info(response)
-    
     return result
 
     
@@ -955,16 +951,16 @@ def submit_dm(receiver_handle) -> str | Response:
     
     # Check if SightEngine flagged content as profane
     if (
-            isinstance(sightengine_result, dict)
-            and sightengine_result.get("status") == "success"
-            and len(sightengine_result.get("profanity", {}).get("matches", [])) > 0
+        isinstance(sightengine_result, dict)
+        and sightengine_result.get("status") == "success"
+        and len(sightengine_result.get("profanity", {}).get("matches", [])) > 0
     ):
         profane_dm = "yes"
         return render_template("error.html", error="Do you really think that's appropriate?")
     
     # If SightEngine did not flag content as profane, perform manual check
     content_words = content.lower().strip().split()
-    
+
     for word in profane_words_list:
         if word.lower() in content_words:
             profane_dm = "yes"
@@ -977,19 +973,27 @@ def submit_dm(receiver_handle) -> str | Response:
         """
         INSERT INTO direct_messages (sender_handle, receiver_handle, content, profane_dm)
         VALUES (?, ?, ?, ?)
-    """,
+        """,
         (sender_handle, receiver_handle, content, profane_dm),
     )
 
     db.commit()
-
-    return redirect(
-        url_for(
-            "direct_messages",
-            receiver_handle=receiver_handle,
-            loggedIn="handle" in session,
-        )
+    dm_id = cursor.lastrowid
+    cursor.execute(
+        "SELECT id, sender_handle, receiver_handle, content, timestamp FROM direct_messages WHERE id = ?",
+        (dm_id,)
     )
+    message = cursor.fetchone()
+    return jsonify({
+        "id": message["id"],
+        "sender_handle": session["handle"],
+        "receiver_handle": receiver_handle,
+        "content": content,
+        "timestamp": message["timestamp"],
+        "profane_dm": profane_dm
+    })
+
+
 
 # Muting and unmuting I dont know who put this here but it does nothing i think
 
