@@ -33,12 +33,11 @@ async function checkNotifications() {
   }
 }
 
-if (hasNotificationSupport) {
-	Notification.requestPermission();
-	if (Notification.permission !== 'denied') {
-		Notification.requestPermission();
-	}
-}
+document.addEventListener('click', () => {
+  if (hasNotificationSupport && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+}, { once: true });
 
 socket.on('new_flit', checkNotifications);
 
