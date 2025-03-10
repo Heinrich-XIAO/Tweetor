@@ -25,7 +25,20 @@ if (window.location.pathname.startsWith('/dm/')) {
           if (!document.getElementById(`message-${message.id}`)) {
             const p = document.createElement('p');
             p.id = `message-${message.id}`;
-            p.textContent = `${message.sender_handle}: ${message.content}`;
+            
+            const b = document.createElement('b');
+            b.textContent = message.sender_handle;
+            p.appendChild(b);
+            
+            // Use a span for the colon and space, then a separate span for the message content.
+            const spaceSpan = document.createElement('span');
+            spaceSpan.textContent = ' ';
+            p.appendChild(spaceSpan);
+            
+            const contentSpan = document.createElement('span');
+            contentSpan.textContent = message.content;
+            p.appendChild(contentSpan);
+            
             messageContainer.appendChild(p);
           }
         }
