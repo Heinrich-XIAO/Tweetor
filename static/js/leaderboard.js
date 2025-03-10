@@ -1,5 +1,3 @@
-console.log("Leaderboard.js loaded");
-
 if (window.location.pathname === '/leaderboard') {
   const leaderboardPromise = fetch("/api/leaderboard").then(res => res.json());
 

@@ -1,4 +1,3 @@
-console.log("flitRenderer.js loaded");
 let skip = 0;
 const limit = 20;
 

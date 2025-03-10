@@ -1,5 +1,3 @@
-console.log("engagedDMs.js loaded");
-
 let dmData = [];
 
 async function fetchDMs() {

@@ -1,5 +1,3 @@
-console.log("renderDMs.js loaded");
-
 if (window.location.pathname.startsWith('/dm/')) {
   const url = window.location.href;
   const mainUrl = url.split('?')[0];

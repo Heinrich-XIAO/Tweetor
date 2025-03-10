@@ -1,5 +1,3 @@
-console.log("Settings.js loaded");
-
 if (window.location.pathname === '/settings') {
   document.addEventListener('DOMContentLoaded', () => {
     const theme = document.getElementById("theme_input");

@@ -1,4 +1,3 @@
-console.log("users.js loaded");
 if (window.location.pathname === '/users') {
     socket.on('online_update', function(online) {
         const userslist = document.getElementById('users-list');
