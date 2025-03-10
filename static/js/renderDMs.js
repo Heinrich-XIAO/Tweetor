@@ -41,13 +41,10 @@ if (window.location.pathname.startsWith('/dm/')) {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
-
       const messageContainer = document.getElementById('message-container');
 
-      // Insert messages in chronological order
       data.messages.forEach(message => {
         if (!data.blocked_users.includes(message.sender_handle)) {
-          // Check if the message already exists to avoid duplication
           if (!document.getElementById(`message-${message.id}`)) {
             const p = document.createElement('p');
             p.id = `message-${message.id}`;
@@ -61,12 +58,10 @@ if (window.location.pathname.startsWith('/dm/')) {
             timestampSpan.title = timestampData.full;
             p.appendChild(timestampSpan);
             
-            
             const b = document.createElement('b');
             b.textContent = message.sender_handle;
             p.appendChild(b);
             
-            // Use a span for the colon and space, then a separate span for the message content.
             const spaceSpan = document.createElement('span');
             spaceSpan.textContent = ' ';
             p.appendChild(spaceSpan);
@@ -80,7 +75,6 @@ if (window.location.pathname.startsWith('/dm/')) {
         }
       });
 
-      // Handle loading more messages
       if (data.pagination.has_more) {
         dm_skip += dm_limit;
       } else {

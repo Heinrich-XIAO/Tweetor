@@ -3,7 +3,6 @@ const limit = 20;
 
 let bulkFlitCache = {};
 
-// Start the initial flits request immediately
 let initialFlitsPromise;
 {
   const url = new URL(window.location.href);
@@ -92,15 +91,12 @@ function updateImageContainer(imgElement) {
   }
 }
 
-// Fetch multiple flits and memoize them using GET
 async function fetchBulkFlits(ids) {
-	// only request ids not already in cache
 	let idsToFetch = ids.filter(id => !(id in bulkFlitCache));
 	if (idsToFetch.length === 0) return bulkFlitCache;
 	const query = `?ids=${idsToFetch.join(",")}`;
 	const res = await fetch('/api/flits_bulk' + query);
 	const data = await res.json();
-	// Merge new data into the cache by iterating over the object's key/value pairs
 	for (const key in data) {
 		if (Object.prototype.hasOwnProperty.call(data, key)) {
 			const flit = data[key];
@@ -110,26 +106,22 @@ async function fetchBulkFlits(ids) {
 	return bulkFlitCache;
 }
 
-// Helper to retrieve a single flit using the bulk API
 async function getBulkFlit(flitId) {
   const bulk = await fetchBulkFlits([flitId]);
   return bulk[flitId];
 }
 
-// Global: convert UST to EST
 function convertUSTtoEST(date) {
   const ustDate = new Date(date);
   const estDate = new Date(ustDate.toLocaleString('en-US', { timeZone: 'America/New_York' }));
   return estDate;
 }
 
-// Global: get month abbreviation if needed
 function getMonthAbbreviation(date) {
   const months = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
   return months[date.getMonth()];
 }
 
-// Global: renderFlitWithFlitJSON (same implementation)
 async function renderFlitWithFlitJSON(json, flit) {
   if (json['flit']) {
     const flit_data_div = document.createElement('div');
@@ -211,7 +203,6 @@ async function renderFlitWithFlitJSON(json, flit) {
   return flit;
 }
 
-// Global: renderSingleFlit (already global from previous changes)
 async function renderSingleFlit(flit) {
   const flitId = flit.dataset.flitId;
   const data = await getBulkFlit(flitId);
@@ -225,7 +216,6 @@ async function renderSingleFlit(flit) {
   return flit;
 }
 
-// Global: renderFlits function
 async function renderFlits() {
   if (renderFlits.isRendering) return;
   renderFlits.isRendering = true;
@@ -279,13 +269,11 @@ async function renderFlits() {
   }
 }
 
-// Global: renderAll function
 async function renderAll() {
   const flitsList = Array.from(document.getElementsByClassName('flit'));
   await Promise.all(flitsList.map(async (flit) => renderSingleFlit(flit)));
 }
 
-// Global: reflit (now queries DOM elements on call)
 async function reflit(id) {
   const data = await getBulkFlit(id);
   const json = { flit: data };
@@ -340,7 +328,7 @@ socket.on('online_update', function(online) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderAll();
-  renderFlits(); // Initial render
+  renderFlits();
   
   window.onscroll = function(ev) {
     if (Math.round(window.innerHeight + window.scrollY) > document.body.offsetHeight - window.innerHeight) {

@@ -10,7 +10,7 @@ async function fetchDMs() {
 }
 
 function renderDMs() {
-  const dmList = document.getElementById('dm_list');  // get element after DOM is loaded
+  const dmList = document.getElementById('dm_list');
   for (let i = 0; i < dmData.length; i++) {
     const dmElement = document.createElement('a');
     dmElement.href = `/dm/${dmData[i]}`;

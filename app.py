@@ -46,7 +46,6 @@ TENOR_SECRET = os.getenv("TENOR_SECRET")
 SIGHT_ENGINE_USER = os.getenv("SIGHT_ENGINE_USER")
 mp = Mixpanel(MIXPANEL_SECRET)
 
-# NEW: add a helper function to track events asynchronously
 import threading
 def track_event(user, event, properties):
     def do_track():
@@ -71,7 +70,6 @@ app.config["CORS_HEADERS"] = "Content-Type"
 sitemapper = Sitemapper()
 sitemapper.init_app(app)
 
-# Rate limiting
 limiter = Limiter(
     app=app,
      key_func=helpers.get_client_ip,
@@ -80,7 +78,6 @@ limiter = Limiter(
 
 minify(app=app, html=True, js=True, cssless=True) 
 
-# Set up the session object
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
@@ -98,7 +95,6 @@ used_captchas = []
 @app.before_request
 @limiter.exempt
 def block_ips():
-    # Get the client's IP address
     ip = helpers.get_client_ip()
     
     with open('blocklist.txt', 'r') as f:
@@ -110,11 +106,8 @@ def block_ips():
         patterns.append(pattern)
     for pattern in patterns:
         if pattern.match(ip):
-            # Abort the request with a 403 Forbidden error
             abort(403)
-    # Check if the IP starts with "54"
     if ip.startswith("54"):
-        # Abort the request with a 403 Forbidden error
         abort(403)
 
 
@@ -122,10 +115,7 @@ def block_ips():
 @app.route("/")
 @limiter.limit("5/second", override_defaults=True)
 def home() -> str:
-    # Get a connection to the database
     db = helpers.get_db()
-
-    # Render the home template
     return render_template("home.html", loggedIn="handle" in session)
 
 ## APIs
@@ -162,7 +152,6 @@ def get_flits(user_handle=None) -> Response | str:
     db = helpers.get_db()
     cursor = db.cursor()
     user_handle = request.args.get("user")
-    # Validate skip and limit parameters
     if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
         return "either skip or limit is not an integer", 400
 
@@ -176,7 +165,6 @@ def get_flits(user_handle=None) -> Response | str:
     current_user_handle = helpers.get_user_handle()
     if "username" in session:
         blocked_handles = helpers.get_blocked_users(current_user_handle)
-        # app.logger.info(f'Blocked handles: {blocked_handles}')
     
     result = {}
 
@@ -219,8 +207,6 @@ def engaged_dms() -> str | Response:
         return jsonify([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
 
 
-# Assuming you have set up your Flask app and session correctly elsewhere in your application
-
 @app.route("/api/get_captcha")
 @limiter.limit("8/minute", override_defaults=False)
 def get_captcha():
@@ -230,7 +216,7 @@ def get_captcha():
             break
     
     session['correct_captcha'] = correct_captcha
-    session.modified = True  # Mark the session as modified
+    session.modified = True
     
     captcha_img = Image.new('RGB', (random.randint(120, 200), 50), color=(random.randint(50, 100), 109, random.randint(30, 255)))
     d = ImageDraw.Draw(captcha_img)
@@ -270,15 +256,10 @@ def get_gif() -> str:
         }).json()
     return "no json was provided"
 
-#Helper function for logging ips, becuase muh telematry
-
-
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("10/minute")
 def submit_flit() -> str | Response:
-    # Get a connection to the database
-
     db = helpers.get_db()
     user_agent = request.headers.get('User-Agent')
     common_browsers = [
@@ -293,31 +274,24 @@ def submit_flit() -> str | Response:
         'MSIE', 
         'Trident',
         'Gecko',  
-        'Presto',  # Used by (old) Opera
+        'Presto'
     ]
     
-    # Check if the User-Agent contains any of the common browser substrings
     if not user_agent or not any(browser in user_agent for browser in common_browsers):
         return "Unauthorized", 401
 
-    # Create a cursor to interact with the database
     cursor = db.cursor()
-    #muh telematry
     client_ip = helpers.get_client_ip()
 
-    # Extract form data for the new flit
     content = str(request.form["content"])
     meme_url = request.form["meme_link"]
 
-    # Validate meme URL format
     if not meme_url.startswith("https://media.tenor.com/") and meme_url != "":
         return render_template("error.html", error="Why is this meme not from tenor?")
 
-    # Check if the user is muted
     if session.get("username") in muted:
         return render_template("error.html", error="You were muted.")
 
-    # Check for various content validation conditions
     if content.strip() == "":
         return render_template("error.html", error="Message was blank.")
     if len(content) > 300:
@@ -335,13 +309,10 @@ def submit_flit() -> str | Response:
     if latest_flit and latest_flit["content"] == request.form["content"] and latest_flit["userHandle"] == session["handle"]:
         return redirect("/")
     
-    #profane word list    
     with open('profane_words.json') as f:
         profane_words_list = json.load(f)
         sightengine_result = is_profanity(content)
     
-    # Check if SightEngine flagged content as profane
-
     if (
             isinstance(sightengine_result, dict)
             and sightengine_result.get("status") == "success"
@@ -349,7 +320,6 @@ def submit_flit() -> str | Response:
     ):
         return render_template("error.html", error="Do you really think that's appropriate?")
     
-    # If SightEngine did not flag content as profane, perform manual check
     profane_flit = "no"
     content_words = content.lower().strip().split()
     
@@ -358,10 +328,7 @@ def submit_flit() -> str | Response:
             profane_flit = "yes"
             return render_template("error.html", error="Do you really think that's appropriate?")
     
-        # Check if the original_flit_id field is present in the form data
     if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
-        # Insert the new flit into the database
-# Insert the new flit into the database including the IP address
         cursor.execute(
             "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -379,29 +346,20 @@ def submit_flit() -> str | Response:
         db.commit()
         db.close()
 
-        # Replaced inline tracking with a fire-and-forget call
-        # Original:
-        # try:
-        #     mp.track(session['handle'], 'Posted', {'Flit Id': cursor.lastrowid})
-        # except Exception as e:
-        #     app.logger.error(f"Mixpanel error: {str(e)}")
         track_event(session['handle'], 'Posted', {'Flit Id': cursor.lastrowid})
         socketio.emit('new_flit')
         
         return redirect(url_for("home"))
 
-    # Check for reflit
     is_reflit = False
-    original_flit_id = request.form.get("original_flit_id")  # Get original_flit_id from form data
+    original_flit_id = request.form.get("original_flit_id")
     if original_flit_id is not None:
-        # Look for the original flit in the database
         cursor.execute("SELECT id FROM flits WHERE id = ?", (original_flit_id,))
         original_flit = cursor.fetchone()
 
-        if original_flit:  # If the original flit exists
+        if original_flit:
             is_reflit = True
 
-    # Insert the reflit or empty flit into the database
     cursor.execute(
         "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
@@ -417,11 +375,6 @@ def submit_flit() -> str | Response:
         ),
     )
 
-    # Original:
-    # try:
-    #     mp.track(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
-    # except Exception as e:
-    #     app.logger.info(f"Mixpanel error: ReFlit tracking failed - {str(e)}")
     track_event(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
     socketio.emit('new_flit')
 
@@ -440,7 +393,6 @@ def settings():
     return render_template('settings.html',
         loggedIn=("handle" in session)
     )
-# Gets users to show if they are online
 @app.route('/users', methods=['GET', 'POST'])
 @limiter.exempt
 def users():
@@ -453,15 +405,12 @@ def users():
 @app.route('/terms')
 def terms():
     return render_template('TERMS.html')
-# Signup route
-# Added rate limiting so that people can only sign up 10 times a day
 @sitemapper.include()
 @app.route("/signup", methods=["GET", "POST"])
 @limiter.limit("20/day")
 def signup():
     error = None
 
-    # If the HTTP request method is POST, handle form submission
     if request.method == "POST":
         username = request.form["username"].strip()
         handle = username
@@ -472,18 +421,15 @@ def signup():
         
         app.logger.info(f'Correct CAPTCHA: {correct_captcha}')
 
-        # Check if the user-provided captcha input matches the correct captcha
         if user_captcha_input != correct_captcha:
             return redirect("/signup")
 
-        # Check if the provided passwords match
         if password != passwordConformation:
             return redirect("/signup")
 
         
         if "admin" in username.lower():
             return "Username cannot contain 'admin'."
-        # Check if the username has disallowed characters
 
         if not re.match("^[A-Za-z0-9_-]*$", username):
             return "Only latin alphabet characters and numbers are allowed."
@@ -493,26 +439,21 @@ def signup():
             "error.html", error="Your username is too long"
             )
 
-        # Get a connection to the database
         db = helpers.get_db()
 
-        # Create a cursor to interact with the database
         cursor = db.cursor()
 
-        # Check if the username already exists in the database
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
 
         if len(cursor.fetchall()) > 0:
-            handle = f"{username}.{len(cursor.fetchall())}" # added a dot to fix vulnerability
+            handle = f"{username}.{len(cursor.fetchall())}"
         else:
             for char in username:
                 if char == ".":
                     return "Username cannot contain a dot."
 
-        # Hash the password before storing it in the database
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        # Insert the new user data into the database
         cursor.execute(
             "INSERT INTO users (username, password, handle, turbo) VALUES (?, ?, ?, ?)",
             (username, hashed_password, handle, 0),
@@ -520,71 +461,53 @@ def signup():
         db.commit()
         db.close()
 
-        # Note: you must supply the user_id who performed the event as the first parameter.
         try:
             mp.track(handle, 'Signed Up', {'Signup Type': 'Referral'})
         except Exception as e:
             app.logger.info(f"Mixpanel error: Signed Up tracking failed - {str(e)}")
 
 
-        # Set session data for the newly registered user
         session["handle"] = handle
         session["username"] = username
 
-        # Redirect to the home page
         return redirect("/")
 
-    # If the user is already logged in, redirect to the home page
     if "username" in session:
         return redirect("/")
 
-    # Render the signup template with potential error messages
     return render_template("signup.html", error=error)
 
-# Login route
-# Added rate limiting to prevent brute force attacks
 @sitemapper.include()
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("6/minute")
 def login() -> str | Response:
-    # Handle form submission if the request method is POST
     if request.method == "POST":
         handle = request.form["handle"]
         password = request.form["password"]
 
-        # Get a connection to the database
         db = helpers.get_db()
 
-        # Create a cursor to interact with the database
         cursor = db.cursor()
 
-        # Query the database for the user with the provided handle
         cursor.execute("SELECT * FROM users WHERE handle = ?", (handle,))
         users = cursor.fetchall()
 
-        # If there is no or more than one matching user, redirect to the login page
         if len(users) != 1:
             return redirect("/login")
 
-        # Hash the provided password to check against the stored hashed password
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        # If the password matches the stored hashed password, set session data for the user
         if users[0]["password"] == hashed_password:
             session["handle"] = handle
             session["username"] = users[0]["username"]
         else:
-            # If the password doesn't match, redirect to the login page
             return redirect("/login")
 
-        # Redirect the user to the home page after successful login
         return redirect("/")
 
-    # If the user is already logged in, redirect to the home page
     if "username" in session:
         return redirect("/")
 
-    # Render the login template for users who are not logged in
     return render_template("login.html")
 
 @app.route('/change_password', methods=['GET', 'POST'])
@@ -628,13 +551,10 @@ def leaderboard():
 @app.route("/flits/<flit_id>")
 @limiter.limit("5/second")
 def singleflit(flit_id: str) -> str | Response:
-    # Get a connection to the database
     conn = helpers.get_db()
 
-    # Create a cursor to interact with the database
     c = conn.cursor()
 
-    # Retrieve the specified flit's information from the database
     c.execute("SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?", (flit_id,))
     flit = c.fetchone()
 
@@ -644,11 +564,9 @@ def singleflit(flit_id: str) -> str | Response:
     if flit:
         original_flit = None
         if flit["is_reflit"] == 1:
-            # Retrieve the original flit's information if this flit is a reflit
             c.execute("SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id = ?", (flit["original_flit_id"],))
             original_flit = c.fetchone()
 
-        # Render the template with the flit's information
         return render_template(
             "flit.html",
             flit=flit,
@@ -656,19 +574,15 @@ def singleflit(flit_id: str) -> str | Response:
             original_flit=original_flit,
         )
 
-    # If the flit doesn't exist, redirect to the home page
     return redirect("/")
 
 @app.route("/logout", methods=["GET", "POST"])
 @limiter.exempt
 def logout() -> Response:
-    # Check if the user is logged in
     if "username" in session:
-        # Remove session data for the user
         session.pop("handle", None)
         session.pop("username", None)
 
-    # Redirect the user to the home page, whether they were logged in or not
     return redirect("/")
 
 
@@ -677,32 +591,25 @@ def logout() -> Response:
 @app.route("/user/<path:username>")
 @limiter.limit("60/minute")
 def user_profile(username: str) -> str | Response:
-    # Get a connection to the database
     conn = helpers.get_db()
 
-    # Create a cursor to interact with the database
     cursor = conn.cursor()
 
-    # Query the database for the user profile with the specified username
     cursor.execute("SELECT * FROM users WHERE handle = ?", (username,))
     user = cursor.fetchone()
 
-    # If the user doesn't exist, redirect to the home page
     if not user:
         return redirect("/")
 
-    # Query the database for the user's non-reflit flits, checking if they have made at least one flit
     cursor.execute(
         "SELECT COUNT(*) > 0 FROM flits WHERE userHandle = ?",
         (username,),
     )
     has_flits = cursor.fetchone()[0]
 
-    # Initialize variables
     activeness = None
     badges = []
 
-    # If the user has flits, calculate activeness and add badges
     if has_flits:
         cursor.execute(
             "SELECT * FROM flits WHERE userHandle = ? ORDER BY timestamp DESC",
@@ -717,14 +624,12 @@ def user_profile(username: str) -> str | Response:
         weeks = diff.total_seconds() / 3600 / 24 / 7
         activeness = round(0 if weeks == 0 else len(flits) / weeks * 1000)
 
-        # Add badges based on activeness and staff status
         if activeness > 5000:
             badges.append(("badges/creator.png", "Activeness of over 5000"))
         
         if user["handle"] in staff_accounts:
             badges.append(("badges/staff.png", "Staff at Tweetor!"))
 
-    # Render the user profile template with relevant data
     return render_template(
         "user.html",
         badges=badges,
@@ -773,13 +678,11 @@ def is_profanity(text):
 
     response = requests.post(api_url, data=data)
     
-    # Parse the JSON response
     result = response.json()
     
-    # Check if the 'status' key exists and its value is 'failure'
     if 'status' in result and result['status'] == 'failure':
         app.logger.info("API call failed due to usage limit or another error.")
-        return "failure"  # Explicitly set result to "failure"
+        return "failure"
     
     return result
 
@@ -859,7 +762,6 @@ def api_direct_messages(receiver_handle):
     sender_handle = session["handle"]
     blocked_handles = helpers.get_blocked_users(sender_handle)
 
-    # Get skip and limit parameters
     skip = request.args.get("skip")
     limit = request.args.get("limit")
     if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
@@ -867,7 +769,6 @@ def api_direct_messages(receiver_handle):
     skip = int(skip)
     limit = int(limit)
 
-    # Validate skip and limit
     if limit > 250:
         return jsonify({"error": "Limit cannot exceed 250"}), 400
 
@@ -892,7 +793,6 @@ def api_direct_messages(receiver_handle):
 
     messages = cursor.fetchall()
 
-    # Convert messages to JSON-friendly format
     json_messages = [
         {
             "id": message[0],
@@ -912,7 +812,7 @@ def api_direct_messages(receiver_handle):
         "pagination": {
             "skip": skip,
             "limit": limit,
-            "has_more": len(messages) == limit  # Assume there are more messages if we got exactly 'limit' results
+            "has_more": len(messages) == limit
         }
     })
 @app.route("/submit_dm/<path:receiver_handle>", methods=["POST"])
@@ -932,7 +832,6 @@ def submit_dm(receiver_handle) -> str | Response:
         profane_words_list = json.load(f)
         sightengine_result = is_profanity(content)
     
-    # Check if SightEngine flagged content as profane
     if (
         isinstance(sightengine_result, dict)
         and sightengine_result.get("status") == "success"
@@ -941,7 +840,6 @@ def submit_dm(receiver_handle) -> str | Response:
         profane_dm = "yes"
         return render_template("error.html", error="Do you really think that's appropriate?")
     
-    # If SightEngine did not flag content as profane, perform manual check
     content_words = content.lower().strip().split()
 
     for word in profane_words_list:
@@ -978,8 +876,6 @@ def submit_dm(receiver_handle) -> str | Response:
 
 
 
-# Muting and unmuting I dont know who put this here but it does nothing i think
-
 muted = []
 
 @app.route("/mute/<handle>")
@@ -1005,22 +901,18 @@ def sitemap():
 @limiter.limit("4/minute")
 def block_unblock():
     if request.method == 'POST':
-        # Extract the action and user_handle from the form
         action = request.form['action']
         user_handle = request.form['user_handle']
         
-        # Connect to the database
         conn = helpers.get_db()
         cursor = conn.cursor()
         
         if action == 'block':
-            # Attempt to insert or update the block based on existence
             cursor.execute("""
                 INSERT INTO blocks (blocker_handle, blocked_handle) VALUES (?, ?)
                 ON CONFLICT(blocker_handle, blocked_handle) DO UPDATE SET blocker_handle = excluded.blocker_handle
             """, (session['handle'], user_handle))
         elif action == 'unblock':
-            # Delete the block based on existence
             cursor.execute("""
                 DELETE FROM blocks WHERE blocker_handle = ? AND blocked_handle = ?
             """, (session['handle'], user_handle))
@@ -1028,10 +920,9 @@ def block_unblock():
         conn.commit()
         conn.close()
         
-        return redirect(url_for('view_blocks'))  # Redirect to the view_blocks page or wherever you want
+        return redirect(url_for('view_blocks'))
         
     else:
-        # Render the block/unblock form
         return render_template('block_unblock.html', loggedIn="handle" in session)
 
 
@@ -1040,14 +931,11 @@ def block_unblock():
 @helpers.login_required
 @limiter.limit("1/second")
 def view_blocks():
-    # Connect to the database
     conn = helpers.get_db()
     cursor = conn.cursor()
     
-    # Get the current user's handle
     current_user_handle = session['handle']
     
-    # Fetch all blocks where the blocker_handle matches the current user's handle
     cursor.execute("""
         SELECT blocked_handle FROM blocks WHERE blocker_handle = ?
     """, (current_user_handle,))
@@ -1056,7 +944,6 @@ def view_blocks():
     
     conn.close()
     
-    # Render the blocks view
     return render_template('view_blocks.html', blocks=[block[0] for block in blocks],  loggedIn="handle" in session )
 
 
@@ -1066,7 +953,6 @@ def get_leaderboard():
     conn = helpers.get_db()
     cursor = conn.cursor()
     
-    # Select the latest 1000 rows from the flits table, ordered by timestamp
     cursor.execute("""
         SELECT userHandle, timestamp, is_reflit
         FROM flits
@@ -1083,7 +969,7 @@ def get_leaderboard():
         if handle == 'admin' or flit[2] == 1:
             continue
         
-        days = 7  # Assuming 7-day window
+        days = 7
         current_time = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         time_difference = current_time - datetime.datetime.fromisoformat(flit[1])
         days_diff = time_difference.days
@@ -1096,16 +982,12 @@ def get_leaderboard():
         else:
             user_scores[handle] = (days - days_diff)/days*2
     
-    # Round all scores to 2 decimal places
     rounded_scores = {k: round(v, 2) for k, v in user_scores.items()}
     
-    # Sort the user scores
     sorted_scores = sorted(rounded_scores.items(), key=lambda x: x[1], reverse=True)
     
-    # Limit the top 10 results
     top_results = sorted_scores[:10]
     
-    # Convert to JSON
     result = jsonify([{'userHandle': handle, 'score': score} for handle, score in top_results])
     
     return result
@@ -1149,7 +1031,6 @@ assets.register('js_all', js)
 @app.route("/api/flits_bulk", methods=["GET"])
 @limiter.exempt
 def flits_bulk():
-    # Get comma separated ids from the query parameter
     ids_str = request.args.get("ids")
     if not ids_str:
         return jsonify({"error": "Query parameter 'ids' is required"}), 400

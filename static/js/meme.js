@@ -40,10 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const images = document.createElement('div');
 
         for (const result of data['results']) {
-          // Create an img element
           const img = document.createElement("img");
-
-          // Set the src attribute to the gif url
           img.src = result.media_formats.gif.url;
           img.height = 100;
           img.dataset['id'] = result.id;
@@ -58,8 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById("meme_link").value = img.src;
             closeMeme();
           }
-
-          // Append the img element to the div
+          
           images.appendChild(img);
         }
         memeImages.innerHTML = '';
