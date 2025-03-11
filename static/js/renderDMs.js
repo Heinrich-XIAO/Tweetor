@@ -109,11 +109,11 @@ if (window.location.pathname.startsWith('/dm/')) {
         e.preventDefault();
         const formData = new FormData(sendMessageForm);
         try {
+          sendMessageForm.reset();
           const response = await fetch(sendMessageForm.action, {
             method: 'POST',
             body: formData
           });
-          sendMessageForm.reset();
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
           const data = await response.json();
           const messageContainer = document.getElementById('message-container');
