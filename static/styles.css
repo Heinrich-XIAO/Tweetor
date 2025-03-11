@@ -26,14 +26,11 @@ body {
 }
 
 .top {
-  --offset: 50px; 
-  
+  --offset: 50px;
   position: sticky;
-  bottom: 20px;      
-  margin-right:10px; 
+  bottom: 20px;
+  margin-right:10px;
   place-self: end;
-  
-  /* visual styling */
   text-decoration: none;
   padding: 10px;
   font-family: sans-serif;
@@ -46,33 +43,31 @@ body {
   color: #444;
 }
 
-/* remove the below if you don't want smooth scrolling */
 html,
 body {
 	scroll-behavior: smooth;
 }
 
-
 html {
-  font-size: 62.5%; 
+  font-size: 62.5%;
 }
 
 body {
-  font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
+  font-size: 1.5em;
   line-height: 1.6;
   font-weight: 400;
   font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-textarea, 
+textarea,
 input[type="text"],
 input[type="password"] {
   height: 38px;
-  padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
+  padding: 6px 10px;
   border: 1px solid #D1D1D1;
   border-radius: 4px;
   box-shadow: none;
-  box-sizing: border-box; 
+  box-sizing: border-box;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -86,7 +81,7 @@ textarea {
 
 input[type="text"]:focus, textarea:focus {
   border: 1px solid #33C3F0;
-  outline: 0; 
+  outline: 0;
 }
 
 button:has(svg) {
@@ -111,36 +106,36 @@ button, input[type="submit"] {
   border: 1px solid #bbb;
   cursor: pointer;
   box-sizing: border-box;
-  margin-bottom: 1rem; 
+  margin-bottom: 1rem;
   margin-top: 1rem;
 }
 
 button:hover, button:focus {
   border-color: #888;
-  outline: 0; 
+  outline: 0;
 }
 
 .button-primary {
   background-color: #33C3F0;
-  border-color: #33C3F0; 
+  border-color: #33C3F0;
 }
 
 .button-primary:focus {
   background-color: #1EAEDB;
-  border-color: #1EAEDB; 
+  border-color: #1EAEDB;
 }
 
-.six.columns { 
-  width: 48%;            
+.six.columns {
+  width: 48%;
 }
 
-.offset-by-three.columns { 
-  margin-left: 26%;            
+.offset-by-three.columns {
+  margin-left: 26%;
 }
 
 .u-full-width {
   width: 100%;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 #memePopup {
@@ -164,10 +159,10 @@ button:hover, button:focus {
 }
 
 .centered {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
 .search-form {
@@ -206,17 +201,12 @@ button:hover, button:focus {
 
 ::placeholder {
   color: #808080;
-  opacity: 0.7; 
+  opacity: 0.7;
 }
-
-/* @media (min-width: 480.05px) and (max-width: 768px) */
 
 .left-menu {
   display: grid;
   position: relative;
-  grid-area: 3 / 2 / 27 / 4;
-  /* grid-template-columns: 0 0 1.54052141rem 0 0 4.08173335rem 0 0 0.62681597rem 1.98253757rem 3.0023636rem 5.30245115rem; */
-  /* grid-template-rows: 0 0 minmax(8.2316083rem, max-content) minmax(2.26538213rem, max-content) minmax(1.20122376rem, max-content) minmax(2.88050959rem, max-content) minmax(1.34945669rem, max-content) minmax(4.08173335rem, max-content) minmax(1.31771596rem, max-content) minmax(2.91225031rem, max-content) minmax(1.33141022rem, max-content) minmax(30.65125727rem, max-content); */
   grid-area: 4 / 2 / 29 / 4;
 }
 
@@ -228,23 +218,23 @@ button:hover, button:focus {
 }
 
 .txt-centered {
-    text-align: center;
+  text-align: center;
 }
 
-.flit-content-input.flit-content-input, .flit-content-input.flit-content-input:focus {
+.flit-content-input.flit-content-input,
+.flit-content-input.flit-content-input:focus {
   border-radius: 0%;
   border-width: 0px;
   border: none;
-  border-style: none; 
-  outline:none;
+  border-style: none;
+  outline: none;
   font-size: x-large;
   height: 10em;
   width: 100%;
   resize: none;
-  
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  appearance:none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 #character-counter {
@@ -258,18 +248,13 @@ button:hover, button:focus {
 }
 
 .logo img {
-	height: 60px;
+  height: 60px;
 }
 
-/* .logout form, .login form, .signup form {
-  display: flex;
-  align-items: center;
-} */
-
-.logout button,  .login button, .signup button {
-	background-color: transparent;
-	border: none;
-	font-size: 16px;
+.logout button, .login button, .signup button {
+  background-color: transparent;
+  border: none;
+  font-size: 16px;
 }
 
 .centered-form {
@@ -311,18 +296,16 @@ button:hover, button:focus {
   background-color: #1da1f2;
   border: none;
   border-radius: 4px;
-  /* padding: 10px 20px 10px 20px; */
   font-size: 16px;
   cursor: pointer;
 }
 
-.centered-form input[type="submit"]:hover {
+centered-form input[type="submit"]:hover {
   background-color: #0c8bd6;
 }
 
 .flit {
   padding: 20px;
-  /* padding-bottom: 5px; */
   margin-bottom: -1px;
   border-style: solid;
   border-color: #555;
@@ -365,27 +348,8 @@ a:hover.flit-username, a:hover.flit-content {
   font-size: 14px;
   color: #888;
 }
-/* .modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4);
-}
-.modal-content {
-  background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-} */
 
-/* Button used to open the contact form - fixed at the bottom of the page */
-.open-button {
+button.open-button {
   background-color: #555;
   padding: 16px 20px;
   border: none;
@@ -397,7 +361,6 @@ a:hover.flit-username, a:hover.flit-content {
   width: 280px;
 }
 
-/* The popup form - hidden by default */
 .form-popup {
   display: none;
   position: fixed;
@@ -407,49 +370,45 @@ a:hover.flit-username, a:hover.flit-content {
   z-index: 9;
 }
 
-/* Add styles to the form container */
 .form-container {
   max-width: 300px;
-  padding: 10px; 
+  padding: 10px;
   background-color: #222;
 }
 
-/* Full-width input fields */
-.form-container input[type=text], .form-container input[type=password] {
+.form-container input[type=text],
+.form-container input[type=password] {
   width: 100%;
   padding: 15px;
   margin: 5px 0 22px 0;
   border: none;
 }
 
-/* When the inputs get focus, do something */
-.form-container input[type=text]:focus, .form-container input[type=password]:focus {
+.form-container input[type=text]:focus,
+.form-container input[type=password]:focus {
   outline: none;
 }
 
-/* Set a style for the submit/login button */
 .form-container .btn {
   background-color: #04AA6D;
-  /* padding: 16px 20px; */
   border: none;
   cursor: pointer;
   width: 100%;
-  margin-bottom:10px;
+  margin-bottom: 10px;
   opacity: 0.8;
 }
 
-/* Add a red background color to the cancel button */
 .form-container .cancel {
   background-color: red;
 }
 
-/* Add some hover effects to buttons */
-.form-container .btn:hover, .open-button:hover {
+.form-container .btn:hover,
+button.open-button:hover {
   opacity: 1;
 }
 
 .memeBg {
-  padding: 0px;
+  padding: 0;
   padding-left: 20px;
   transition: transform 250ms;
   border: none;
@@ -457,8 +416,7 @@ a:hover.flit-username, a:hover.flit-content {
 
 .memeBg:hover {
   transform: translateY(-10px);
-  border: #000;
-  border: 1px;
+  border: 1px solid #000;
 }
 
 .search-form button {
@@ -476,8 +434,8 @@ a:hover.flit-username, a:hover.flit-content {
 }
 
 hr {
-  margin-top: 0rem;
-  margin-bottom: 0rem;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 #memeImages {
@@ -530,8 +488,8 @@ hr {
   margin: auto;
 }
 
-.menu{
-  width:10%;
+.menu {
+  width: 10%;
   border-right: 1px solid #555;
   min-width: 60px;
   background-color: var(--background, black);
@@ -544,32 +502,27 @@ hr {
 .dm_with_person {
   padding-left: 5px !important;
   color: grey;
-  margin-bottom: 0rem !important;
-  margin-top:0rem !important;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* This is the media query for smaller screens */
 @media screen and (max-width: 1350px) {
-  /* This will override the default style when the screen width is less than or equal to 1350px */
   .menu {
-    width: 60px !important; /* This will make the div element take up the full width of the screen */
-    min-width: auto !important; /* This will remove the minimum width constraint */
-    float: none !important; /* This will make the div element stop floating */
+    width: 60px !important;
+    min-width: auto !important;
+    float: none !important;
   }
-
   main {
-    width: calc(100vw - 60px) !important; /* This will make the main element take up the full width of the screen */
-    float: none !important; /* This will make the main element stop floating */
+    width: calc(100vw - 60px) !important;
+    float: none !important;
     margin-left: 60px !important;
   }
-
   .pages>a {
     text-align: center !important;
-    padding: 8px 0px !important;
+    padding: 8px 0 !important;
   }
-
   .centered-form {
     width: 300px !important;
   }
@@ -580,60 +533,45 @@ main {
   width: 90vw;
 }
 
-/* Define a keyframes animation named fade-out */
 @keyframes fade-out {
-  /* Set the opacity of the element to 1 at the start */
   from {
     opacity: 1;
   }
-  /* Set the opacity of the element to 0 at the end */
   to {
     opacity: 0;
   }
 }
 
 #error {
-  /* Add your other styles here */
-  position: fixed; /* Make the element fixed */
-  top: 0; /* Position it at the top of the viewport */
-  left: 0; /* Position it at the left of the viewport */
-  width: 100%; /* Make it span the entire width */
-  height: 100%; /* Make it span the entire height */
-  z-index: 9999; /* Make it on top of everything else */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
 }
 
 #error p, #error h1 {
-  all:initial;
+  all: initial;
 }
 
 #error h1 {
   display: block;
   font-size: 2em;
-  margin-block-start: 0.67em;
-  margin-block-end: 0.67em;
-  margin-inline-start: 0px;
-  margin-inline-end: 0px;
+  margin: 0.67em 0;
   font-weight: bold;
 }
 
 #error p {
   display: block;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
-  margin-inline-start: 0px;
-  margin-inline-end: 0px;
+  margin: 1em 0;
 }
 
-/* Apply the fade-out animation to the error element when it has the class of fade-out */
 #error.fade-out {
-  /* Set the animation name, duration, and timing function */
   animation: fade-out 2s ease-in-out;
-  /* Set the animation fill mode to forwards to keep the final state */
   animation-fill-mode: forwards;
 }
 
-
-/* Leaderboard styles */
 .rankNumber {
   margin-left: 20px;
 }
@@ -647,44 +585,41 @@ main {
 }
 
 #leaderboard {
-	font-size: 2em;
-	margin: auto;
+  font-size: 2em;
+  margin: auto;
 }
 
 #leaderboardTitle {
-	text-align: center;
-	font-size: 2.5em;
+  text-align: center;
+  font-size: 2.5em;
 }
 
-/* ReFlit Styles */
 .originalFlit {
   border-radius: 10px;
 }
 
-/* Meme Button styles */
 .memeButton {
-	border: none; 
-	padding: 0px; 
-	margin-top: 0px; 
-	margin-bottom: 0px;
+  border: none;
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 0;
   margin-right: 25px;
-	transform: translateY(-55px) !important;
-	float: right;
+  transform: translateY(-55px) !important;
+  float: right;
 }
 
-/* Flit submit styles */
 .flitSubmit {
-	padding-left: 10px;
-	padding-right: 10px;
-	font-weight: 900 !important;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-weight: 900 !important;
 }
 
 .image-container {
-  margin-top: 10px; 
+  margin-top: 10px;
 }
 
 .image-container img {
-  display: block; 
+  display: block;
   height: auto;
   max-width: 400px;
 }
@@ -694,20 +629,20 @@ li > p.image-container {
 }
 
 .profileBadges {
-	background-color: #333;
-	width: max-content; 
-	border-radius: 10px;
-	margin-left: 20px;
+  background-color: #333;
+  width: max-content;
+  border-radius: 10px;
+  margin-left: 20px;
 }
 
 #usernameUserProfile {
-	display: inline-block;
-	width: auto;
+  display: inline-block;
+  width: auto;
 }
 
 #userProfileDetails {
-	display: flex;
-	align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .lg-view {
@@ -726,22 +661,21 @@ li > p.image-container {
   background-color: var(--background2);
 }
 
-#send-message-form>#content {
-  border-width: 0px;
+#send-message-form > #content {
+  border-width: 0;
   width: 100%;
 }
 
 .dm-timestamp {
   float: right;
   margin-right: 10px;
-  /* position: absolute; */
 }
 
 #message-container {
   width: 100%;
 }
 
-#message-container>p:nth-child(span) {
+#message-container > p:nth-child(span) {
   margin-right: 100px;
 }
 
