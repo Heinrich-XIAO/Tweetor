@@ -51,8 +51,6 @@ if (window.location.pathname.startsWith('/dm/')) {
  
             const timestampData = formatTimestamp(message.timestamp);
             const timestampSpan = document.createElement('span');
-            timestampSpan.style.fontWeight = 'lighter';
-            timestampSpan.style.marginLeft = '10px';
             timestampSpan.classList.add('dm-timestamp');
             timestampSpan.textContent = timestampData.display;
             timestampSpan.title = timestampData.full;

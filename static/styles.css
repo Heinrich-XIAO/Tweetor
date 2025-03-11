@@ -726,12 +726,22 @@ li > p.image-container {
   background-color: var(--background2);
 }
 
-.dm-timestamp {
-  right: 10px;
-  position: absolute;
+#send-message-form>#content {
+  border-width: 0px;
+  width: 100%;
 }
 
-#message-container>p {
+.dm-timestamp {
+  float: right;
+  margin-right: 10px;
+  /* position: absolute; */
+}
+
+#message-container {
+  width: 100%;
+}
+
+#message-container>p:nth-child(span) {
   margin-right: 100px;
 }
 
