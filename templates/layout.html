@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <title>{% block title %}{% endblock %} | Tweetor</title>
-  <script src="{{ url_for('static', filename='js/iconify.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/socket.io.min.js')}}"></script>
   {% assets "js_all" %}
   <script src="{{ ASSET_URL }}"></script>
@@ -12,8 +11,8 @@
   {% assets "css_all" %}
   <link rel="stylesheet" href="{{ ASSET_URL }}">
   {% endassets %}
-  <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png')}}">
+  <link rel="icon" type="image" href="{{ url_for('static', filename='logo.svg')}}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg')}}">
   <meta name="keywords" content="Social Media, Tweetor">
   <meta name="description" content="Non-toxic social media friendly to all with algorithms that stop toxic behavior">
   <meta name="author" content="Heinrich Xiao">
@@ -24,7 +23,7 @@
   <div class="menu w3-sidebar w3-bar-block">
     <div class="logo">
       <a href="/">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="fliter Logo">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="fliter Logo">
       </a>
     </div>
     <div class="pages">
@@ -92,5 +91,6 @@
       reportModal.style.display = 'none';
     }
   </script>
+  <script src="{{ url_for('static', filename='js/iconify.min.js')}}"></script>
 </body>
 </html>

@@ -26,7 +26,7 @@ async function checkNotifications() {
     prevRecentMessages = await res.json();
     if (hasNotificationSupport && Notification.permission == 'granted') {
       const notification = new Notification(`@${newElements[0].userHandle}`, {
-        icon: '/static/logo.png',
+        icon: '/static/logo.svg',
         body: newElements[0].content
       })
     }
