@@ -22,7 +22,16 @@ function renderDMs() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await fetchDMs();
-  renderDMs();
-});
+fetchDMs().then(
+  () => {
+    console.log("got dms");
+    if (document.readyState == "loading") {
+      document.addEventListener('DOMContentLoaded', async () => {
+        renderDMs();
+      });
+      return;
+    }
+    renderDMs();
+  }
+)
+
