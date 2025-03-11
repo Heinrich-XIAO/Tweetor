@@ -152,7 +152,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     flit_data_div.appendChild(handle);
     flit_data_div.innerHTML += '&#160;·&#160;';
     flit_data_div.appendChild(timestampElement);
-    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openModal(${json.flit.id})'><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
+    flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openModal(${json.flit.id})' aria-label="Report Flit ${json.flit.id}"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
     
     flit.appendChild(flit_data_div);
     
@@ -189,6 +189,7 @@ async function renderFlitWithFlitJSON(json, flit) {
     
     let reflit_button = document.createElement("button");
     reflit_button.classList.add("retweet-button");
+    reflit_button.ariaLabel = "Reflit Button";
     reflit_button.addEventListener("click", function() {
       reflit(json.flit.id);
     });
