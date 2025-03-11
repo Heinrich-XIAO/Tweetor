@@ -170,6 +170,7 @@ async function renderFlitWithFlitJSON(json, flit) {
       const image = document.createElement('img');
       image.src = json.flit.meme_link;
       image.width = 100;
+      image.loading = 'lazy';
       flitContentDiv.appendChild(document.createElement('br'));
       flitContentDiv.appendChild(image);
     }
