@@ -40,23 +40,47 @@ document.addEventListener('DOMContentLoaded', function() {
         const images = document.createElement('div');
 
         for (const result of data['results']) {
-          const img = document.createElement("img");
-          img.src = result.media_formats.gif.url;
-          img.height = 100;
-          img.dataset['id'] = result.id;
-          img.onclick = (e) => {
-            const img = document.createElement("img");
-            img.src = e.srcElement.src;
-            img.width = e.srcElement.width * 3;
-            img.dataset = e.srcElement.dataset;
+          // Determine smallest media and its format key
+          let smallestMedia, chosenFormat;
+          for (const [format, mediaObj] of Object.entries(result.media_formats)) {
+            if (!smallestMedia || mediaObj.size < smallestMedia.size) {
+              smallestMedia = mediaObj;
+              chosenFormat = format;
+            }
+          }
+          // Create either a video or an image element based on the chosen format
+          let mediaElement;
+          if (chosenFormat.toLowerCase().includes("webm")) {
+            mediaElement = document.createElement("video");
+            mediaElement.src = smallestMedia.url;
+            mediaElement.height = 100;
+            mediaElement.controls = false;
+          } else {
+            mediaElement = document.createElement("img");
+            mediaElement.src = smallestMedia.url;
+            mediaElement.height = 100;
+          }
+          mediaElement.dataset['id'] = result.id;
+          mediaElement.onclick = (e) => {
+            let newElement;
+            if (e.target.tagName.toLowerCase() === 'video') {
+              newElement = document.createElement("video");
+              newElement.src = e.target.src;
+                newElement.width = e.target.tagName.toLowerCase() === 'video' ? e.target.videoWidth : e.target.width;
+              newElement.controls = false;
+            } else {
+              newElement = document.createElement("img");
+              newElement.src = e.target.src;
+              newElement.width = e.target.width;
+            }
+            newElement.dataset = e.target.dataset;
             memeImages.innerHTML = '';
             document.getElementById("addedElements").innerHTML = "";
-            document.getElementById("addedElements").appendChild(img);
-            document.getElementById("meme_link").value = img.src;
+            document.getElementById("addedElements").appendChild(newElement);
+            document.getElementById("meme_link").value = newElement.src;
             closeMeme();
           }
-          
-          images.appendChild(img);
+          images.appendChild(mediaElement);
         }
         memeImages.innerHTML = '';
         memeImages.appendChild(images);

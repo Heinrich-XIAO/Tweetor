@@ -252,7 +252,8 @@ def get_gif() -> str:
             "key": TENOR_SECRET,
             "q": request.json['q'],
             "limit": 8,
-            "client_key": session["handle"]
+            "client_key": session["handle"],
+            "media_filter": "webm,tinywebm"
         }).json()
     return "no json was provided"
 

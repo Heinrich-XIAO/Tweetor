@@ -447,14 +447,14 @@ hr {
   background: yellow;
 }
 
-#memeImages > img {
+#memeImages > img, #memeImages > video {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
 }
 
-#memeImages img {
+#memeImages img, #memeImages video {
   max-width: 100px;
   width: 9%;
 }
