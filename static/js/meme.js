@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
             mediaElement.src = smallestMedia.url;
             mediaElement.height = 100;
             mediaElement.controls = false;
+            mediaElement.autoplay = true;
           } else {
             mediaElement = document.createElement("img");
             mediaElement.src = smallestMedia.url;
@@ -66,8 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target.tagName.toLowerCase() === 'video') {
               newElement = document.createElement("video");
               newElement.src = e.target.src;
-                newElement.width = e.target.tagName.toLowerCase() === 'video' ? e.target.videoWidth : e.target.width;
+              newElement.width = e.target.tagName.toLowerCase() === 'video' ? e.target.videoWidth : e.target.width;
               newElement.controls = false;
+              newElement.autoplay = true;
             } else {
               newElement = document.createElement("img");
               newElement.src = e.target.src;

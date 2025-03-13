@@ -24,8 +24,8 @@ let initialFlitsPromise;
 
 function makeUrlsClickable(content) {
   const escapedContent = content.replace(/&/g, '&amp;')
-                                .replace(/</g, '&lt;')
-                                .replace(/>/g, '&gt;');
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
   const usernameRegex = /\((\w+):\)/gi;
 
@@ -43,13 +43,13 @@ function makeUrlsClickable(content) {
     return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
   }
 
-  let modifiedContent = escapedContent.replace(urlRegex, function(url) {
+  let modifiedContent = escapedContent.replace(urlRegex, function (url) {
     const element = document.createElement('a');
     if (allowedImageSites.some(site => new RegExp(site).test(url)) && isImageUrl(url)) {
       const imgElement = document.createElement('img');
       imgElement.src = encodeURI(url);
       imgElement.setAttribute('loading', 'lazy');
-      imgElement.onload = function() {
+      imgElement.onload = function () {
         const aspectRatio = imgElement.width / imgElement.height;
         let maxWidth = 400;
         let maxHeight = 400;
@@ -92,18 +92,18 @@ function updateImageContainer(imgElement) {
 }
 
 async function fetchBulkFlits(ids) {
-	let idsToFetch = ids.filter(id => !(id in bulkFlitCache));
-	if (idsToFetch.length === 0) return bulkFlitCache;
-	const query = `?ids=${idsToFetch.join(",")}`;
-	const res = await fetch('/api/flits_bulk' + query);
-	const data = await res.json();
-	for (const key in data) {
-		if (Object.prototype.hasOwnProperty.call(data, key)) {
-			const flit = data[key];
-			bulkFlitCache[flit.id] = flit;
-		}
-	}
-	return bulkFlitCache;
+  let idsToFetch = ids.filter(id => !(id in bulkFlitCache));
+  if (idsToFetch.length === 0) return bulkFlitCache;
+  const query = `?ids=${idsToFetch.join(",")}`;
+  const res = await fetch('/api/flits_bulk' + query);
+  const data = await res.json();
+  for (const key in data) {
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      const flit = data[key];
+      bulkFlitCache[flit.id] = flit;
+    }
+  }
+  return bulkFlitCache;
 }
 
 async function getBulkFlit(flitId) {
@@ -118,7 +118,7 @@ function convertUSTtoEST(date) {
 }
 
 function getMonthAbbreviation(date) {
-  const months = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return months[date.getMonth()];
 }
 
@@ -127,54 +127,63 @@ async function renderFlitWithFlitJSON(json, flit) {
     const flit_data_div = document.createElement('div');
     flit_data_div.classList.add("flit-username");
     flit_data_div.classList.add("flit-timestamp");
-    
+
     const username = document.createElement('a');
     username.innerText = json.flit.username;
     username.href = `/user/${json.flit.userHandle}`;
     username.classList.add("user-handle");
-    
+
     const handle = document.createElement('a');
     handle.innerText = '@' + json.flit.userHandle;
     handle.href = `/user/${json.flit.userHandle}`;
     handle.classList.add("user-handle");
-    
+
     let timestamp = new Date(json.flit.timestamp.replace(/\s/g, 'T') + "Z");
     timestamp = convertUSTtoEST(timestamp);
-    let options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+    let options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
     let formatted_timestamp = timestamp.toLocaleDateString(undefined, options);
-    
+
     const timestampElement = document.createElement("span");
     timestampElement.innerText = formatted_timestamp;
     timestampElement.classList.add("user-handle");
-    
+
     flit_data_div.appendChild(username);
     flit_data_div.innerHTML += '&#160;&#160;';
     flit_data_div.appendChild(handle);
     flit_data_div.innerHTML += '&#160;·&#160;';
     flit_data_div.appendChild(timestampElement);
     flit_data_div.innerHTML += `<button style="float: right; border: none;" onclick='openModal(${json.flit.id})' aria-label="Report Flit ${json.flit.id}"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>`;
-    
+
     flit.appendChild(flit_data_div);
-    
+
     const flitContentDiv = document.createElement('div');
     flitContentDiv.classList.add('flit-content');
-    
+
     const content = document.createElement('a');
     content.classList.add('flit-content');
     content.href = `/flits/${json.flit.id}`;
     const processedContent = makeUrlsClickable(json.flit.content);
     content.innerHTML += processedContent;
     flit.appendChild(content);
-    
+
     if (json.flit.meme_link && (localStorage.getItem('renderGifs') === 'true' || localStorage.getItem('renderGifs') === null)) {
-      const image = document.createElement('img');
-      image.src = json.flit.meme_link;
-      image.width = 100;
-      image.loading = 'lazy';
+      const memeLink = json.flit.meme_link;
+      const isWebm = memeLink.toLowerCase().endsWith('.webm');
+      const mediaElement = isWebm ? document.createElement('video') : document.createElement('img');
+
+      mediaElement.src = memeLink;
+      mediaElement.width = 100;
+      mediaElement.loading = 'lazy';
+
+      if (isWebm) {
+        mediaElement.loop = true;
+        mediaElement.autoplay = true;
+      }
+
       flitContentDiv.appendChild(document.createElement('br'));
-      flitContentDiv.appendChild(image);
+      flitContentDiv.appendChild(mediaElement);
     }
-    
+
     if (json.flit.is_reflit) {
       const originalFlit = document.createElement('div');
       originalFlit.classList.add('flit');
@@ -185,13 +194,13 @@ async function renderFlitWithFlitJSON(json, flit) {
       await renderFlitWithFlitJSON({ flit: originalData }, originalFlit);
       flitContentDiv.appendChild(originalFlit);
     }
-    
+
     flit.appendChild(flitContentDiv);
-    
+
     let reflit_button = document.createElement("button");
     reflit_button.classList.add("retweet-button");
     reflit_button.ariaLabel = "Reflit Button";
-    reflit_button.addEventListener("click", function() {
+    reflit_button.addEventListener("click", function () {
       reflit(json.flit.id);
     });
     const icon = document.createElement("span");
@@ -244,7 +253,7 @@ async function renderFlits() {
     json.forEach(flit => {
       bulkFlitCache[flit.id] = flit;
     });
-  
+
     const flits = document.getElementById('flits');
     const flitPromises = json.map(async (flitJSON) => {
       let flit = document.createElement("div");
@@ -252,7 +261,7 @@ async function renderFlits() {
       return await renderFlitWithFlitJSON({ flit: flitJSON }, flit);
     });
     const flitElements = await Promise.all(flitPromises);
-  
+
     const maxKey = Math.max(...Object.keys(bulkFlitCache).map(Number));
     for (let i = maxKey - skip; i > maxKey - skip - limit; i--) {
       if (bulkFlitCache[i]) {
@@ -298,8 +307,8 @@ async function updateGreenDots(onlineUsers) {
   handles.forEach((handle, index) => {
     if (index % 3 !== 0) return;
     const nextSibling = handle.nextSibling;
-    if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && 
-       (nextSibling.style.backgroundColor === "green" || nextSibling.style.backgroundColor === "grey")) {
+    if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE &&
+      (nextSibling.style.backgroundColor === "green" || nextSibling.style.backgroundColor === "grey")) {
       nextSibling.parentNode.removeChild(nextSibling);
     }
     if (onlineUsers.includes(handle.innerText)) {
@@ -324,15 +333,15 @@ async function updateGreenDots(onlineUsers) {
   });
 }
 
-socket.on('online_update', function(online) {
+socket.on('online_update', function (online) {
   updateGreenDots(Object.keys(online));
 });
 
 document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   renderFlits();
-  
-  window.onscroll = function(ev) {
+
+  window.onscroll = function (ev) {
     if (Math.round(window.innerHeight + window.scrollY) > document.body.offsetHeight - window.innerHeight) {
       renderFlits();
     }
