@@ -7,7 +7,11 @@ if os.getenv('TESTING', 'false').lower() == 'true':
 else:
     DATABASE = "tweetor.db"
 
-
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_sender_handle ON direct_messages (sender_handle);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_receiver_handle ON direct_messages (receiver_handle);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON direct_messages (timestamp);")
+    
 
 
 with sqlite3.connect(DATABASE) as conn:

@@ -161,16 +161,16 @@ def get_flits(user_handle=None) -> Response | str:
         limit = 10
         skip = 0
 
-    current_user_handle = helpers.get_user_handle()
-    if "username" in session:
-        blocked_handles = helpers.get_blocked_users(current_user_handle)
-    
-    result = {}
-
     if limit > 50:
         return jsonify({"error": "No"}), 400
 
-    query_params = (current_user_handle, limit, skip)
+    current_user_handle = helpers.get_user_handle()
+    if "username" in session:
+        blocked_handles = helpers.get_blocked_users(current_user_handle)
+    else:
+        blocked_handles = []
+
+    result = {}
 
     cursor.execute("SELECT MAX(id) FROM flits")
     last_id = cursor.fetchone()[0]
@@ -178,22 +178,30 @@ def get_flits(user_handle=None) -> Response | str:
         last_id = 0
     skip = last_id - skip
 
-    def get_flit_recursive(flit_id):
-        if flit_id in result:
-            return
-        
-        cursor.execute("SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?", (flit_id,))
-        flit = cursor.fetchone()
-        if flit is None or (flit["profane_flit"] == "yes" and not helpers.is_admin()):
-            return
+    query_range = range(skip - limit + 1, skip + 1)
+    cursor.execute(
+        """
+        SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id 
+        FROM flits 
+        WHERE id IN ({seq})
+        """.format(seq=','.join(['?'] * len(query_range))),
+        query_range
+    )
+    flits = cursor.fetchall()
+
+    def process_flit(flit):
+        if flit["profane_flit"] == "yes" and not helpers.is_admin():
+            return None
         flit_data = dict(flit)
         if flit_data.get("is_reflit") == 1:
-            get_flit_recursive(flit_data.get("original_flit_id"))
-        result[flit_id] = flit_data
+            original_flit = next((f for f in flits if f["id"] == flit_data.get("original_flit_id")), None)
+            if original_flit:
+                process_flit(original_flit)
+        result[flit["id"]] = flit_data
 
-    for flit_id in range(skip - limit, skip + 1):
-        get_flit_recursive(flit_id)
-    
+    for flit in flits:
+        process_flit(flit)
+
     flit_list = list(result.values())
     return jsonify(flit_list)
 
