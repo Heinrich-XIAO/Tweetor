@@ -665,7 +665,23 @@ li > p.image-container {
 
 #send-message-form > #content {
   border-width: 0;
-  width: 100%;
+  width: calc(100% - 20px);
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+#send-message-form > button {
+  border: none;
+  position: absolute;
+  right: 20px;
+  height: 38px;
+  width: 38px;
+  margin: 0px;
+}
+
+#send-message-form > button > svg {
+  width: 38px;
+  height: 38px;
 }
 
 .dm-timestamp {

@@ -7,7 +7,7 @@
 <form id="send-message-form" action="{{ url_for('submit_dm', receiver_handle=receiver_handle) }}" method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="text" name="content" id="content" required placeholder="Message @{{ receiver_handle }}">
-  <button type="submit">Send</button>
+  <button type="submit"><span class="iconify" data-icon="material-symbols:send-outline-rounded"></span></button>
 </form>
 
 <div id="message-container">
