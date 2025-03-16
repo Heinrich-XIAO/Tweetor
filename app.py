@@ -37,7 +37,7 @@ import re
 from flask_wtf.csrf import CSRFProtect
 import json
 from io import BytesIO
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 load_dotenv()
 
 SIGHT_ENGINE_SECRET = os.getenv("SIGHT_ENGINE_SECRET")
@@ -914,6 +914,17 @@ def submit_dm(receiver_handle) -> str | Response:
         (dm_id,)
     )
     message = cursor.fetchone()
+
+    # Emit WebSocket event to the receiver
+    socketio.emit('new_dm', {
+        "id": message["id"],
+        "sender_handle": session["handle"],
+        "receiver_handle": receiver_handle,
+        "content": content,
+        "timestamp": message["timestamp"],
+        "profane_dm": profane_dm
+    }, room=receiver_handle)
+
     return jsonify({
         "id": message["id"],
         "sender_handle": session["handle"],
@@ -1131,12 +1142,16 @@ def send_message():
 def handle_connect():
     if "handle" in session:
         online_users[session["handle"]] = time.time_ns()
+        # Join the user to a room with their handle
+        join_room(session["handle"])
     emit('online_update', online_users, broadcast=True)
     
 @socketio.on('disconnect')
 def handle_disconnect():
     if "handle" in session:
         online_users.pop(session["handle"], None)
+        # Leave the room with their handle
+        leave_room(session["handle"])
     emit('online_update', online_users, broadcast=True)
 
 if __name__ == "__main__":

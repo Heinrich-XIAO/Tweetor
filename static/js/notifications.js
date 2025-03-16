@@ -1,7 +1,6 @@
 ('notifications.js Loaded')
 const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let prevRecentMessages;
-const notificationAudio = document.getElementById("notification");
 const hasNotificationSupport = 'Notification' in window;
 
 
