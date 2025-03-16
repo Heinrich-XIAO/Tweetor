@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <script>
+    const isLoggedIn = {{ loggedIn|tojson }};
+  </script>
   <title>{% block title %}{% endblock %} | Tweetor</title>
   <script src="{{ url_for('static', filename='js/socket.io.min.js')}}"></script>
   {% assets "js_all" %}
@@ -11,8 +14,8 @@
   {% assets "css_all" %}
   <link rel="stylesheet" href="{{ ASSET_URL }}">
   {% endassets %}
-  <link rel="icon" type="image" href="{{ url_for('static', filename='logo.svg')}}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg')}}">
+  <link rel="icon" type="image" href="{{ url_for('static', filename='logo.min.svg')}}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.min.svg')}}">
   <meta name="keywords" content="Social Media, Tweetor">
   <meta name="description" content="Non-toxic social media friendly to all with algorithms that stop toxic behavior">
   <meta name="author" content="Heinrich Xiao">
@@ -23,7 +26,7 @@
   <div class="menu w3-sidebar w3-bar-block">
     <div class="logo">
       <a href="/">
-        <img src="{{ url_for('static', filename='logo.svg') }}" alt="fliter Logo">
+        <img src="{{ url_for('static', filename='logo.min.svg') }}" alt="fliter Logo">
       </a>
     </div>
     <div class="pages">
