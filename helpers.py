@@ -5,6 +5,7 @@ from flask import (
   redirect,
   session,
   url_for,
+  render_template  # added for admin_required
 )
 from functools import wraps
 import os
@@ -25,22 +26,14 @@ def login_required(f):
     return decorated_function
 
 def get_client_ip():
-    if request.headers.getlist("X-Forwarded-For"):
-        ip = request.headers.getlist("X-Forwarded-For")[0]
-    elif request.headers.get('cf-connecting-ip'):
-        ip = request.headers.get('cf-connecting-ip')
-    else:
-        ip = request.remote_addr
-
-    return ip
+    forwarded = request.headers.getlist("X-Forwarded-For")
+    return forwarded[0] if forwarded else request.headers.get('cf-connecting-ip') or request.remote_addr
 
 def get_all_user_handles():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT handle FROM users")
-    user_handles = [i[0] for i in cursor.fetchall()]
-    return user_handles
-
+    with get_db() as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT handle FROM users")
+        return [row[0] for row in cursor.fetchall()]
 
 def get_user_handle():
   db = get_db()
@@ -49,25 +42,21 @@ def get_user_handle():
         return "Not Logged In"
   else:
         return session["handle"]
+
 def get_all_flit_ids():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT id FROM flits")
-    flit_ids = [i[0] for i in cursor.fetchall()]
-    return flit_ids
+    with get_db() as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT id FROM flits")
+        return [row[0] for row in cursor.fetchall()]
 
 def get_blocked_users(current_user_handle):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT DISTINCT blocked_handle FROM blocks WHERE blocker_handle = ?
-    """, (current_user_handle,))
-    blocked_users = cursor.fetchall()
-    conn.close()
-
-    # Convert the result to a list of usernames
-    blocked_usernames = [row[0] for row in blocked_users]
-    return blocked_usernames
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT blocked_handle FROM blocks WHERE blocker_handle = ?
+        """, (current_user_handle,))
+        blocked_users = cursor.fetchall()
+    return [row[0] for row in blocked_users]
 
 def admin_required(f):
     @wraps(f)
