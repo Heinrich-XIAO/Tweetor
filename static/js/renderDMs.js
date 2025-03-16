@@ -147,5 +147,50 @@ if (window.location.pathname.startsWith('/dm/')) {
         }
       });
     }
+
+    // Add socket listener for new direct messages
+    socket.on('new_dm', (message) => {
+      const messageContainer = document.getElementById('message-container');
+      if (!messageContainer) return;
+      
+      if (!document.getElementById(`message-${message.id}`)) {
+        const p = document.createElement('p');
+        p.id = `message-${message.id}`;
+        
+        const timestampData = formatTimestamp(message.timestamp);
+        const timestampSpan = document.createElement('span');
+        timestampSpan.style.fontWeight = 'lighter';
+        timestampSpan.style.marginLeft = '10px';
+        timestampSpan.classList.add('dm-timestamp');
+        timestampSpan.textContent = timestampData.display;
+        timestampSpan.title = timestampData.full;
+        p.appendChild(timestampSpan);
+        
+        const b = document.createElement('b');
+        b.textContent = message.sender_handle;
+        p.appendChild(b);
+        
+        const spaceSpan = document.createElement('span');
+        spaceSpan.textContent = ' ';
+        p.appendChild(spaceSpan);
+        
+        const contentSpan = document.createElement('span');
+        contentSpan.textContent = message.content;
+        p.appendChild(contentSpan);
+        
+        messageContainer.prepend(p);
+      }
+      
+      // Show desktop notification
+      if (Notification.permission === 'granted') {
+        new Notification(`${message.sender_handle} said ...`, { body: message.content });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(`${message.sender_handle} said ...`, { body: message.content });
+          }
+        });
+      }
+    });
   });
 }
