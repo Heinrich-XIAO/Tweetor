@@ -144,6 +144,14 @@ if (window.location.pathname.startsWith('/dm/')) {
       
       renderMessage(message, true);
       
+      const redDot = document.getElementById(`red-dot-${message.sender_handle}`);
+      if (redDot) {
+        redDot.style.display = 'block';
+        document.addEventListener('click', () => {
+          redDot.style.display = 'none';
+        }, { once: true });
+      }
+
       // Show desktop notification
       if (Notification.permission === 'granted') {
         new Notification(`${message.sender_handle+' '}said ...`, { body: message.content });

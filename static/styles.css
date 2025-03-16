@@ -684,3 +684,17 @@ li > p.image-container {
 #users {
   margin-left: 10px;
 }
+
+#dm_list>div {
+  position: relative;
+}
+
+.red-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  height: 10px;
+  width: 10px;
+  background-color: red;
+  border-radius: 50%;
+}

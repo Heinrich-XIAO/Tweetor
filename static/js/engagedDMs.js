@@ -18,7 +18,17 @@ function renderDMs() {
     dmElement.classList.add("w3-button");
     dmElement.classList.add("dm_with_person");
     dmElement.textContent = dmData[i];
-    dmList.appendChild(dmElement);
+
+    const redDot = document.createElement('span');
+    redDot.style.display = 'none';
+    redDot.classList.add('red-dot');
+    redDot.id = `red-dot-${dmData[i]}`;
+    dmElement.appendChild(redDot);
+
+    const dmWrapper = document.createElement('div');
+    dmWrapper.appendChild(dmElement);
+
+    dmList.appendChild(dmWrapper);
   }
 }
 
