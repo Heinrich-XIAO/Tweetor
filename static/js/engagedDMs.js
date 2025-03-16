@@ -24,7 +24,6 @@ function renderDMs() {
 
 fetchDMs().then(
   () => {
-    console.log("got dms");
     if (document.readyState == "loading") {
       document.addEventListener('DOMContentLoaded', async () => {
         renderDMs();

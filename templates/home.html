@@ -8,7 +8,7 @@
   <br>
   <div class="row">
     <div class="flit_form">
-      <form action="/submit_flit" method="post" id="post_flit">
+      <form id="post_flit" method="post">
         <!-- Hidden Inputs -->
 	
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -68,6 +68,28 @@
     // Update the form input value with the formatted content
     textarea.value = content.trimEllip(300);
     characterCounter.innerHTML = `${textarea.value.length}/300`;
+  });
+
+  document.getElementById('post_flit').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const formData = new FormData(this);
+    this.reset(); // Reset the form before making the request
+    document.getElementById('addedElements').innerHTML = ''; // Clear the added elements
+
+    fetch('/submit_flit', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Handle the response data
+      console.log(data);
+      // Optionally, update the page with the new flit without refreshing
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
   });
 </script>
 {% endif %}
