@@ -115,7 +115,6 @@ def block_ips():
 @app.route("/")
 @limiter.limit("5/second", override_defaults=True)
 def home() -> str:
-    db = helpers.get_db()
     return render_template("home.html", loggedIn="handle" in session)
 
 ## APIs
