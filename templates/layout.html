@@ -2,9 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script>
-    const isLoggedIn = {{ loggedIn|tojson }};
-  </script>
   <title>{% block title %}{% endblock %} | Tweetor</title>
   <script src="{{ url_for('static', filename='js/socket.io.min.js')}}"></script>
   {% assets "js_all" %}
