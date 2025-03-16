@@ -693,8 +693,8 @@ li > p.image-container {
   position: absolute;
   top: 5px;
   right: 5px;
-  height: 10px;
-  width: 10px;
-  background-color: red;
+  height: 14px;
+  width: 14px;
+  background-color: rgb(218, 62, 68);
   border-radius: 50%;
 }
