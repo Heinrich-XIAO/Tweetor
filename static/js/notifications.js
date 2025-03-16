@@ -40,9 +40,3 @@ document.addEventListener('click', () => {
 }, { once: true });
 
 socket.on('new_flit', checkNotifications);
-
-(async () => {
-  let res = await fetch(`/api/get_flits?skip=${skip}&limit=${limit}`);
-  prevRecentMessages = await res.json();
-})();
-

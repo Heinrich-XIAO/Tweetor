@@ -146,17 +146,15 @@ def flitAPI():
 @app.route("/api/get_flits")
 @limiter.exempt
 def get_flits(user_handle=None) -> Response | str:
-    skip = request.args.get("skip")
-    limit = request.args.get("limit")
-    db = helpers.get_db()
-    cursor = db.cursor()
-    user_handle = request.args.get("user")
-    if skip is None or limit is None or not skip.isdigit() or not limit.isdigit():
+    skip_param = request.args.get("skip")
+    limit_param = request.args.get("limit")
+    
+    if skip_param is None or limit_param is None or not skip_param.isdigit() or not limit_param.isdigit():
         return "either skip or limit is not an integer", 400
 
     try:
-        limit = int(request.args.get("limit"))
-        skip = int(request.args.get("skip"))
+        limit = int(limit_param)
+        skip = int(skip_param)
     except ValueError:
         limit = 10
         skip = 0
@@ -170,37 +168,57 @@ def get_flits(user_handle=None) -> Response | str:
     else:
         blocked_handles = []
 
-    result = {}
-
+    db = helpers.get_db()
+    cursor = db.cursor()
+    
+    # Get maximum id from flits
     cursor.execute("SELECT MAX(id) FROM flits")
-    last_id = cursor.fetchone()[0]
-    if last_id is None:
-        last_id = 0
-    skip = last_id - skip
+    last_id_fetch = cursor.fetchone()[0]
+    last_id = last_id_fetch if last_id_fetch is not None else 0
+    # Transform skip to be relative to the last id
+    computed_skip = last_id - skip
 
-    query_range = range(skip - limit + 1, skip + 1)
+    lower_bound = computed_skip - limit + 1
+    upper_bound = computed_skip
+
+    # Fetch flit records using the BETWEEN operator for a consecutive ID range
     cursor.execute(
         """
-        SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id 
-        FROM flits 
-        WHERE id IN ({seq})
-        """.format(seq=','.join(['?'] * len(query_range))),
-        query_range
+        SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id
+        FROM flits
+        WHERE id BETWEEN ? AND ?
+        ORDER BY id ASC
+        """,
+        (lower_bound, upper_bound)
     )
-    flits = cursor.fetchall()
+    
+    # Use row factory to get results as dicts
+    db.row_factory = sqlite3.Row
+    fetched_rows = cursor.fetchall()
+    db.close()
 
-    def process_flit(flit):
+    # Create a dictionary mapping ids to flit records for fast lookup
+    flit_dict = { row["id"]: dict(row) for row in fetched_rows }
+    result = {}
+
+    # Use recursive processing with caching to ensure original flits for reflits are processed
+    def process_flit(flit_id):
+        if flit_id in result:
+            return
+        flit = flit_dict.get(flit_id)
+        if not flit:
+            return
         if flit["profane_flit"] == "yes" and not helpers.is_admin():
-            return None
-        flit_data = dict(flit)
-        if flit_data.get("is_reflit") == 1:
-            original_flit = next((f for f in flits if f["id"] == flit_data.get("original_flit_id")), None)
-            if original_flit:
-                process_flit(original_flit)
-        result[flit["id"]] = flit_data
+            return
+        result[flit["id"]] = flit
+        if flit.get("is_reflit") == 1:
+            orig_id = flit.get("original_flit_id")
+            if orig_id in flit_dict:
+                process_flit(orig_id)
 
-    for flit in flits:
-        process_flit(flit)
+    # Process each flit from our fetched set.
+    for flit_id in flit_dict:
+        process_flit(flit_id)
 
     flit_list = list(result.values())
     return jsonify(flit_list)
@@ -210,9 +228,32 @@ def get_flits(user_handle=None) -> Response | str:
 def engaged_dms() -> str | Response:
     if "handle" not in session:
         return "{\"logged_in\": false}"
-    else:
-        return jsonify([list(dm)[0] for dm in helpers.get_engaged_direct_messages(session["handle"])])
 
+    user_handle = session["handle"]
+    db = helpers.get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        """
+        SELECT engaged_handle, MAX(timestamp) AS last_ts 
+        FROM (
+            SELECT receiver_handle AS engaged_handle, timestamp 
+            FROM direct_messages 
+            WHERE sender_handle = ?
+            UNION ALL
+            SELECT sender_handle AS engaged_handle, timestamp 
+            FROM direct_messages 
+            WHERE receiver_handle = ?
+        )
+        GROUP BY engaged_handle
+        ORDER BY last_ts DESC;
+        """,
+        (user_handle, user_handle)
+    )
+    engaged_dms = cursor.fetchall()
+    db.commit()
+    db.close()
+    
+    return jsonify([dm[0] for dm in engaged_dms])
 
 @app.route("/api/get_captcha")
 @limiter.limit("8/minute", override_defaults=False)

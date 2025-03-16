@@ -18,6 +18,7 @@ let initialFlitsPromise;
       json.forEach(flit => {
         bulkFlitCache[flit.id] = flit;
       });
+			prevRecentMessages = json;
       return json;
     });
 }
