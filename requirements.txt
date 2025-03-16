@@ -46,3 +46,4 @@ jsmin==3.0.1
 flask_assets==2.1.0
 Flask-SocketIO==5.5.1
 flask-minify==0.49
+eventlet==0.39.1

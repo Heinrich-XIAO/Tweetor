@@ -1,3 +1,5 @@
+import eventlet
+eventlet.monkey_patch()
 import sqlite3
 import hashlib
 import random
@@ -135,7 +137,7 @@ def flitAPI():
     c.execute('SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?', (flit_id,))
     flit = c.fetchone()
 
-    if flit is None or (flit['profane_flit'] == 'yes' and not helpers.is_admin()):
+    if (flit is None or (flit['profane_flit'] == 'yes' and not helpers.is_admin())):
         return "profane"
 
     return jsonify({
@@ -1155,4 +1157,4 @@ def handle_disconnect():
     emit('online_update', online_users, broadcast=True)
 
 if __name__ == "__main__":
-    socketio.run(app, debug=False)
+    socketio.run(app, debug=False, host='0.0.0.0', port=5000)
