@@ -379,7 +379,7 @@ def submit_flit() -> str | Response:
             profane_flit = "yes"
             return render_template("error.html", error="Do you really think that's appropriate?")
     
-    if request.form.get("original_flit_id") is None and request.form["original_flit_id"] is None:
+    if not request.form.get("original_flit_id"):
         cursor.execute(
             "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -401,37 +401,36 @@ def submit_flit() -> str | Response:
         socketio.emit('new_flit')
         
         return redirect(url_for("home"))
+    else:
+        is_reflit = False
+        original_flit_id = request.form.get("original_flit_id")
+        if original_flit_id is not None:
+            cursor.execute("SELECT id FROM flits WHERE id = ?", (original_flit_id,))
+            original_flit = cursor.fetchone()
+            if original_flit:
+                is_reflit = True
 
-    is_reflit = False
-    original_flit_id = request.form.get("original_flit_id")
-    if original_flit_id is not None:
-        cursor.execute("SELECT id FROM flits WHERE id = ?", (original_flit_id,))
-        original_flit = cursor.fetchone()
+        cursor.execute(
+            "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                session["username"],
+                content,
+                session["handle"],
+                "",
+                profane_flit,
+                meme_url,
+                int(is_reflit),
+                original_flit_id,
+                client_ip,
+            ),
+        )
 
-        if original_flit:
-            is_reflit = True
+        track_event(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
+        socketio.emit('new_flit')
 
-    cursor.execute(
-        "INSERT INTO flits (username, content, userHandle, hashtag, profane_flit, meme_link, is_reflit, original_flit_id, ip ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            session["username"],
-            content,
-            session["handle"],
-            "",
-            profane_flit,
-            meme_url,
-            int(is_reflit),
-            original_flit_id,
-            client_ip,
-        ),
-    )
-
-    track_event(session['handle'], 'ReFlit', {'Original Flit Id': original_flit_id})
-    socketio.emit('new_flit')
-
-    db.commit()
-    db.close()
-    return redirect(url_for("home"))
+        db.commit()
+        db.close()
+        return redirect(url_for("home"))
 
 
 
@@ -949,9 +948,11 @@ def mute(handle) -> str:
 
 @app.route("/unmute/<handle>")
 def unmute(handle) -> str:
-    muted.remove(handle)
-def unmute(handle) -> str:
-    muted.remove(handle)
+    try:
+        muted.remove(handle)
+    except ValueError:
+        pass  # handle case if handle is not in muted
+    return ""  # or a proper response
 
 @app.route("/sitemap.xml")
 @limiter.exempt
