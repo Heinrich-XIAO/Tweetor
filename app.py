@@ -1091,6 +1091,9 @@ js = Bundle(
 )
 assets.register('js_all', js)
 
+js = Bundle('js/postFlit.js', filters='jsmin', output=f'dist/{get_random_hash()}.js')
+assets.register('postFlit.js', js)
+
 @app.route("/api/flits_bulk", methods=["GET"])
 @limiter.exempt
 def flits_bulk():
