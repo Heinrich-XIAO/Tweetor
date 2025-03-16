@@ -179,6 +179,7 @@ async function renderFlitWithFlitJSON(json, flit) {
       if (isWebm) {
         mediaElement.loop = true;
         mediaElement.autoplay = true;
+        mediaElement.muted = true; // Mute by default
       }
 
       flitContentDiv.appendChild(document.createElement('br'));

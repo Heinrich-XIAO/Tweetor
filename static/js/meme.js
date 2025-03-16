@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
             mediaElement.height = 100;
             mediaElement.controls = false;
             mediaElement.autoplay = true;
+            mediaElement.muted = true; // Mute by default
           } else {
             mediaElement = document.createElement("img");
             mediaElement.src = smallestMedia.url;
