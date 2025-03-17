@@ -1,5 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
 import sqlite3
 import hashlib
 import random
