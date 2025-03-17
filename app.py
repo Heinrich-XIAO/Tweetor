@@ -295,7 +295,7 @@ def render_online() -> Response:
     return response
 
 @app.route("/api/get_gif", methods=["POST"])
-@limiter.exempt
+@limiter.limit("20/minute")
 def get_gif() -> str:
     if request.json is not None:
         return requests.get(f"https://tenor.googleapis.com/v2/search", {
@@ -310,6 +310,7 @@ def get_gif() -> str:
 
 @app.route("/submit_flit", methods=["POST"])
 @limiter.limit("10/minute")
+@limiter.limit("2/5seconds")
 def submit_flit() -> str | Response:
     db = helpers.get_db()
     user_agent = request.headers.get('User-Agent')
