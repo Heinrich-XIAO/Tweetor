@@ -1,3 +1,3 @@
 const socket = io({
-  transports: ['websocket']
+  // transports: ['websocket']
 });
