@@ -207,7 +207,18 @@ def get_flits(user_handle=None) -> Response | str:
             return
         flit = flit_dict.get(flit_id)
         if not flit:
-            return
+            db2 = helpers.get_db()
+            cursor2 = db2.cursor()
+            cursor2.execute(
+                "SELECT id, content, timestamp, userHandle, username, hashtag, profane_flit, meme_link, is_reflit, original_flit_id FROM flits WHERE id=?",
+                (flit_id,)
+            )
+            row = cursor2.fetchone()
+            db2.close()
+            if row is None:
+                return
+            flit = dict(row)
+            return flit
         if flit["profane_flit"] == "yes" and not helpers.is_admin():
             return
         result[flit["id"]] = flit
